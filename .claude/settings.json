@@ -1,0 +1,40 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(*)",
+      "Grep(*)",
+      "Glob(*)",
+      "Bash(git log *)",
+      "Bash(git diff *)",
+      "Bash(git show *)",
+      "Bash(git status)",
+      "Bash(git blame *)",
+      "Bash(git stash list)",
+      "Bash(ls *)",
+      "Bash(wc *)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-commit-gate.sh\""
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "prompt",
+            "prompt": "Trước khi kết thúc, kiểm tra: (1) Có uncommitted changes quan trọng không? (2) Task đang làm dở chưa cập nhật progress? (3) Có blocker nào chưa ghi lại? Nếu có vấn đề, trả về {\"decision\": \"block\", \"reason\": \"[mô tả]\"}. Nếu OK, trả về {\"decision\": \"allow\"}."
+          }
+        ]
+      }
+    ]
+  }
+}

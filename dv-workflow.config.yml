@@ -1,0 +1,128 @@
+# ============================================================================
+# dv-workflow-kit Configuration
+# ============================================================================
+# File cấu hình trung tâm điều khiển toàn bộ toolkit.
+# Mỗi dự án copy file này và tùy chỉnh theo nhu cầu.
+# Skills đọc file này để quyết định behavior, bật/tắt features.
+# ============================================================================
+
+# --- Project Info -----------------------------------------------------------
+project:
+  name: "my-project"
+  type: "new-product"          # new-product | old-maintenance
+  language: "vi"               # vi | en — ngôn ngữ docs output
+  # version: "1.0.0"           # Tuỳ chọn — version của dự án
+
+# --- Level System -----------------------------------------------------------
+# Level quyết định mức độ workflow áp dụng.
+# Level cao hơn bao gồm tất cả features của level thấp hơn.
+#
+#   Level 1 (lite)     : research → execute → commit (skip plan cho task nhỏ)
+#   Level 2 (standard) : research → plan → execute → review → commit
+#   Level 3 (full)     : full workflow + living docs + metrics + dashboard
+#
+level: 2
+
+# --- Team Configuration -----------------------------------------------------
+team:
+  roles:
+    - dev              # Luôn có
+    - techlead         # TL: architecture review, approve plans
+    # - ba             # BA: requirements, user stories
+    # - qc             # QC: test plans, bug reports
+    # - pm             # PM: dashboard, reports, metrics view
+
+# --- Feature Flags ----------------------------------------------------------
+# Bật/tắt từng feature độc lập. true | false | "skip"
+# "skip" = skill tồn tại nhưng không enforce, user tự quyết định dùng.
+#
+flags:
+  # Core Workflow
+  research: true               # /research - khảo sát codebase
+  plan: true                   # /plan - lập kế hoạch
+  execute: true                # /execute - thực hiện theo plan
+  commit: true                 # /commit - smart commit
+  review: true                 # /review - code review
+  debug: true                  # /debug - debug có hệ thống
+
+  # Living Docs
+  living_docs: false           # Tự động cập nhật docs khi code thay đổi
+  docs_update_on_commit: false # Trigger docs-update sau mỗi commit
+
+  # Metrics & Tracking
+  estimation: false            # /estimate - ước lượng effort
+  log_work: false              # /log-work - ghi nhận effort thực tế
+  metrics_tracking: false      # Thu thập metrics tự động
+  dora_metrics: false          # DORA metrics calculation
+
+  # Quality Gates
+  pre_commit_tests: "skip"     # Chạy tests trước commit
+  pre_commit_lint: "skip"      # Chạy lint trước commit
+  block_commit_on_fail: false  # Block commit nếu test/lint fail
+
+  # Collaboration
+  handoff: true                # /handoff - bàn giao session
+  thinking_framework: true     # Áp dụng THINKING.md tự động
+
+  # Role-specific
+  requirements_skill: false    # /requirements - BA skill
+  test_plan_skill: false       # /test-plan - QC skill
+  arch_review_skill: false     # /arch-review - TL skill
+  dashboard_skill: false       # /dashboard - PM skill
+
+# --- Complexity Routing -----------------------------------------------------
+# Tự động chọn workflow depth dựa trên số files thay đổi.
+routing:
+  small_task_max_files: 2      # <= N files: direct execute hoặc /debug
+  medium_task_max_files: 5     # <= N files: research → plan → execute
+  # > medium: full workflow + chia sub-tasks
+
+# --- Estimation Settings ----------------------------------------------------
+estimation:
+  unit: "hours"                # hours | story-points | t-shirt (S/M/L/XL)
+  track_actual: true           # So sánh estimate vs actual
+  categories:
+    - research
+    - planning
+    - coding
+    - testing
+    - review
+    - documentation
+
+# --- Metrics ----------------------------------------------------------------
+metrics:
+  # Nơi lưu metrics data
+  data_dir: ".dev-metrics"
+
+  # DORA metrics thresholds (dùng để đánh giá)
+  dora:
+    deployment_frequency:
+      elite: "daily"           # multiple/day
+      high: "weekly"           # weekly-monthly
+      medium: "monthly"        # monthly-bimonthly
+    lead_time:
+      elite: "< 1 day"
+      high: "< 1 week"
+      medium: "< 1 month"
+    change_failure_rate:
+      elite: "< 5%"
+      high: "< 10%"
+      medium: "< 15%"
+    mttr:
+      elite: "< 1 hour"
+      high: "< 1 day"
+      medium: "< 1 week"
+
+  # Export settings
+  export:
+    format: "json"             # json | csv
+    auto_export: false         # Tự động export sau mỗi sprint/milestone
+    # external_sync: "jira"   # jira | github | linear (cần MCP config)
+
+# --- Paths ------------------------------------------------------------------
+paths:
+  tasks: ".dev-tasks"          # Active task documentation
+  docs: ".dev-docs"            # Living documentation
+  metrics: ".dev-metrics"      # Metrics data files
+  reports: ".dev-reports"      # Generated reports/dashboards
+  templates: "templates"       # Template files (từ toolkit)

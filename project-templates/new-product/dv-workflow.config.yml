@@ -1,0 +1,112 @@
+# ============================================================================
+# dv-workflow-kit — Template: NEW PRODUCT
+# ============================================================================
+# Dùng cho: Dự án phần mềm mới, team build từ đầu.
+# Đặc điểm: Heavy planning, architecture-first, full documentation,
+#            tất cả roles cùng tham gia, metrics tracking bật.
+# ============================================================================
+
+project:
+  name: "your-product-name"
+  type: "new-product"
+  language: "vi"
+
+# Level 2: Research → Plan → Execute → Review → Commit
+# Nâng lên Level 3 khi cần: living docs, metrics, dashboard
+level: 2
+
+team:
+  roles:
+    - dev
+    - techlead
+    - ba
+    - qc
+    - pm
+
+flags:
+  # Core Workflow — BẬT tất cả
+  research: true
+  plan: true
+  execute: true
+  commit: true
+  review: true
+  debug: true
+
+  # Living Docs — bật khi stable (sau sprint 1-2)
+  living_docs: false            # → true khi team quen workflow
+  docs_update_on_commit: false
+
+  # Metrics — bật để track progress
+  estimation: true
+  log_work: true
+  metrics_tracking: true
+  dora_metrics: true
+
+  # Quality Gates — soft enforcement đầu, tăng dần
+  pre_commit_tests: "skip"      # → true sau khi có test suite
+  pre_commit_lint: "skip"       # → true sau khi config linter
+  block_commit_on_fail: false   # → true khi team quen
+
+  # Collaboration
+  handoff: true
+  thinking_framework: true
+
+  # Role-specific — bật tất cả vì có đủ roles
+  requirements_skill: true      # BA
+  test_plan_skill: true         # QC
+  arch_review_skill: true       # TL
+  dashboard_skill: true         # PM
+
+routing:
+  small_task_max_files: 2
+  medium_task_max_files: 5
+
+estimation:
+  unit: "hours"                 # Có thể đổi sang story-points khi quen
+  track_actual: true
+  categories:
+    - research
+    - planning
+    - coding
+    - testing
+    - review
+    - documentation
+
+metrics:
+  data_dir: ".dev-metrics"
+  dora:
+    deployment_frequency:
+      elite: "daily"
+      high: "weekly"
+      medium: "monthly"
+    lead_time:
+      elite: "< 1 day"
+      high: "< 1 week"
+      medium: "< 1 month"
+    change_failure_rate:
+      elite: "< 5%"
+      high: "< 10%"
+      medium: "< 15%"
+    mttr:
+      elite: "< 1 hour"
+      high: "< 1 day"
+      medium: "< 1 week"
+  export:
+    format: "json"
+    auto_export: false
+
+paths:
+  tasks: ".dev-tasks"
+  docs: ".dev-docs"
+  metrics: ".dev-metrics"
+  reports: ".dev-reports"
+  templates: "templates"
+
+# ============================================================================
+# HƯỚNG DẪN ONBOARDING — xóa section này sau khi setup xong
+# ============================================================================
+# Bước 1: Cập nhật project.name
+# Bước 2: Điều chỉnh team.roles theo thực tế
+# Bước 3: Chạy `/config-init` để tạo thư mục và verify
+# Bước 4: Bắt đầu feature đầu tiên với `/task-init [feature-name]`
+# Bước 5: Sau sprint 1, cân nhắc bật living_docs: true

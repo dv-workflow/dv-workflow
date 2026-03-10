@@ -1,0 +1,32 @@
+# ============================================================================
+# dv-workflow-kit — .gitignore
+# ============================================================================
+# Runtime directories (tạo khi dùng toolkit trong project thực)
+# Uncomment nếu muốn track task docs trong git (recommended cho team)
+
+# Task documentation (active work)
+# .dev-tasks/
+
+# Living docs (nếu muốn exclude)
+# .dev-docs/
+
+# Metrics data
+.dev-metrics/
+.dev-reports/
+
+# Local overrides
+CLAUDE.local.md
+.claude/settings.local.json
+*.local.yml
+*.local.yaml
+
+# OS & Editor
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Logs
+*.log

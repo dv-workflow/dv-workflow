@@ -1,0 +1,100 @@
+# ============================================================================
+# dv-workflow-kit — Template: OLD PROJECT / MAINTENANCE
+# ============================================================================
+# Dùng cho: Dự án cũ đang chạy, outsource, hoặc hệ thống legacy cần maintenance.
+# Đặc điểm: Lighter workflow, focus bug fixes & small features,
+#            change tracking, regression testing, nhanh gọn.
+# ============================================================================
+
+project:
+  name: "project-name"
+  type: "old-maintenance"
+  language: "vi"
+
+# Level 1: Research → Execute → Commit (Plan optional cho bugs)
+# Nâng lên Level 2 khi cần feature lớn hoặc refactor
+level: 1
+
+team:
+  roles:
+    - dev
+    - techlead      # TL review critical changes
+    # - ba          # Bật nếu có BA
+    # - qc          # Bật nếu có QC
+    # - pm          # Bật nếu cần báo cáo
+
+flags:
+  # Core Workflow
+  research: true
+  plan: "skip"          # Optional — bật cho features lớn
+  execute: true
+  commit: true
+  review: "skip"        # Optional — bật cho critical changes
+  debug: true           # Quan trọng cho maintenance
+
+  # Living Docs — tắt (codebase cũ, khó maintain docs)
+  living_docs: false
+  docs_update_on_commit: false
+
+  # Metrics — nhẹ, chỉ track basics
+  estimation: "skip"    # Optional
+  log_work: "skip"      # Optional — bật nếu client cần timesheet
+  metrics_tracking: false
+  dora_metrics: false
+
+  # Quality Gates
+  pre_commit_tests: "skip"
+  pre_commit_lint: "skip"
+  block_commit_on_fail: false
+
+  # Collaboration
+  handoff: true         # Quan trọng cho maintenance — nhiều người
+  thinking_framework: true
+
+  # Role-specific
+  requirements_skill: false
+  test_plan_skill: false
+  arch_review_skill: false     # Bật khi có refactor lớn
+  dashboard_skill: false       # Bật nếu PM cần report
+
+routing:
+  small_task_max_files: 3     # Maintenance tasks thường nhỏ hơn
+  medium_task_max_files: 6
+
+estimation:
+  unit: "hours"
+  track_actual: false
+  categories:
+    - investigation
+    - coding
+    - testing
+
+metrics:
+  data_dir: ".dev-metrics"
+  export:
+    format: "json"
+    auto_export: false
+
+paths:
+  tasks: ".dev-tasks"
+  docs: ".dev-docs"
+  metrics: ".dev-metrics"
+  reports: ".dev-reports"
+  templates: "templates"
+
+# ============================================================================
+# HƯỚNG DẪN — Old Project / Maintenance workflow
+# ============================================================================
+# Bug fix workflow (1-3 files):
+#   /debug [mô tả lỗi] → fix → /commit
+#
+# Small feature (< 5 files):
+#   /task-init [name] → /research [name] → implement → /commit
+#
+# Medium feature (5+ files) — tạm thời bật plan:
+#   /task-init [name] → /research [name] → /plan [name] → /execute [name]
+#
+# Cuối session — luôn handoff:
+#   /handoff [task-name]
+#
+# Bật log_work nếu client yêu cầu timesheet: log_work: true
