@@ -1,5 +1,5 @@
 ---
-name: requirements
+name: dw-requirements
 description: "BA skill: Thu thập, phân tích và viết requirements document + user stories. Dùng ở đầu feature trước khi dev bắt đầu."
 argument-hint: "[feature-name]"
 allowed-tools:
@@ -93,5 +93,5 @@ Ghi ra `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-requirements.md`:
 ## Sau Khi Tạo
 
 - Thông báo dev: "Requirements doc sẵn sàng tại [path]"
-- Gợi ý: "TL có thể chạy `/arch-review $ARGUMENTS` để review technical feasibility"
-- Gợi ý: "Dev có thể chạy `/task-init $ARGUMENTS` để bắt đầu implementation"
+- Gợi ý: "TL có thể chạy `/dw-arch-review $ARGUMENTS` để review technical feasibility"
+- Gợi ý: "Dev có thể chạy `/dw-task-init $ARGUMENTS` để bắt đầu implementation"

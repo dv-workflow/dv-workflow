@@ -46,17 +46,17 @@ Trước khi thực hiện bất kỳ skill nào, PHẢI đọc `dv-workflow.con
 ## Multi-Role Workflow
 
 ```
-BA: /requirements → output: requirements doc
+BA: /dw-requirements → output: requirements doc
      ↓
-TL: /arch-review → output: architecture decision + approve
+TL: /dw-arch-review → output: architecture decision + approve
      ↓
-Dev+Agent: /task-init → /research → /plan → [TL approve] → /execute
+Dev+Agent: /dw-task-init → /dw-research → /dw-plan → [TL approve] → /dw-execute
      ↓
-QC: /test-plan → manual/auto testing
+QC: /dw-test-plan → manual/auto testing
      ↓
-Dev+Agent: /review → /commit → PR
+Dev+Agent: /dw-review → /dw-commit → PR
      ↓
-PM: /dashboard → project health view
+PM: /dw-dashboard → project health view
 ```
 
 Không phải mọi task đều cần full chain. Routing complexity quyết định.

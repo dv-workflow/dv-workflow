@@ -1,5 +1,5 @@
 ---
-name: plan
+name: dw-plan
 description: "Lập kế hoạch implementation chi tiết sau khi đã research. Thiết kế giải pháp, phân chia subtasks, xác định rủi ro. DỪNG để chờ approval trước khi execute."
 argument-hint: "[task-name]"
 allowed-tools:
@@ -28,7 +28,7 @@ Task: **$ARGUMENTS**
 ## Bước 1: Đọc Context
 
 Đọc `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-context.md` — file research đã tạo.
-Nếu chưa có → thông báo: "Cần chạy `/research $ARGUMENTS` trước."
+Nếu chưa có → thông báo: "Cần chạy `/dw-research $ARGUMENTS` trước."
 
 ## Bước 2: Thiết kế giải pháp
 
@@ -118,6 +118,6 @@ Trình bày plan cho user với:
 1. Tóm tắt approach (3-5 câu)
 2. Số subtasks và estimate tổng (nếu có)
 3. Top 2 risks
-4. Yêu cầu: "Approve plan này để tiếp tục `/execute $ARGUMENTS`"
+4. Yêu cầu: "Approve plan này để tiếp tục `/dw-execute $ARGUMENTS`"
 
 Nếu team có TL: "Plan cần TL review trước khi execute."

@@ -1,8 +1,7 @@
 ---
-name: task-init
+name: dw-task-init
 description: "Khởi tạo bộ documentation cho task mới. Tạo thư mục và 3 template files (context, plan, progress)."
 argument-hint: "[task-name]"
-disable-model-invocation: true
 ---
 
 # Khởi Tạo Task: $ARGUMENTS
@@ -48,8 +47,8 @@ Hiển thị cho user:
 1. Danh sách files đã tạo
 2. Workflow tiếp theo dựa trên level:
 
-**Level 1**: "Tiếp theo: Bắt đầu implement hoặc chạy `/research $ARGUMENTS`"
-**Level 2**: "Tiếp theo: Chạy `/research $ARGUMENTS` → `/plan $ARGUMENTS` → approve → `/execute $ARGUMENTS`"
-**Level 3**: "Tiếp theo: Chạy `/estimate $ARGUMENTS` → `/research $ARGUMENTS` → `/plan $ARGUMENTS`"
+**Level 1**: "Tiếp theo: Bắt đầu implement hoặc chạy `/dw-research $ARGUMENTS`"
+**Level 2**: "Tiếp theo: Chạy `/dw-research $ARGUMENTS` → `/dw-plan $ARGUMENTS` → approve → `/dw-execute $ARGUMENTS`"
+**Level 3**: "Tiếp theo: Chạy `/dw-estimate $ARGUMENTS` → `/dw-research $ARGUMENTS` → `/dw-plan $ARGUMENTS`"
 
-Nếu team có BA: "Gợi ý: BA có thể chạy `/requirements $ARGUMENTS` trước để chuẩn bị yêu cầu"
+Nếu team có BA: "Gợi ý: BA có thể chạy `/dw-requirements $ARGUMENTS` trước để chuẩn bị yêu cầu"

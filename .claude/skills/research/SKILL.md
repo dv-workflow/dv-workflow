@@ -1,5 +1,5 @@
 ---
-name: research
+name: dw-research
 description: "Khảo sát và phân tích codebase trước khi lập kế hoạch. Tìm patterns, dependencies, và ảnh hưởng của thay đổi. Dùng khi cần hiểu code trước khi implement."
 argument-hint: "[task-name]"
 context: fork
@@ -95,4 +95,4 @@ Khi hoàn thành, trả về tóm tắt:
 - Số files khảo sát
 - Key findings (3-5 bullets)
 - Risks & unknowns
-- Gợi ý: "Tiếp theo chạy `/plan $ARGUMENTS`"
+- Gợi ý: "Tiếp theo chạy `/dw-plan $ARGUMENTS`"

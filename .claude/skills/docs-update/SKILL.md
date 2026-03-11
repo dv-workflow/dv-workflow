@@ -1,5 +1,5 @@
 ---
-name: docs-update
+name: dw-docs-update
 description: "Cập nhật living docs khi code thay đổi. Phát hiện docs lỗi thời và cập nhật tự động. Dùng sau khi execute hoặc commit."
 argument-hint: "[scope: all | architecture | api | models | task-name]"
 ---

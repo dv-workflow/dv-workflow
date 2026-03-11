@@ -38,20 +38,20 @@ team:
 #
 flags:
   # Core Workflow
-  research: true               # /research - khảo sát codebase
-  plan: true                   # /plan - lập kế hoạch
-  execute: true                # /execute - thực hiện theo plan
-  commit: true                 # /commit - smart commit
-  review: true                 # /review - code review
-  debug: true                  # /debug - debug có hệ thống
+  research: true               # /dw-research - khảo sát codebase
+  plan: true                   # /dw-plan - lập kế hoạch
+  execute: true                # /dw-execute - thực hiện theo plan
+  commit: true                 # /dw-commit - smart commit
+  review: true                 # /dw-review - code review
+  debug: true                  # /dw-debug - debug có hệ thống
 
   # Living Docs
   living_docs: false           # Tự động cập nhật docs khi code thay đổi
   docs_update_on_commit: false # Trigger docs-update sau mỗi commit
 
   # Metrics & Tracking
-  estimation: false            # /estimate - ước lượng effort
-  log_work: false              # /log-work - ghi nhận effort thực tế
+  estimation: false            # /dw-estimate - ước lượng effort
+  log_work: false              # /dw-log-work - ghi nhận effort thực tế
   metrics_tracking: false      # Thu thập metrics tự động
   dora_metrics: false          # DORA metrics calculation
 
@@ -65,10 +65,10 @@ flags:
   thinking_framework: true     # Áp dụng THINKING.md tự động
 
   # Role-specific
-  requirements_skill: false    # /requirements - BA skill
-  test_plan_skill: false       # /test-plan - QC skill
-  arch_review_skill: false     # /arch-review - TL skill
-  dashboard_skill: false       # /dashboard - PM skill
+  requirements_skill: false    # /dw-requirements - BA skill
+  test_plan_skill: false       # /dw-test-plan - QC skill
+  arch_review_skill: false     # /dw-arch-review - TL skill
+  dashboard_skill: false       # /dw-dashboard - PM skill
 
 # --- Complexity Routing -----------------------------------------------------
 # Tự động chọn workflow depth dựa trên số files thay đổi.

@@ -1,8 +1,7 @@
 ---
-name: log-work
+name: dw-log-work
 description: "Ghi nhận effort thực tế cho task hoặc subtask. So sánh với estimate. Cập nhật metrics tracking. Dùng sau khi hoàn thành subtask/task."
 argument-hint: "[task-name]"
-disable-model-invocation: true
 ---
 
 # Ghi Nhận Effort

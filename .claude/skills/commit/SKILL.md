@@ -1,8 +1,7 @@
 ---
-name: commit
+name: dw-commit
 description: "Tạo commit thông minh với quality checks tùy theo config. Chạy tests/lint trước commit nếu flags bật."
 argument-hint: "[commit message]"
-disable-model-invocation: true
 ---
 
 # Smart Commit
@@ -71,7 +70,7 @@ git commit -m "<message>"
 ### 7. Post-commit (theo flags)
 
 **Nếu `docs_update_on_commit = true`:**
-- Thông báo: "Living docs cần cập nhật. Chạy `/docs-update`?"
+- Thông báo: "Living docs cần cập nhật. Chạy `/dw-docs-update`?"
 
 **Nếu `metrics_tracking = true`:**
 - Ghi commit vào metrics: timestamp, type, scope, files changed

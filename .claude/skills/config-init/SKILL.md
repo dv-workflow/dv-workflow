@@ -1,8 +1,7 @@
 ---
-name: config-init
+name: dw-config-init
 description: "Khởi tạo dv-workflow-kit cho dự án mới. Tạo config file, thư mục, và cấu trúc cần thiết."
 argument-hint: "[project-name]"
-disable-model-invocation: true
 ---
 
 # Khởi Tạo dv-workflow-kit
@@ -73,4 +72,4 @@ Hiển thị:
 - Config đã tạo với settings gì
 - Danh sách skills có sẵn (dựa trên flags)
 - Hướng dẫn bước tiếp theo
-- Gợi ý: "Chạy `/task-init [tên-task]` để bắt đầu task đầu tiên"
+- Gợi ý: "Chạy `/dw-task-init [tên-task]` để bắt đầu task đầu tiên"

@@ -1,5 +1,5 @@
 ---
-name: review
+name: dw-review
 description: "Review code thay đổi gần đây hoặc cả task. Kiểm tra correctness, security, conventions, test coverage. Tạo báo cáo phân loại Critical/Warning/Suggestion."
 argument-hint: "[task-name | branch | file]"
 context: fork
@@ -62,6 +62,6 @@ Tạo báo cáo đầy đủ theo format của reviewer agent.
 
 - Nếu có Critical issues: "Cần fix trước khi merge"
 - Nếu chỉ có Warnings: "Khuyến khích fix, nhưng có thể proceed"
-- Nếu pass: "Approved — có thể chạy `/commit`"
+- Nếu pass: "Approved — có thể chạy `/dw-commit`"
 
 Nếu team có TL: "Gợi ý gửi báo cáo này cho TL để final approve."

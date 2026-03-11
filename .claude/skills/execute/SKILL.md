@@ -1,8 +1,7 @@
 ---
-name: execute
+name: dw-execute
 description: "Thực hiện implementation theo plan đã được approve. Tuân thủ TDD, commit sau mỗi subtask. Chỉ dùng khi plan đã được duyệt."
 argument-hint: "[task-name]"
-disable-model-invocation: true
 ---
 
 # Thực Hiện Implementation
@@ -26,7 +25,7 @@ Task: **$ARGUMENTS**
 4. Xác nhận plan có `Trạng thái: Approved`
 
 Nếu plan chưa approved → **DỪNG**, yêu cầu approve trước.
-Nếu chưa có plan → **DỪNG**, yêu cầu chạy `/plan $ARGUMENTS`.
+Nếu chưa có plan → **DỪNG**, yêu cầu chạy `/dw-plan $ARGUMENTS`.
 Nếu có progress → tiếp tục từ subtask cuối cùng chưa done.
 
 ## Quy Trình Cho MỖI Subtask
@@ -80,7 +79,7 @@ Subtask ST-N of $ARGUMENTS
 
 ### Test fail không rõ nguyên nhân
 1. KHÔNG sửa test để pass (trừ khi test sai)
-2. Chạy `/debug` nếu cần
+2. Chạy `/dw-debug` nếu cần
 3. Ghi vào progress nếu mất thời gian
 
 ### Conflict với code khác
@@ -92,6 +91,6 @@ Subtask ST-N of $ARGUMENTS
 
 1. Cập nhật progress: Trạng thái → `Done`
 2. Tóm tắt: subtasks completed, commits, issues encountered
-3. Nếu `flags.review = true`: "Tiếp theo: chạy `/review`"
-4. Nếu `flags.living_docs = true`: "Cần chạy `/docs-update`"
+3. Nếu `flags.review = true`: "Tiếp theo: chạy `/dw-review`"
+4. Nếu `flags.living_docs = true`: "Cần chạy `/dw-docs-update`"
 5. Nếu `flags.log_work = true`: Hiển thị estimate vs actual

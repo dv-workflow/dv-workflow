@@ -1,5 +1,5 @@
 ---
-name: dashboard
+name: dw-dashboard
 description: "Tạo báo cáo tổng hợp cho PM: trạng thái tasks, metrics DORA, effort tracking, velocity. Ghi ra file report để share."
 argument-hint: "[sprint-name | period: last-week | last-month | all]"
 allowed-tools:

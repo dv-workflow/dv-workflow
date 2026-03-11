@@ -15,8 +15,8 @@ Bộ toolkit workflow cho dev team sử dụng Claude Code Agent.
 ## Routing Theo Độ Phức Tạp
 
 Đọc `routing` trong config để xác định ngưỡng. Mặc định:
-- **1-2 files**: Execute trực tiếp hoặc `/debug`. Vẫn nên `/research` nhanh.
-- **3-5 files**: BẮT BUỘC `/task-init` → `/research` → `/plan` → approve → `/execute`
+- **1-2 files**: Execute trực tiếp hoặc `/dw-debug`. Vẫn nên `/dw-research` nhanh.
+- **3-5 files**: BẮT BUỘC `/dw-task-init` → `/dw-research` → `/dw-plan` → approve → `/dw-execute`
 - **6+ files**: Chia sub-tasks, mỗi phần có workflow riêng.
 
 Nếu không chắc scope → dùng workflow đầy đủ.
@@ -33,38 +33,38 @@ Nếu không chắc scope → dùng workflow đầy đủ.
 ### Core Workflow
 | Skill | Mô tả | Flag |
 |-------|--------|------|
-| `/config-init` | Khởi tạo config cho dự án mới | always |
-| `/task-init [name]` | Tạo bộ docs cho task | always |
-| `/research [name]` | Khảo sát codebase | `research` |
-| `/plan [name]` | Lập kế hoạch implementation | `plan` |
-| `/execute [name]` | Thực hiện theo plan (TDD) | `execute` |
-| `/commit [msg]` | Smart commit + quality gates | `commit` |
+| `/dw-config-init` | Khởi tạo config cho dự án mới | always |
+| `/dw-task-init [name]` | Tạo bộ docs cho task | always |
+| `/dw-research [name]` | Khảo sát codebase | `research` |
+| `/dw-plan [name]` | Lập kế hoạch implementation | `plan` |
+| `/dw-execute [name]` | Thực hiện theo plan (TDD) | `execute` |
+| `/dw-commit [msg]` | Smart commit + quality gates | `commit` |
 
 ### Quality & Debug
 | Skill | Mô tả | Flag |
 |-------|--------|------|
-| `/review` | Code review theo checklist | `review` |
-| `/debug [issue]` | Debug: investigate → diagnose → fix | `debug` |
-| `/docs-update` | Cập nhật living docs | `living_docs` |
+| `/dw-review` | Code review theo checklist | `review` |
+| `/dw-debug [issue]` | Debug: investigate → diagnose → fix | `debug` |
+| `/dw-docs-update` | Cập nhật living docs | `living_docs` |
 
 ### Tracking & Metrics
 | Skill | Mô tả | Flag |
 |-------|--------|------|
-| `/estimate [name]` | Ước lượng effort cho task | `estimation` |
-| `/log-work [name]` | Ghi nhận effort thực tế | `log_work` |
-| `/dashboard` | Generate báo cáo cho PM | `dashboard_skill` |
+| `/dw-estimate [name]` | Ước lượng effort cho task | `estimation` |
+| `/dw-log-work [name]` | Ghi nhận effort thực tế | `log_work` |
+| `/dw-dashboard` | Generate báo cáo cho PM | `dashboard_skill` |
 
 ### Role-Specific
 | Skill | Role | Flag |
 |-------|------|------|
-| `/requirements` | BA | `requirements_skill` |
-| `/test-plan` | QC | `test_plan_skill` |
-| `/arch-review` | TL | `arch_review_skill` |
+| `/dw-requirements` | BA | `requirements_skill` |
+| `/dw-test-plan` | QC | `test_plan_skill` |
+| `/dw-arch-review` | TL | `arch_review_skill` |
 
 ### Collaboration
 | Skill | Mô tả | Flag |
 |-------|--------|------|
-| `/handoff` | Bàn giao session | `handoff` |
+| `/dw-handoff` | Bàn giao session | `handoff` |
 
 ## Cấu Trúc Task Documentation
 

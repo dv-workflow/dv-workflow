@@ -38,7 +38,7 @@ Sửa `dv-workflow.config.yml`:
 ### 4. Khởi tạo
 
 ```
-/config-init [project-name]
+/dw-config-init [project-name]
 ```
 
 ---
@@ -48,17 +48,17 @@ Sửa `dv-workflow.config.yml`:
 ```
 BA (nếu có)          Dev + Agent                  TL (nếu có)
 ─────────────        ─────────────────────         ─────────────
-/requirements   →    /task-init [name]
-                     /research  [name]   →         /arch-review [name]
-                     /plan      [name]   ←         [approve/changes]
-                     /execute   [name]
-                     /review    [name]   →         [final check]
-                     /commit
+/dw-requirements →   /dw-task-init [name]
+                     /dw-research  [name]   →      /dw-arch-review [name]
+                     /dw-plan      [name]   ←      [approve/changes]
+                     /dw-execute   [name]
+                     /dw-review    [name]   →      [final check]
+                     /dw-commit
 
 QC (nếu có)          Dev                           PM
 ─────────────        ─────────────────────         ─────────────
-/test-plan [name]    /debug (nếu có lỗi)           /dashboard [period]
-[manual testing]     /handoff [name]
+/dw-test-plan [name] /dw-debug (nếu có lỗi)       /dw-dashboard [period]
+[manual testing]     /dw-handoff [name]
 ```
 
 ---
@@ -69,32 +69,32 @@ QC (nếu có)          Dev                           PM
 
 | Skill | Khi dùng |
 |-------|---------|
-| `/config-init [name]` | Lần đầu setup project |
-| `/task-init [name]` | Bắt đầu task mới |
-| `/research [name]` | Khảo sát codebase trước khi code |
-| `/execute [name]` | Implement theo plan (TDD) |
-| `/commit [msg]` | Commit với quality checks |
-| `/debug [issue]` | Debug lỗi có hệ thống |
-| `/handoff [name]` | Bàn giao session |
+| `/dw-config-init [name]` | Lần đầu setup project |
+| `/dw-task-init [name]` | Bắt đầu task mới |
+| `/dw-research [name]` | Khảo sát codebase trước khi code |
+| `/dw-execute [name]` | Implement theo plan (TDD) |
+| `/dw-commit [msg]` | Commit với quality checks |
+| `/dw-debug [issue]` | Debug lỗi có hệ thống |
+| `/dw-handoff [name]` | Bàn giao session |
 
 ### Standard (Level 2+)
 
 | Skill | Khi dùng |
 |-------|---------|
-| `/plan [name]` | Lập kế hoạch sau research |
-| `/review [target]` | Review code trước merge |
-| `/estimate [name]` | Ước lượng effort |
-| `/log-work [name]` | Ghi nhận effort thực tế |
+| `/dw-plan [name]` | Lập kế hoạch sau research |
+| `/dw-review [target]` | Review code trước merge |
+| `/dw-estimate [name]` | Ước lượng effort |
+| `/dw-log-work [name]` | Ghi nhận effort thực tế |
 
 ### Full (Level 3 / theo role)
 
 | Skill | Role | Khi dùng |
 |-------|------|---------|
-| `/requirements [name]` | BA | Thu thập yêu cầu |
-| `/arch-review [name]` | TL | Review kiến trúc |
-| `/test-plan [name]` | QC | Tạo test plan |
-| `/dashboard [period]` | PM | Báo cáo tổng hợp |
-| `/docs-update [scope]` | Dev | Cập nhật living docs |
+| `/dw-requirements [name]` | BA | Thu thập yêu cầu |
+| `/dw-arch-review [name]` | TL | Review kiến trúc |
+| `/dw-test-plan [name]` | QC | Tạo test plan |
+| `/dw-dashboard [period]` | PM | Báo cáo tổng hợp |
+| `/dw-docs-update [scope]` | Dev | Cập nhật living docs |
 
 ---
 
@@ -103,32 +103,32 @@ QC (nếu có)          Dev                           PM
 ### Feature mới (3-5 files)
 
 ```
-1. /task-init user-auth          # Tạo docs
-2. /requirements user-auth       # BA viết requirements (nếu có BA)
-3. /research user-auth           # Dev khảo sát codebase
-4. /plan user-auth               # Lập kế hoạch
-   → TL chạy /arch-review        # TL review (nếu cần)
+1. /dw-task-init user-auth          # Tạo docs
+2. /dw-requirements user-auth       # BA viết requirements (nếu có BA)
+3. /dw-research user-auth           # Dev khảo sát codebase
+4. /dw-plan user-auth               # Lập kế hoạch
+   → TL chạy /dw-arch-review        # TL review (nếu cần)
    → BA/PM approve plan
-5. /estimate user-auth           # Estimate effort
-   → QC chạy /test-plan          # QC chuẩn bị test cases
-6. /execute user-auth            # Implement (TDD)
-   → /log-work user-auth         # Ghi effort từng subtask
-7. /review                       # Code review
-8. /commit                       # Smart commit
-9. /docs-update user-auth        # Cập nhật docs (nếu bật)
+5. /dw-estimate user-auth           # Estimate effort
+   → QC chạy /dw-test-plan          # QC chuẩn bị test cases
+6. /dw-execute user-auth            # Implement (TDD)
+   → /dw-log-work user-auth         # Ghi effort từng subtask
+7. /dw-review                       # Code review
+8. /dw-commit                       # Smart commit
+9. /dw-docs-update user-auth        # Cập nhật docs (nếu bật)
 ```
 
 ### Bug fix (1-2 files)
 
 ```
-1. /debug [mô tả lỗi]
-2. /commit fix(scope): [mô tả]
+1. /dw-debug [mô tả lỗi]
+2. /dw-commit fix(scope): [mô tả]
 ```
 
 ### Kết thúc session (bất kỳ task nào)
 
 ```
-/handoff [task-name]
+/dw-handoff [task-name]
 ```
 
 ---
@@ -169,4 +169,4 @@ flags:
 - **Context mất** (giữa sessions): Claude tự đọc `.dev-tasks/[name]/*-progress.md`
 - **Giữa roles**: Share file docs, không cần share chat history
 - **Dispute về scope**: Refer về `*-plan.md` làm source of truth
-- **PM muốn update**: Chạy `/dashboard last-week`
+- **PM muốn update**: Chạy `/dw-dashboard last-week`
