@@ -4,6 +4,25 @@
 
 ---
 
+## [v0.3.0] — 2026-03-18
+
+### Added
+- `rollback` skill — revert task docs về checkpoint (after-research | after-plan | clean)
+- `archive` skill — move done tasks vào `.dev-tasks/archive/YYYY-MM/`, maintain index
+- `project-templates/enterprise/dv-workflow.config.yml` — Level 3 fully enabled template
+- `examples/ci-templates/ci-quality-gate.yml` — GitHub Actions: lint + test + security scan
+- `examples/ci-templates/ci-docs-check.yml` — GitHub Actions: weekly living docs freshness
+
+### Enhanced
+- `docs-update` SKILL: auto-scaffold `.dev-docs/` on first run, smarter git diff classification table, stale check logic
+- `dashboard` SKILL: DORA auto-calculation từ git history, HTML export (`.html` + `.md` dual output), responsive inline CSS template
+
+### Fixed
+- `project-templates/new-product`: remove deprecated `paths.templates` key
+- `dv-workflow.config.yml`: comment out deprecated `paths.templates`
+
+---
+
 ## [v0.2.0] — 2026-03-18
 
 ### Changed (Breaking — Integration Architecture)
