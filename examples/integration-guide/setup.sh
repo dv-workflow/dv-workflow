@@ -49,7 +49,7 @@ else
   cp -r "$TOOLKIT_DIR/.claude" "./"
 fi
 
-# 5. Tạo dv-workflow.config.yml từ template
+# 3. Tạo dv-workflow.config.yml từ template
 if [ ! -f "dv-workflow.config.yml" ]; then
   echo "⚙️  Tạo dv-workflow.config.yml ($PROJECT_TYPE template) ..."
   cp "$TOOLKIT_DIR/project-templates/$PROJECT_TYPE/dv-workflow.config.yml" .
@@ -58,7 +58,7 @@ else
   echo -e "${YELLOW}   dv-workflow.config.yml đã tồn tại — skip${NC}"
 fi
 
-# 6. Tạo CLAUDE.md nếu chưa có
+# 4. Tạo CLAUDE.md nếu chưa có
 if [ ! -f "CLAUDE.md" ]; then
   echo "📋 Tạo CLAUDE.md ..."
   cp "$TOOLKIT_DIR/CLAUDE.md" .
@@ -67,11 +67,11 @@ else
   echo -e "${YELLOW}   CLAUDE.md đã tồn tại — skip. Xem $TOOLKIT_DIR/CLAUDE.md để tham khảo${NC}"
 fi
 
-# 7. Tạo thư mục runtime
+# 5. Tạo thư mục runtime
 echo "📂 Tạo runtime directories ..."
 mkdir -p .dev-tasks .dev-docs .dev-metrics .dev-reports
 
-# 8. Thêm vào .gitignore
+# 6. Thêm vào .gitignore
 if [ -f ".gitignore" ]; then
   if ! grep -q ".dev-metrics" .gitignore; then
     echo "" >> .gitignore
@@ -92,6 +92,6 @@ echo "Bước tiếp theo:"
 echo "  1. Cập nhật project.name trong dv-workflow.config.yml"
 echo "  2. Bật/tắt flags và roles theo team thực tế"
 echo "  3. Chạy Claude Code trong project của bạn"
-echo "  4. Bắt đầu với: /config-init [tên-project]"
+echo "  4. Bắt đầu với: /dw-config-init [tên-project]"
 echo ""
 echo "Docs: $TOOLKIT_DIR/docs/README.md"
