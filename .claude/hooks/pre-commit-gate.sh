@@ -5,7 +5,17 @@
 # exit 0 = allow (có thể warn), exit 2 = block
 
 INPUT=$(cat)
-COMMAND=$(echo "$INPUT" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('command',''))" 2>/dev/null || echo "")
+
+# Detect python command (Windows: python, macOS/Linux: python3)
+if command -v python3 &>/dev/null && python3 -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" 2>/dev/null; then
+  PYTHON=python3
+elif command -v python &>/dev/null && python -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" 2>/dev/null; then
+  PYTHON=python
+else
+  PYTHON=""
+fi
+
+COMMAND=$(echo "$INPUT" | ${PYTHON:-python3} -c "import sys,json; d=json.load(sys.stdin); print(d.get('tool_input',{}).get('command',''))" 2>/dev/null || echo "")
 
 # Chỉ xử lý git commit commands
 if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit'; then
@@ -18,9 +28,9 @@ if [ ! -f "$CONFIG_FILE" ]; then
   exit 0
 fi
 
-# Parse flags từ YAML bằng python3 (robust hơn grep+awk)
+# Parse flags từ YAML bằng python (robust hơn grep+awk)
 get_flag() {
-  python3 - "$CONFIG_FILE" "$1" <<'PYEOF' 2>/dev/null
+  ${PYTHON:-python3} - "$CONFIG_FILE" "$1" <<'PYEOF' 2>/dev/null
 import sys, re
 try:
     content = open(sys.argv[1]).read()

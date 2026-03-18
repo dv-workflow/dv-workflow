@@ -18,6 +18,16 @@ set -e
 TOOLKIT_DIR=".dv-workflow"
 SILENT="${1:-}"
 
+# Detect python command (Windows: python, macOS/Linux: python3)
+if command -v python3 &>/dev/null && python3 -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" 2>/dev/null; then
+  PYTHON=python3
+elif command -v python &>/dev/null && python -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" 2>/dev/null; then
+  PYTHON=python
+else
+  echo "Lỗi: Cần Python 3 để chạy setup. Vui lòng cài đặt Python 3."
+  exit 1
+fi
+
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -172,7 +182,7 @@ if [ ! -f "dv-workflow.config.yml" ]; then
     "$BASE_CONFIG" > "dv-workflow.config.yml"
 
   # Inject roles (replace toàn bộ roles section)
-  python3 - <<PYEOF
+  $PYTHON - <<PYEOF
 import re
 with open('dv-workflow.config.yml') as f:
     content = f.read()
