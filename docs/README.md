@@ -170,3 +170,28 @@ flags:
 - **Giữa roles**: Share file docs, không cần share chat history
 - **Dispute về scope**: Refer về `*-plan.md` làm source of truth
 - **PM muốn update**: Chạy `/dw-dashboard last-week`
+
+---
+
+## Cross-Platform Notes
+
+### macOS / Linux
+Không cần cấu hình thêm. Hook script chạy với bash mặc định.
+
+### Windows
+
+**Khuyến nghị: Dùng Git Bash** (đi kèm Git for Windows).
+
+```bash
+# Mở Git Bash, cd vào project, chạy:
+bash .dv-workflow/examples/integration-guide/setup.sh
+```
+
+**WSL (Windows Subsystem for Linux)** cũng hoạt động tốt — chạy như Linux.
+
+**Command Prompt / PowerShell**: Không hỗ trợ hook scripts (bash). Dùng Git Bash hoặc WSL.
+
+**Lưu ý hook script**:
+- `pre-commit-gate.sh` dùng `python3` — đảm bảo Python 3 có trong PATH
+- Trên Windows, lệnh có thể là `python` thay vì `python3` — kiểm tra bằng `python3 --version`
+- Nếu hook không chạy: vào `.claude/settings.json`, kiểm tra đường dẫn hook

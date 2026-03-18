@@ -18,14 +18,23 @@ if [ ! -f "$CONFIG_FILE" ]; then
   exit 0
 fi
 
-# Parse flags từ YAML (đơn giản, không cần full YAML parser)
+# Parse flags từ YAML bằng python3 (robust hơn grep+awk)
 get_flag() {
-  grep -A1 "^flags:" "$CONFIG_FILE" | grep "$1:" | awk '{print $2}' | tr -d '"' | head -1
+  python3 - "$CONFIG_FILE" "$1" <<'PYEOF' 2>/dev/null
+import sys, re
+try:
+    content = open(sys.argv[1]).read()
+    key = sys.argv[2]
+    m = re.search(r'^\s*' + re.escape(key) + r':\s*(["\']?)([^#\n"\']+)\1', content, re.MULTILINE)
+    print(m.group(2).strip().lower() if m else 'false')
+except Exception:
+    print('false')
+PYEOF
 }
 
-PRE_COMMIT_TESTS=$(grep "pre_commit_tests:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' | head -1)
-PRE_COMMIT_LINT=$(grep "pre_commit_lint:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' | head -1)
-BLOCK_ON_FAIL=$(grep "block_commit_on_fail:" "$CONFIG_FILE" | awk '{print $2}' | tr -d '"' | head -1)
+PRE_COMMIT_TESTS=$(get_flag "pre_commit_tests")
+PRE_COMMIT_LINT=$(get_flag "pre_commit_lint")
+BLOCK_ON_FAIL=$(get_flag "block_commit_on_fail")
 
 # Nếu tất cả flags là false/skip → allow
 if [ "$PRE_COMMIT_TESTS" = "false" ] && [ "$PRE_COMMIT_LINT" = "false" ]; then

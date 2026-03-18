@@ -1,3 +1,9 @@
+// =============================================================================
+// [AFTER STATE] — auth.routes.ts sau khi implement Google OAuth (ST-3, ST-4).
+// AuthService đã được refactor thành class trong quá trình execute.
+// Xem auth.service.ts để biết BEFORE state ban đầu.
+// =============================================================================
+
 import { Router } from 'express';
 import passport from 'passport';
 import { Strategy as LocalStrategy } from 'passport-local';

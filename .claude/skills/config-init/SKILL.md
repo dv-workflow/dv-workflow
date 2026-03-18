@@ -66,7 +66,23 @@ Nếu team có `qc` → bật `test_plan_skill: true`
 Nếu team có `techlead` → bật `arch_review_skill: true`
 Nếu team có `pm` → bật `dashboard_skill: true`
 
-### 5. Thông báo kết quả
+### 5. Validate config
+
+Sau khi tạo hoặc khi user gọi `/dw-config-init` trên config đã có, kiểm tra:
+
+**Known keys** (nếu có key nào ngoài danh sách → warn typo):
+- Top-level: `project`, `level`, `team`, `flags`, `routing`, `estimation`, `metrics`, `paths`
+- `flags` keys: `research`, `plan`, `execute`, `commit`, `review`, `debug`, `living_docs`, `docs_update_on_commit`, `estimation`, `log_work`, `metrics_tracking`, `dora_metrics`, `pre_commit_tests`, `pre_commit_lint`, `block_commit_on_fail`, `handoff`, `thinking_framework`, `requirements_skill`, `test_plan_skill`, `arch_review_skill`, `dashboard_skill`
+
+**Level check**:
+- Nếu `level: 3` → hiển thị warning: "Level 3 đang ở trạng thái beta — một số features (living docs automation, DORA calculation, dashboard HTML export) chưa fully automated."
+
+**Flag value check**:
+- Mỗi flag phải là `true`, `false`, hoặc `"skip"` — nếu giá trị khác → warn
+
+Hiển thị kết quả validation trước khi thông báo hoàn tất.
+
+### 6. Thông báo kết quả
 
 Hiển thị:
 - Config đã tạo với settings gì

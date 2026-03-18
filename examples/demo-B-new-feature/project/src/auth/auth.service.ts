@@ -1,7 +1,11 @@
 import { User } from '../users/user.model'
 
-// Auth service hiện tại chỉ có email/password.
-// Task: Thêm Google OAuth vào đây.
+// =============================================================================
+// [BEFORE STATE] — Trạng thái ban đầu trước khi implement Google OAuth.
+// File này đại diện cho codebase HIỆN TẠI mà Dev sẽ extend trong task này.
+// Sau khi /execute hoàn tất, AuthService sẽ được refactor thành class
+// và thêm loginWithGoogle() — xem auth.routes.ts để biết AFTER state.
+// =============================================================================
 
 export interface AuthResult {
   user: User
