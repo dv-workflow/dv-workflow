@@ -24,18 +24,21 @@ argument-hint: "[task-name]"
 ```
 
 ### File context.md
-Tạo từ template `templates/task-context.md` với:
-- Điền `[Task Name]` = `$ARGUMENTS`
-- Điền `[date]` = ngày hiện tại
+Đọc `project.language` từ config để chọn template:
+- `language: "vi"` → dùng `.claude/templates/task-context.md`
+- `language: "en"` → dùng `.claude/templates/en/task-context.md`
+
+Điền vào template:
+- `[Task Name]` = `$ARGUMENTS`
+- `[date]` = ngày hiện tại
 
 ### File plan.md
-Tạo từ template `templates/task-plan.md` với:
-- Điền `[Task Name]` = `$ARGUMENTS`
+Chọn template theo `project.language` (`.claude/templates/[lang]/task-plan.md`).
 - Nếu `flags.estimation = true`: giữ nguyên section Estimation
 - Nếu `flags.estimation = false`: xóa section Estimation
 
 ### File progress.md
-Tạo từ template `templates/task-progress.md` với:
+Chọn template theo `project.language` (`.claude/templates/[lang]/task-progress.md`).
 - Điền `[Task Name]` = `$ARGUMENTS`
 - Điền `[date]` = ngày hiện tại
 - Nếu `flags.log_work = true`: giữ section Effort Log

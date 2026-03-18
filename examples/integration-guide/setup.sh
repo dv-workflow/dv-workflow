@@ -30,7 +30,7 @@ if [ ! -d "$TOOLKIT_DIR/.claude" ]; then
   exit 1
 fi
 
-# 2. Copy .claude/ vào project (không symlink để dễ customize)
+# 2. Copy .claude/ vào project (bao gồm skills, agents, rules, hooks, templates, thinking framework)
 echo "📁 Copying .claude/ ..."
 if [ -d ".claude" ]; then
   echo -e "${YELLOW}   .claude/ đã tồn tại — merge (không overwrite files đã có)${NC}"
@@ -38,6 +38,7 @@ if [ -d ".claude" ]; then
   cp -rn "$TOOLKIT_DIR/.claude/agents" ".claude/" 2>/dev/null || true
   cp -rn "$TOOLKIT_DIR/.claude/rules" ".claude/" 2>/dev/null || true
   cp -rn "$TOOLKIT_DIR/.claude/hooks" ".claude/" 2>/dev/null || true
+  cp -rn "$TOOLKIT_DIR/.claude/templates" ".claude/" 2>/dev/null || true
   # settings.json merge thủ công để tránh overwrite
   if [ ! -f ".claude/settings.json" ]; then
     cp "$TOOLKIT_DIR/.claude/settings.json" ".claude/"
@@ -47,17 +48,6 @@ if [ -d ".claude" ]; then
 else
   cp -r "$TOOLKIT_DIR/.claude" "./"
 fi
-
-# 3. Copy skills/THINKING.md
-echo "🧠 Copying skills/THINKING.md ..."
-mkdir -p skills
-cp -n "$TOOLKIT_DIR/skills/THINKING.md" "skills/" 2>/dev/null || \
-  echo -e "${YELLOW}   skills/THINKING.md đã tồn tại — skip${NC}"
-
-# 4. Copy templates/
-echo "📄 Copying templates/ ..."
-mkdir -p templates
-cp -rn "$TOOLKIT_DIR/templates/"* "templates/" 2>/dev/null || true
 
 # 5. Tạo dv-workflow.config.yml từ template
 if [ ! -f "dv-workflow.config.yml" ]; then

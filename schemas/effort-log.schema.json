@@ -1,0 +1,70 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "effort-log.schema.json",
+  "title": "Effort Log",
+  "description": "Schema cho file effort log của dv-workflow-kit. Lưu tại .dev-metrics/effort-log.json",
+  "type": "object",
+  "required": ["project", "entries"],
+  "properties": {
+    "project": {
+      "type": "string",
+      "description": "Tên dự án, khớp với project.name trong config"
+    },
+    "unit": {
+      "type": "string",
+      "enum": ["hours", "story-points", "t-shirt"],
+      "description": "Đơn vị đo effort, khớp với estimation.unit trong config"
+    },
+    "entries": {
+      "type": "array",
+      "description": "Danh sách effort entries",
+      "items": {
+        "$ref": "#/definitions/EffortEntry"
+      }
+    }
+  },
+  "definitions": {
+    "EffortEntry": {
+      "type": "object",
+      "required": ["task", "date", "subtask", "work_type", "actual"],
+      "properties": {
+        "task": {
+          "type": "string",
+          "description": "Tên task, khớp với tên thư mục trong .dev-tasks/"
+        },
+        "date": {
+          "type": "string",
+          "format": "date",
+          "description": "Ngày thực hiện (YYYY-MM-DD)"
+        },
+        "subtask": {
+          "type": "string",
+          "description": "Tên subtask, ví dụ: ST-1, ST-2"
+        },
+        "work_type": {
+          "type": "string",
+          "enum": ["research", "planning", "coding", "testing", "review", "documentation", "other"],
+          "description": "Loại công việc"
+        },
+        "estimate": {
+          "type": ["number", "null"],
+          "minimum": 0,
+          "description": "Estimate ban đầu (null nếu không có)"
+        },
+        "actual": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Thời gian thực tế"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Ghi chú tùy chọn"
+        },
+        "author": {
+          "type": "string",
+          "description": "Người thực hiện (role hoặc tên)"
+        }
+      }
+    }
+  }
+}

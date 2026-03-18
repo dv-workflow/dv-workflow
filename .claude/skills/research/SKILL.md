@@ -45,7 +45,7 @@ Thực hiện các bước sau (không cần theo thứ tự cứng):
 
 ## Bước 3: Áp dụng tư duy phản biện
 
-Từ framework `skills/THINKING.md`:
+Từ framework `.claude/skills/thinking/THINKING.md`:
 - **Giả định**: Những gì đang giả định là đúng? Cần kiểm chứng?
 - **Dependencies**: Module nào bị ảnh hưởng nếu thay đổi?
 - **Edge cases**: Trường hợp biên nào cần xem xét?

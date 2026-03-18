@@ -2,7 +2,7 @@
 name: dw-thinking
 description: "Áp dụng framework tư duy phản biện, hệ thống và đa góc nhìn vào vấn đề. Auto-load khi planning hoặc khi cần phân tích sâu. Dùng proactively."
 argument-hint: "[vấn đề cần phân tích]"
-user-invocable: false
+user-invocable: true
 ---
 
 # Framework Tư Duy — Áp Dụng Vào Task
@@ -11,7 +11,7 @@ Vấn đề: **$ARGUMENTS**
 
 ## Nạp Framework
 
-@../../../skills/THINKING.md
+@THINKING.md
 
 ---
 

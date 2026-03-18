@@ -7,7 +7,7 @@ Bộ toolkit workflow cho dev team sử dụng Claude Code Agent.
 
 1. **Config-driven**: Mọi behavior đọc từ `dv-workflow.config.yml`. Kiểm tra flags trước khi enforce.
 2. **Research trước, code sau**: Task >= 3 files BẮT BUỘC qua research → plan → execute.
-3. **Tư duy có hệ thống**: Áp dụng framework trong `skills/THINKING.md` khi planning.
+3. **Tư duy có hệ thống**: Áp dụng framework trong `.claude/skills/thinking/THINKING.md` khi planning.
 4. **Test trước implement**: Viết test trước khi code (TDD khi applicable).
 5. **Commit nhỏ, commit thường xuyên**: Mỗi subtask = 1 commit.
 6. **Living docs**: Docs phải cập nhật khi code thay đổi (nếu flag bật).
