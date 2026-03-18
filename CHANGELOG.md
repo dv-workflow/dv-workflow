@@ -4,6 +4,30 @@
 
 ---
 
+## [v0.2.0] — 2026-03-18
+
+### Changed (Breaking — Integration Architecture)
+- `templates/` và `skills/` **đã xóa khỏi root** — nội dung chuyển vào `.claude/`
+- Templates: `templates/*.md` → `.claude/templates/*.md`
+- THINKING.md: `skills/THINKING.md` → `.claude/skills/thinking/THINKING.md`
+- `setup.sh`: không còn copy `templates/` và `skills/` ra root; copy `.claude/templates/` thay thế
+- `thinking` SKILL: `user-invocable: true` (trước là `false`); `@THINKING.md` (same dir)
+- `task-init` SKILL: language-aware template selection (`project.language` trong config)
+
+### Added
+- `config-validate` skill — kiểm tra config: unknown keys, invalid values, level 3 beta warning
+- `upgrade` skill — update submodule + selective file sync + config backup
+- `sprint-review` skill — retrospective, lessons learned, sprint metrics
+- `.claude/templates/en/` — English templates (task-context, task-plan, task-progress)
+- `docs/custom-skills.md` — hướng dẫn tạo custom skills + examples
+- `schemas/effort-log.schema.json` — chuẩn hóa format effort log data
+
+### Updated
+- `planner.md`, `research/SKILL.md`: reference THINKING.md path mới
+- `CLAUDE.md`: reference THINKING.md path mới
+
+---
+
 ## [v0.1.x] — 2026-03-18 (patch)
 
 ### Fixed
