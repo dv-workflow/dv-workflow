@@ -18,15 +18,6 @@ set -e
 TOOLKIT_DIR=".dv-workflow"
 SILENT="${1:-}"
 
-# Detect python command (Windows: python, macOS/Linux: python3)
-if command -v python3 &>/dev/null && python3 -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" 2>/dev/null; then
-  PYTHON=python3
-elif command -v python &>/dev/null && python -c "import sys; sys.exit(0 if sys.version_info[0]==3 else 1)" 2>/dev/null; then
-  PYTHON=python
-else
-  echo "Lỗi: Cần Python 3 để chạy setup. Vui lòng cài đặt Python 3."
-  exit 1
-fi
 
 CYAN='\033[0;36m'
 GREEN='\033[0;32m'
@@ -181,22 +172,24 @@ if [ ! -f "dv-workflow.config.yml" ]; then
     -e "s|language: \"vi\"|language: \"$LANG\"|" \
     "$BASE_CONFIG" > "dv-workflow.config.yml"
 
-  # Inject roles (replace toàn bộ roles section)
-  $PYTHON - <<PYEOF
-import re
-with open('dv-workflow.config.yml') as f:
-    content = f.read()
+  # Inject roles (replace toàn bộ roles section) — pure awk, no Python needed
+  ROLES_LINES="    - dev"
+  $HAS_TL && ROLES_LINES="${ROLES_LINES}|    - techlead"
+  $HAS_BA && ROLES_LINES="${ROLES_LINES}|    - ba"
+  $HAS_QC && ROLES_LINES="${ROLES_LINES}|    - qc"
+  $HAS_PM && ROLES_LINES="${ROLES_LINES}|    - pm"
 
-roles_block = 'team:\n  roles:\n    - dev'
-if '$HAS_TL' == 'true': roles_block += '\n    - techlead'
-if '$HAS_BA' == 'true': roles_block += '\n    - ba'
-if '$HAS_QC' == 'true': roles_block += '\n    - qc'
-if '$HAS_PM' == 'true': roles_block += '\n    - pm'
-
-content = re.sub(r'team:\s*\n\s*roles:.*?(?=\n\w|\Z)', roles_block + '\n', content, flags=re.DOTALL)
-with open('dv-workflow.config.yml', 'w') as f:
-    f.write(content)
-PYEOF
+  awk -v roles="$ROLES_LINES" '
+    /^  roles:/ {
+      print "  roles:"
+      n = split(roles, a, "|")
+      for (i = 1; i <= n; i++) print a[i]
+      in_roles = 1; next
+    }
+    in_roles && /^    -/ { next }
+    { in_roles = 0; print }
+  ' dv-workflow.config.yml > dv-workflow.config.yml.tmp \
+    && mv dv-workflow.config.yml.tmp dv-workflow.config.yml
 fi
 
 # Tạo CLAUDE.md
