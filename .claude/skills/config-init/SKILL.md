@@ -56,7 +56,7 @@ flags:
 ### 3. Tạo thư mục
 
 ```bash
-mkdir -p .dev-tasks .dev-docs .dev-metrics .dev-reports
+mkdir -p .dw/tasks .dw/docs .dw/metrics .dw/reports
 ```
 
 ### 4. Auto-enable role flags

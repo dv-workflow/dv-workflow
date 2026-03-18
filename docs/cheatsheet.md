@@ -89,7 +89,7 @@ Task 6+ files   →  Chia sub-tasks, mỗi phần chạy riêng
 | Skill không chạy | Kiểm tra flag trong `dv-workflow.config.yml` |
 | Agent không có tools | Đọc agent constraint trong `.claude/agents/` |
 | Execute bị block | Kiểm tra plan đã được approve chưa |
-| Context mất | Đọc `.dev-tasks/[name]/*-progress.md` |
+| Context mất | Đọc `.dw/tasks/[name]/*-progress.md` |
 
 ---
 

@@ -19,8 +19,8 @@ Dự án của bạn/
 │   ├── hooks/
 │   ├── templates/         ← task doc templates (vi/ và en/)
 │   └── settings.json
-├── .dev-tasks/            ← task docs (runtime)
-├── .dev-docs/             ← living docs (runtime)
+├── .dw/tasks/            ← task docs (runtime)
+├── .dw/docs/             ← living docs (runtime)
 └── dv-workflow.config.yml ← config của bạn
 ```
 
@@ -56,7 +56,7 @@ Script sẽ tự động:
 - Copy `.claude/` (skills, agents, rules, hooks, **templates**) — không overwrite files đã có
 - Tạo `dv-workflow.config.yml` từ template phù hợp
 - Tạo `CLAUDE.md` nếu chưa có
-- Tạo runtime directories: `.dev-tasks/`, `.dev-docs/`, `.dev-metrics/`, `.dev-reports/`
+- Tạo runtime directories: `.dw/tasks/`, `.dw/docs/`, `.dw/metrics/`, `.dw/reports/`
 - Thêm `.gitignore` entries
 
 ---
@@ -171,19 +171,19 @@ dự-án-của-bạn/
 │   │   └── commit-standards.md
 │   └── settings.json             # hooks
 │
-├── .dev-tasks/                   # task docs (commit vào git)
+├── .dw/tasks/                   # task docs (commit vào git)
 │   └── [task-name]/
 │       ├── [task-name]-context.md
 │       ├── [task-name]-plan.md
 │       └── [task-name]-progress.md
 │
-├── .dev-docs/                    # living docs (commit vào git)
+├── .dw/docs/                    # living docs (commit vào git)
 │   ├── ARCHITECTURE.md
 │   ├── API.md
 │   └── DATA-MODELS.md
 │
-├── .dev-metrics/                 # runtime metrics (gitignore)
-├── .dev-reports/                 # generated reports (gitignore)
+├── .dw/metrics/                 # runtime metrics (gitignore)
+├── .dw/reports/                 # generated reports (gitignore)
 │
 ├── dv-workflow.config.yml        # config của bạn
 └── CLAUDE.md                     # instructions của bạn
@@ -205,5 +205,5 @@ A: Dùng flags trong config. Ví dụ: `estimation: false` để tắt /estimate
 **Q: Nhiều dev trong team, ai cũng copy toolkit?**
 A: Submodule commit vào git nên mọi người đều có. Chạy `git submodule update --init` sau khi clone.
 
-**Q: `.dev-tasks/` có commit vào git không?**
-A: Có, đây là living docs. `.dev-metrics/` và `.dev-reports/` thì không (đã gitignore).
+**Q: `.dw/tasks/` có commit vào git không?**
+A: Có, đây là living docs. `.dw/metrics/` và `.dw/reports/` thì không (đã gitignore).

@@ -137,7 +137,7 @@ QC (nếu có)          Dev                           PM
 
 Mỗi task tạo ra:
 ```
-.dev-tasks/[task-name]/
+.dw/tasks/[task-name]/
 ├── [task]-context.md     # Research findings
 ├── [task]-plan.md        # Implementation plan
 ├── [task]-progress.md    # Progress + effort log + handoff notes
@@ -166,7 +166,7 @@ flags:
 
 ## Tips
 
-- **Context mất** (giữa sessions): Claude tự đọc `.dev-tasks/[name]/*-progress.md`
+- **Context mất** (giữa sessions): Claude tự đọc `.dw/tasks/[name]/*-progress.md`
 - **Giữa roles**: Share file docs, không cần share chat history
 - **Dispute về scope**: Refer về `*-plan.md` làm source of truth
 - **PM muốn update**: Chạy `/dw-dashboard last-week`

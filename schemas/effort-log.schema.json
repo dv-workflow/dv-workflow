@@ -2,7 +2,7 @@
   "$schema": "http://json-schema.org/draft-07/schema#",
   "$id": "effort-log.schema.json",
   "title": "Effort Log",
-  "description": "Schema cho file effort log của dv-workflow-kit. Lưu tại .dev-metrics/effort-log.json",
+  "description": "Schema cho file effort log của dv-workflow-kit. Lưu tại .dw/metrics/effort-log.json",
   "type": "object",
   "required": ["project", "entries"],
   "properties": {
@@ -30,7 +30,7 @@
       "properties": {
         "task": {
           "type": "string",
-          "description": "Tên task, khớp với tên thư mục trong .dev-tasks/"
+          "description": "Tên task, khớp với tên thư mục trong .dw/tasks/"
         },
         "date": {
           "type": "string",

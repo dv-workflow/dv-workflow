@@ -73,7 +73,7 @@ estimation:
     - documentation
 
 metrics:
-  data_dir: ".dev-metrics"
+  data_dir: ".dw/metrics"
   dora:
     deployment_frequency:
       elite: "daily"
@@ -96,10 +96,10 @@ metrics:
     auto_export: false
 
 paths:
-  tasks: ".dev-tasks"
-  docs: ".dev-docs"
-  metrics: ".dev-metrics"
-  reports: ".dev-reports"
+  tasks: ".dw/tasks"
+  docs: ".dw/docs"
+  metrics: ".dw/metrics"
+  reports: ".dw/reports"
 
 # ============================================================================
 # HƯỚNG DẪN ONBOARDING — xóa section này sau khi setup xong

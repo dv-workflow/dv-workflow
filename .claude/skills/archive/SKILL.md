@@ -1,6 +1,6 @@
 ---
 name: dw-archive
-description: "Move task docs đã hoàn thành vào archive. Giữ .dev-tasks/ gọn gàng. Dùng sau khi task Done và đã merge PR."
+description: "Move task docs đã hoàn thành vào archive. Giữ .dw/tasks/ gọn gàng. Dùng sau khi task Done và đã merge PR."
 argument-hint: "[task-name | --all-done | --older-than-days N]"
 ---
 
@@ -77,5 +77,5 @@ Archive hoàn tất.
 
 Index cập nhật: {paths.tasks}/archive/README.md
 
-.dev-tasks/ hiện còn: [N] active tasks
+.dw/tasks/ hiện còn: [N] active tasks
 ```

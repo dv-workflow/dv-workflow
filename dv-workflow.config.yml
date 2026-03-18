@@ -92,7 +92,7 @@ estimation:
 # --- Metrics ----------------------------------------------------------------
 metrics:
   # Nơi lưu metrics data
-  data_dir: ".dev-metrics"
+  data_dir: ".dw/metrics"
 
   # DORA metrics thresholds (dùng để đánh giá)
   dora:
@@ -121,8 +121,8 @@ metrics:
 
 # --- Paths ------------------------------------------------------------------
 paths:
-  tasks: ".dev-tasks"          # Active task documentation
-  docs: ".dev-docs"            # Living documentation
-  metrics: ".dev-metrics"      # Metrics data files
-  reports: ".dev-reports"      # Generated reports/dashboards
+  tasks: ".dw/tasks"           # Active task documentation
+  docs: ".dw/docs"             # Living documentation
+  metrics: ".dw/metrics"       # Metrics data files (gitignored)
+  reports: ".dw/reports"       # Generated reports/dashboards (gitignored)
   # templates: removed — task templates nằm trong .claude/templates/ (kể từ v0.2.0)

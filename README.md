@@ -61,8 +61,7 @@ Xem [docs/cheatsheet.md](docs/cheatsheet.md) để có bảng tham chiếu nhanh
 dự-án-của-bạn/
 ├── .dv-workflow/          ← toolkit (git submodule, read-only)
 ├── .claude/               ← skills, agents, rules, hooks
-├── .dev-tasks/            ← task documentation (commit vào git)
-├── .dev-docs/             ← living docs (commit vào git)
+├── .dw/                   ← tasks, docs, metrics, reports
 └── dv-workflow.config.yml ← config của bạn
 ```
 

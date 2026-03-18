@@ -213,13 +213,13 @@ if [ ! -f "CLAUDE.md" ]; then
 SECTION
 fi
 
-# Tạo runtime directories
-mkdir -p .dev-tasks .dev-docs .dev-metrics .dev-reports
+# Tạo runtime directories (gom vào .dw/ để không pollute root)
+mkdir -p .dw/tasks .dw/docs .dw/metrics .dw/reports
 
 # Gitignore
 if [ -f ".gitignore" ]; then
-  if ! grep -q ".dev-metrics" .gitignore; then
-    printf "\n# dv-workflow-kit\n.dev-metrics/\n.dev-reports/\nCLAUDE.local.md\n" >> .gitignore
+  if ! grep -q ".dw/metrics" .gitignore; then
+    printf "\n# dv-workflow-kit\n.dw/metrics/\n.dw/reports/\nCLAUDE.local.md\n" >> .gitignore
   fi
 else
   cp "$TOOLKIT_DIR/.gitignore" .
@@ -247,7 +247,7 @@ echo "  Files tạo:"
 echo "    .claude/          — 22 skills, agents, rules, hooks, templates"
 echo "    dv-workflow.config.yml"
 echo "    CLAUDE.md"
-echo "    .dev-tasks/  .dev-docs/  .dev-metrics/  .dev-reports/"
+echo "    .dw/tasks/  .dw/docs/  .dw/metrics/  .dw/reports/"
 echo ""
 echo -e "${CYAN}  Skills đã bật:${NC}"
 echo "    /dw-task-init  /dw-research  /dw-execute  /dw-commit  /dw-debug  /dw-handoff"

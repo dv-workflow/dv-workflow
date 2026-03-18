@@ -76,7 +76,7 @@ estimation:
     - documentation
 
 metrics:
-  data_dir: ".dev-metrics"
+  data_dir: ".dw/metrics"
   dora:
     deployment_frequency:
       elite: "daily"
@@ -99,10 +99,10 @@ metrics:
     auto_export: true           # Export sau mỗi sprint
 
 paths:
-  tasks: ".dev-tasks"
-  docs: ".dev-docs"
-  metrics: ".dev-metrics"
-  reports: ".dev-reports"
+  tasks: ".dw/tasks"
+  docs: ".dw/docs"
+  metrics: ".dw/metrics"
+  reports: ".dw/reports"
 
 # ============================================================================
 # HƯỚNG DẪN ONBOARDING ENTERPRISE — xóa section này sau khi setup xong
@@ -116,4 +116,4 @@ paths:
 #
 # Level 3 beta notes:
 #   - Chạy /dw-docs-update sau execute để verify living docs hoạt động
-#   - Kiểm tra .dev-docs/ sau lần đầu để customize cấu trúc
+#   - Kiểm tra .dw/docs/ sau lần đầu để customize cấu trúc

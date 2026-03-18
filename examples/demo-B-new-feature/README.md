@@ -36,7 +36,7 @@ demo-B-new-feature/
 │       └── __tests__/auth.test.ts    ← Tests
 │
 └── workflow-output/                  # Toàn bộ docs output của workflow
-    └── .dev-tasks/google-oauth/
+    └── .dw/tasks/google-oauth/
         ├── google-oauth-requirements.md  ← BA tạo với /requirements
         ├── google-oauth-context.md       ← Agent research với /research
         ├── google-oauth-plan.md          ← Agent plan + TL approve với /arch-review
@@ -59,7 +59,7 @@ demo-B-new-feature/
 
 # DEV_X:
 /task-init google-oauth
-# → Tạo: .dev-tasks/google-oauth/ với 3 file trống
+# → Tạo: .dw/tasks/google-oauth/ với 3 file trống
 
 # Agent (researcher):
 /research google-oauth
@@ -144,7 +144,7 @@ Mỗi role làm đúng việc của mình:
 
 ### Context persistence qua sessions
 ```
-Session 1 (Ngày 1): Research + Plan → save vào .dev-tasks/
+Session 1 (Ngày 1): Research + Plan → save vào .dw/tasks/
 Session 2 (Ngày 2): /execute → đọc plan.md + context.md → tiếp tục ngay
 Session 3 (Sau handoff): Agent mới đọc progress.md → biết ngay đang ở đâu
 ```

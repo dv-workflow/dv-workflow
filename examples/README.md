@@ -120,7 +120,7 @@ examples/
 │   │       ├── cart/cart.service.ts
 │   │       └── __tests__/cart.test.ts   # Regression test
 │   ├── workflow-output/
-│   │   └── .dev-tasks/bug-cart-lost-after-login/
+│   │   └── .dw/tasks/bug-cart-lost-after-login/
 │   │       ├── ...-context.md      # Research findings
 │   │       └── ...-progress.md     # Debug trace + effort log
 │   └── README.md
@@ -132,7 +132,7 @@ examples/
 │   │       ├── users/user.model.ts
 │   │       └── __tests__/auth.test.ts   # 5 test cases
 │   ├── workflow-output/
-│   │   └── .dev-tasks/google-oauth/
+│   │   └── .dw/tasks/google-oauth/
 │   │       ├── ...-requirements.md  # BA doc
 │   │       ├── ...-context.md       # Research
 │   │       ├── ...-plan.md          # 5 subtasks + TL approval

@@ -64,7 +64,7 @@ v1.0.0            — Production-ready: trial project-team (open-source target)
 
 > **Vấn đề**: `setup.sh` hiện tại copy `templates/` và `skills/THINKING.md` ra project root, tạo folder thừa ngoài `.claude/`.
 >
-> **Nguyên tắc mới**: Mọi thứ của dw trong project phải nằm trong `.claude/` — single directory boundary, ngoài ra chỉ có `dv-workflow.config.yml`, `CLAUDE.md`, và runtime dirs (`.dev-tasks/`, `.dev-docs/`).
+> **Nguyên tắc mới**: Mọi thứ của dw trong project phải nằm trong `.claude/` — single directory boundary, ngoài ra chỉ có `dv-workflow.config.yml`, `CLAUDE.md`, và runtime dirs (`.dw/tasks/`, `.dw/docs/`).
 
 **Cấu trúc sau khi fix:**
 ```
@@ -77,8 +77,8 @@ project-root/
 │   ├── hooks/
 │   ├── templates/          ← CHUYỂN từ templates/ vào đây
 │   └── settings.json
-├── .dev-tasks/             ← runtime (project artifact)
-├── .dev-docs/              ← runtime (project artifact)
+├── .dw/tasks/             ← runtime (project artifact)
+├── .dw/docs/              ← runtime (project artifact)
 ├── dv-workflow.config.yml
 └── CLAUDE.md
 ```
@@ -191,7 +191,7 @@ project-root/
 #### Dashboard HTML Export
 - `dashboard` SKILL generate report dạng markdown + HTML
 - Include: task velocity, DORA metrics, effort tracking, team health
-- Export tới `.dev-reports/` directory
+- Export tới `.dw/reports/` directory
 - **Files**: Update `dashboard` SKILL.md, tạo `templates/dashboard.html.template`
 
 #### Level 3 Config Templates
@@ -222,9 +222,9 @@ project-root/
 
 ### Theme 4: Task Archival
 
-- Task docs cũ (done > 30 ngày) tự động move vào `.dev-tasks/archive/`
+- Task docs cũ (done > 30 ngày) tự động move vào `.dw/tasks/archive/`
 - `/dw-archive [task-name]` skill manual trigger
-- Giải quyết scaling concern: `.dev-tasks/` directory messy với nhiều tasks
+- Giải quyết scaling concern: `.dw/tasks/` directory messy với nhiều tasks
 - **Files**: `archive` SKILL (new), update `task-init` SKILL
 
 ### Deliverables v0.3.0

@@ -70,16 +70,16 @@ estimation:
     - testing
 
 metrics:
-  data_dir: ".dev-metrics"
+  data_dir: ".dw/metrics"
   export:
     format: "json"
     auto_export: false
 
 paths:
-  tasks: ".dev-tasks"
-  docs: ".dev-docs"
-  metrics: ".dev-metrics"
-  reports: ".dev-reports"
+  tasks: ".dw/tasks"
+  docs: ".dw/docs"
+  metrics: ".dw/metrics"
+  reports: ".dw/reports"
   templates: "templates"
 
 # ============================================================================

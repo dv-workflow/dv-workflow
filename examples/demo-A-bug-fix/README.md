@@ -18,7 +18,7 @@ demo-A-bug-fix/
 │       └── __tests__/cart.test.ts  ← regression test (FAIL trước fix, PASS sau)
 │
 └── workflow-output/              # Output thật của workflow sau khi chạy
-    └── .dev-tasks/bug-cart-lost-after-login/
+    └── .dw/tasks/bug-cart-lost-after-login/
         ├── ...-context.md        # Research findings
         └── ...-progress.md       # Debug log + fix record
 ```
@@ -43,7 +43,7 @@ cp .dv-workflow/project-templates/old-maintenance/dv-workflow.config.yml .
 
 ```
 Agent tạo:
-.dev-tasks/bug-cart-lost-after-login/
+.dw/tasks/bug-cart-lost-after-login/
 ├── ...-context.md    (trống)
 ├── ...-plan.md       (trống — level 1 không enforce plan cho bugs)
 └── ...-progress.md   (trống)
@@ -71,7 +71,7 @@ Fix (TDD):
   3. Test → PASS ✓
 ```
 
-> Xem output: `workflow-output/.dev-tasks/bug-cart-lost-after-login/`
+> Xem output: `workflow-output/.dw/tasks/bug-cart-lost-after-login/`
 
 ### Bước 3: Commit → `/commit`
 

@@ -19,9 +19,9 @@
 
 ## Task Documentation
 
-- Plan: `.dev-tasks/[task-name]/[task-name]-plan.md`
-- Context: `.dev-tasks/[task-name]/[task-name]-context.md`
-- Progress: `.dev-tasks/[task-name]/[task-name]-progress.md`
+- Plan: `.dw/tasks/[task-name]/[task-name]-plan.md`
+- Context: `.dw/tasks/[task-name]/[task-name]-context.md`
+- Progress: `.dw/tasks/[task-name]/[task-name]-progress.md`
 
 ## Testing
 

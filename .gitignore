@@ -5,14 +5,14 @@
 # Uncomment nếu muốn track task docs trong git (recommended cho team)
 
 # Task documentation (active work)
-# .dev-tasks/
+# .dw/tasks/
 
 # Living docs (nếu muốn exclude)
-# .dev-docs/
+# .dw/docs/
 
 # Metrics data
-.dev-metrics/
-.dev-reports/
+.dw/metrics/
+.dw/reports/
 
 # Local overrides
 CLAUDE.local.md

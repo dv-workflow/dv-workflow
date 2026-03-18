@@ -12,7 +12,7 @@ Scope: **$ARGUMENTS**
 
 Đọc `dv-workflow.config.yml` → kiểm tra:
 - `flags.living_docs` — nếu `false` → thông báo "Living docs chưa bật" và DỪNG
-- `paths.docs` → thư mục living docs (mặc định: `.dev-docs`)
+- `paths.docs` → thư mục living docs (mặc định: `.dw/docs`)
 
 ## Living Docs Structure
 
@@ -53,7 +53,7 @@ Thông báo: "Khởi tạo living docs tại `{paths.docs}/` — lần chạy đ
    | `*model*`, `*schema*`, `*migration*`, `*entity*` | `DATA-MODELS.md` |
    | `*route*`, `*controller*`, `*handler*`, `*endpoint*` | `API.md` |
    | `*config*`, `*app.*`, `package.json`, `*.yml` | `ARCHITECTURE.md` |
-   | `*.md` trong project (không phải `.dev-docs/`) | Kiểm tra DECISIONS.md |
+   | `*.md` trong project (không phải `.dw/docs/`) | Kiểm tra DECISIONS.md |
    | Thư mục mới xuất hiện | `ARCHITECTURE.md` + tạo `modules/[name].md` |
 
 3. **Stale check**: Với mỗi doc cần update, đọc nội dung hiện tại, so sánh với code thực tế. Ghi rõ: "Phần X đang mô tả Y nhưng code hiện tại là Z."

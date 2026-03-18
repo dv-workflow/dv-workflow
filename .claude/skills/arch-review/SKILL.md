@@ -29,7 +29,7 @@ Bạn đang thực hiện với vai trò **Tech Lead**. Đây là checkpoint qua
 1. Đọc requirements (nếu có): `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-requirements.md`
 2. Đọc plan: `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-plan.md`
 3. Đọc context: `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-context.md`
-4. Đọc living docs (nếu có): `.dev-docs/ARCHITECTURE.md`, `.dev-docs/DECISIONS.md`
+4. Đọc living docs (nếu có): `.dw/docs/ARCHITECTURE.md`, `.dw/docs/DECISIONS.md`
 
 ## Review Checklist
 

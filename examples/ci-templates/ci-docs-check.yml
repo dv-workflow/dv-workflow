@@ -1,5 +1,5 @@
 # GitHub Actions: Docs Freshness Check
-# Kiểm tra living docs (.dev-docs/) không quá stale so với code.
+# Kiểm tra living docs (.dw/docs/) không quá stale so với code.
 #
 # Setup:
 #   1. Copy file này vào .github/workflows/ của project
@@ -27,8 +27,8 @@ jobs:
       - name: Check docs exist
         id: docs-exist
         run: |
-          if [ ! -d ".dev-docs" ]; then
-            echo "WARNING: .dev-docs/ not found — living docs chưa được khởi tạo"
+          if [ ! -d ".dw/docs" ]; then
+            echo "WARNING: .dw/docs/ not found — living docs chưa được khởi tạo"
             echo "exists=false" >> $GITHUB_OUTPUT
           else
             echo "exists=true" >> $GITHUB_OUTPUT
@@ -45,7 +45,7 @@ jobs:
 
           # Kiểm tra docs có được update trong 7 ngày không
           DOCS_LAST_UPDATE=$(git log --oneline --since="7 days ago" \
-            -- ".dev-docs/" | wc -l | tr -d ' ')
+            -- ".dw/docs/" | wc -l | tr -d ' ')
 
           echo "=== Docs Freshness Report ==="
           echo "Code files changed (7 days): $(echo "$CHANGED_CODE" | wc -l | tr -d ' ')"
@@ -66,7 +66,7 @@ jobs:
         run: |
           MISSING=""
           for doc in ARCHITECTURE.md API.md DATA-MODELS.md; do
-            if [ ! -f ".dev-docs/$doc" ]; then
+            if [ ! -f ".dw/docs/$doc" ]; then
               MISSING="$MISSING $doc"
             fi
           done
@@ -81,4 +81,4 @@ jobs:
       - name: Summary
         run: |
           echo "=== Living Docs Check Complete ==="
-          echo "Xem chi tiết tại .dev-docs/ trong repository"
+          echo "Xem chi tiết tại .dw/docs/ trong repository"
