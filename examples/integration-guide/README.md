@@ -39,14 +39,17 @@ git submodule update --init
 
 ---
 
-## Bước 2: Chạy Setup Script
+## Bước 2: Chạy Setup Wizard
 
 ```bash
-# Mặc định: project type "new-product"
-bash .dv-workflow/integration-guide/setup.sh
+bash .dv-workflow/setup.sh
+```
 
-# Hoặc chỉ định project type
-bash .dv-workflow/integration-guide/setup.sh old-maintenance
+Wizard hỏi 4 câu (~1-2 phút) và tự cấu hình tất cả. Silent mode cho CI:
+
+```bash
+DW_NAME="my-app" DW_LEVEL=2 DW_ROLES="dev,techlead" DW_LANG="vi" \
+bash .dv-workflow/setup.sh --silent
 ```
 
 Script sẽ tự động:

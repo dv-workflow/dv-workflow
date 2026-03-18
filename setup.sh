@@ -6,11 +6,11 @@
 # Thời gian: ~1-2 phút
 #
 # Usage:
-#   bash .dv-workflow/examples/integration-guide/setup.sh
+#   bash .dv-workflow/setup.sh
 #
 # Silent mode (CI/scripted):
 #   DW_NAME="my-app" DW_LEVEL=2 DW_ROLES="dev,techlead" DW_LANG="vi" \
-#   bash .dv-workflow/examples/integration-guide/setup.sh --silent
+#   bash .dv-workflow/setup.sh --silent
 # =============================================================================
 
 set -e
