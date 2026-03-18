@@ -1,0 +1,84 @@
+# GitHub Actions: Docs Freshness Check
+# Kiểm tra living docs (.dev-docs/) không quá stale so với code.
+#
+# Setup:
+#   1. Copy file này vào .github/workflows/ của project
+#   2. Dùng khi flags.living_docs = true và flags.dora_metrics = true
+#   3. Chạy weekly để nhắc team update docs
+
+name: Docs Freshness Check
+
+on:
+  schedule:
+    - cron: '0 9 * * 1'   # Mỗi thứ Hai lúc 9:00 AM UTC
+  workflow_dispatch:        # Cho phép chạy thủ công
+
+jobs:
+  docs-check:
+    name: Check Living Docs
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 30    # Lấy 30 commits để compare
+
+      - name: Check docs exist
+        id: docs-exist
+        run: |
+          if [ ! -d ".dev-docs" ]; then
+            echo "WARNING: .dev-docs/ not found — living docs chưa được khởi tạo"
+            echo "exists=false" >> $GITHUB_OUTPUT
+          else
+            echo "exists=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Check docs freshness
+        if: steps.docs-exist.outputs.exists == 'true'
+        run: |
+          # Tìm code files thay đổi trong 7 ngày qua
+          CHANGED_CODE=$(git log --oneline --since="7 days ago" \
+            --name-only --pretty="" -- \
+            "*.ts" "*.js" "*.py" "*.go" "*.java" \
+            | sort -u | head -20)
+
+          # Kiểm tra docs có được update trong 7 ngày không
+          DOCS_LAST_UPDATE=$(git log --oneline --since="7 days ago" \
+            -- ".dev-docs/" | wc -l | tr -d ' ')
+
+          echo "=== Docs Freshness Report ==="
+          echo "Code files changed (7 days): $(echo "$CHANGED_CODE" | wc -l | tr -d ' ')"
+          echo "Docs commits (7 days): $DOCS_LAST_UPDATE"
+
+          if [ "$(echo "$CHANGED_CODE" | wc -l | tr -d ' ')" -gt "5" ] && \
+             [ "$DOCS_LAST_UPDATE" -eq "0" ]; then
+            echo ""
+            echo "WARNING: Code đã thay đổi đáng kể nhưng docs chưa được update trong 7 ngày."
+            echo "Chạy /dw-docs-update trong Claude Code để cập nhật."
+            # Không fail CI, chỉ warn
+          else
+            echo "Docs freshness: OK"
+          fi
+
+      - name: Check required docs exist
+        if: steps.docs-exist.outputs.exists == 'true'
+        run: |
+          MISSING=""
+          for doc in ARCHITECTURE.md API.md DATA-MODELS.md; do
+            if [ ! -f ".dev-docs/$doc" ]; then
+              MISSING="$MISSING $doc"
+            fi
+          done
+
+          if [ -n "$MISSING" ]; then
+            echo "WARNING: Thiếu living docs files:$MISSING"
+            echo "Chạy /dw-docs-update all để tạo"
+          else
+            echo "All required docs present: OK"
+          fi
+
+      - name: Summary
+        run: |
+          echo "=== Living Docs Check Complete ==="
+          echo "Xem chi tiết tại .dev-docs/ trong repository"

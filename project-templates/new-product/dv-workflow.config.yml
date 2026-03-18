@@ -100,7 +100,6 @@ paths:
   docs: ".dev-docs"
   metrics: ".dev-metrics"
   reports: ".dev-reports"
-  templates: "templates"
 
 # ============================================================================
 # HƯỚNG DẪN ONBOARDING — xóa section này sau khi setup xong

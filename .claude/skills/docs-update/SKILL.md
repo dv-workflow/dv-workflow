@@ -30,16 +30,35 @@ Scope: **$ARGUMENTS**
 
 ## Quy Trình
 
+### Bước 0: Scaffold (lần đầu chạy)
+
+Nếu `{paths.docs}/` không tồn tại hoặc trống → tạo cấu trúc ban đầu:
+```bash
+mkdir -p {paths.docs}/modules
+```
+Tạo các file skeleton: `ARCHITECTURE.md`, `API.md`, `DATA-MODELS.md`, `DECISIONS.md`, `GLOSSARY.md`, `SETUP.md`.
+Thông báo: "Khởi tạo living docs tại `{paths.docs}/` — lần chạy đầu tiên."
+
 ### Nếu scope = "all" hoặc không có argument
 
-1. **Detect changes**: Chạy `git diff --name-only HEAD~5` (5 commits gần nhất)
-2. **Classify changes**: Phân loại files thay đổi:
-   - Schema/model files → cần update DATA-MODELS.md
-   - Route/controller files → cần update API.md
-   - Config/structure changes → cần update ARCHITECTURE.md
-   - New patterns/decisions → cần update DECISIONS.md
-3. **Check stale docs**: So sánh nội dung docs hiện tại với code thực tế
-4. **Update**: Cập nhật từng doc file cần thiết
+1. **Detect changes**:
+   ```bash
+   git diff --name-only HEAD~10   # 10 commits gần nhất
+   git diff --name-only --cached  # staged changes
+   ```
+
+2. **Classify changes** theo pattern:
+   | Pattern file | Docs cần update |
+   |-------------|-----------------|
+   | `*model*`, `*schema*`, `*migration*`, `*entity*` | `DATA-MODELS.md` |
+   | `*route*`, `*controller*`, `*handler*`, `*endpoint*` | `API.md` |
+   | `*config*`, `*app.*`, `package.json`, `*.yml` | `ARCHITECTURE.md` |
+   | `*.md` trong project (không phải `.dev-docs/`) | Kiểm tra DECISIONS.md |
+   | Thư mục mới xuất hiện | `ARCHITECTURE.md` + tạo `modules/[name].md` |
+
+3. **Stale check**: Với mỗi doc cần update, đọc nội dung hiện tại, so sánh với code thực tế. Ghi rõ: "Phần X đang mô tả Y nhưng code hiện tại là Z."
+
+4. **Update**: Chỉ cập nhật những gì thực sự lỗi thời. Thêm timestamp cuối mỗi update.
 
 ### Nếu scope = "architecture"
 - Đọc cấu trúc thư mục, main config files, entry points

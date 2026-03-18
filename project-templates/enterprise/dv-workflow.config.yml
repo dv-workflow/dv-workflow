@@ -1,0 +1,119 @@
+# ============================================================================
+# dv-workflow-kit — Template: ENTERPRISE (Level 3)
+# ============================================================================
+# Dùng cho: Team 5-20 người, cần full audit trail, metrics, và living docs.
+# Đặc điểm: Full workflow, tất cả features bật, DORA tracking, dashboard.
+#
+# NOTE: Level 3 có một số features đang beta:
+#   - living docs automation: hoạt động tốt, cần review output
+#   - DORA auto-calculation: từ git history, không cần manual input
+#   - dashboard HTML export: fully functional
+# ============================================================================
+
+project:
+  name: "your-enterprise-project"
+  type: "new-product"
+  language: "vi"               # vi | en
+
+# Level 3: Full workflow + living docs + metrics + dashboard
+level: 3
+
+team:
+  roles:
+    - dev
+    - techlead
+    - ba
+    - qc
+    - pm
+
+flags:
+  # Core Workflow — BẬT tất cả
+  research: true
+  plan: true
+  execute: true
+  commit: true
+  review: true
+  debug: true
+
+  # Living Docs — BẬT (Level 3)
+  living_docs: true
+  docs_update_on_commit: true   # Tự động gợi nhắc sau mỗi commit
+
+  # Metrics & Tracking — BẬT tất cả (Level 3)
+  estimation: true
+  log_work: true
+  metrics_tracking: true
+  dora_metrics: true
+
+  # Quality Gates — Enforcement đầy đủ
+  pre_commit_tests: true        # Block nếu tests fail
+  pre_commit_lint: true         # Block nếu lint fail
+  block_commit_on_fail: true    # Hard block
+
+  # Collaboration
+  handoff: true
+  thinking_framework: true
+
+  # Role-specific — BẬT tất cả
+  requirements_skill: true      # BA
+  test_plan_skill: true         # QC
+  arch_review_skill: true       # TL
+  dashboard_skill: true         # PM
+
+routing:
+  small_task_max_files: 2
+  medium_task_max_files: 5
+
+estimation:
+  unit: "story-points"          # Phù hợp với team có PM/Scrum process
+  track_actual: true
+  categories:
+    - research
+    - planning
+    - coding
+    - testing
+    - review
+    - documentation
+
+metrics:
+  data_dir: ".dev-metrics"
+  dora:
+    deployment_frequency:
+      elite: "daily"
+      high: "weekly"
+      medium: "monthly"
+    lead_time:
+      elite: "< 1 day"
+      high: "< 1 week"
+      medium: "< 1 month"
+    change_failure_rate:
+      elite: "< 5%"
+      high: "< 10%"
+      medium: "< 15%"
+    mttr:
+      elite: "< 1 hour"
+      high: "< 1 day"
+      medium: "< 1 week"
+  export:
+    format: "json"
+    auto_export: true           # Export sau mỗi sprint
+
+paths:
+  tasks: ".dev-tasks"
+  docs: ".dev-docs"
+  metrics: ".dev-metrics"
+  reports: ".dev-reports"
+
+# ============================================================================
+# HƯỚNG DẪN ONBOARDING ENTERPRISE — xóa section này sau khi setup xong
+# ============================================================================
+# Bước 1: Cập nhật project.name và language
+# Bước 2: Xác nhận team.roles đúng với thực tế
+# Bước 3: Chạy `/dw-config-validate` để kiểm tra config
+# Bước 4: Chạy `/dw-config-init [project-name]` để tạo thư mục
+# Bước 5: Bắt đầu sprint với `/dw-requirements [feature]` (BA)
+# Bước 6: Cuối sprint chạy `/dw-sprint-review sprint-1` + `/dw-dashboard`
+#
+# Level 3 beta notes:
+#   - Chạy /dw-docs-update sau execute để verify living docs hoạt động
+#   - Kiểm tra .dev-docs/ sau lần đầu để customize cấu trúc

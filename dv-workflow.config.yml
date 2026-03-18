@@ -125,4 +125,4 @@ paths:
   docs: ".dev-docs"            # Living documentation
   metrics: ".dev-metrics"      # Metrics data files
   reports: ".dev-reports"      # Generated reports/dashboards
-  templates: "templates"       # Template files (từ toolkit)
+  # templates: removed — task templates nằm trong .claude/templates/ (kể từ v0.2.0)
