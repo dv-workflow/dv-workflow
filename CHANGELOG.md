@@ -4,6 +4,21 @@
 
 ---
 
+## [v0.1.x] — 2026-03-18 (patch)
+
+### Fixed
+- **C2**: `pre-commit-gate.sh` — thay `grep+awk` bằng `python3 regex` để parse YAML robust hơn
+- **W3**: Demo B — fix code inconsistencies: thêm `UserModel` class-based API, align `displayName` field, thêm BEFORE/AFTER state labels
+
+### Added
+- **C1**: Root `README.md` với quick start, level table, links đến docs
+- **C3**: `config-init` SKILL — validation step: known keys, level 3 beta warning, flag value check
+- **P1**: `docs/cheatsheet.md` — bảng tham chiếu 17 skills 1 trang
+- **P2**: Cross-platform notes (Windows Git Bash / WSL) vào `docs/README.md`
+- `docs/upgrade-plan.md` — kế hoạch upgrade v0.1.x → v1.0
+
+---
+
 ## [v0.1] — 2026-03-10 (beta)
 
 Phiên bản đầu tiên. Kiến trúc cốt lõi và bộ skills hoàn chỉnh cho Level 1–2.
