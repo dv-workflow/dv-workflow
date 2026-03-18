@@ -1,6 +1,6 @@
 # Integration Guide — dv-workflow-kit
 
-> **v0.1** · Repo: [github.com/dv-workflow/dv-workflow](https://github.com/dv-workflow/dv-workflow)
+> **v0.3** · Repo: [github.com/dv-workflow/dv-workflow](https://github.com/dv-workflow/dv-workflow)
 
 Hướng dẫn tích hợp dv-workflow-kit vào dự án thực tế của bạn.
 
@@ -11,15 +11,16 @@ Sau khi setup, bạn copy files cần thiết vào project. Workflow:
 
 ```
 Dự án của bạn/
-├── .dv-workflow/          ← git submodule (dv-workflow-kit)
+├── .dv-workflow/          ← git submodule (dv-workflow-kit, read-only)
 ├── .claude/               ← được copy từ toolkit, bạn customize
-│   ├── skills/
+│   ├── skills/            ← 22 skills (bao gồm thinking/THINKING.md)
 │   ├── agents/
 │   ├── rules/
+│   ├── hooks/
+│   ├── templates/         ← task doc templates (vi/ và en/)
 │   └── settings.json
-├── templates/             ← task doc templates
-├── skills/
-│   └── THINKING.md
+├── .dev-tasks/            ← task docs (runtime)
+├── .dev-docs/             ← living docs (runtime)
 └── dv-workflow.config.yml ← config của bạn
 ```
 
@@ -49,9 +50,7 @@ bash .dv-workflow/integration-guide/setup.sh old-maintenance
 ```
 
 Script sẽ tự động:
-- Copy `.claude/` (skills, agents, rules, hooks) — không overwrite files đã có
-- Copy `skills/THINKING.md`
-- Copy `templates/`
+- Copy `.claude/` (skills, agents, rules, hooks, **templates**) — không overwrite files đã có
 - Tạo `dv-workflow.config.yml` từ template phù hợp
 - Tạo `CLAUDE.md` nếu chưa có
 - Tạo runtime directories: `.dev-tasks/`, `.dev-docs/`, `.dev-metrics/`, `.dev-reports/`
@@ -183,16 +182,11 @@ dự-án-của-bạn/
 ├── .dev-metrics/                 # runtime metrics (gitignore)
 ├── .dev-reports/                 # generated reports (gitignore)
 │
-├── skills/
-│   └── THINKING.md
-├── templates/
-│   ├── task-context.md
-│   ├── task-plan.md
-│   ├── task-progress.md
-│   └── pr-template.md
-│
 ├── dv-workflow.config.yml        # config của bạn
 └── CLAUDE.md                     # instructions của bạn
+
+# NOTE (v0.2+): templates/ và skills/ KHÔNG còn ở project root.
+# Tất cả nằm trong .claude/ — xem .claude/templates/ và .claude/skills/thinking/
 ```
 
 ---
