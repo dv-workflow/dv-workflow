@@ -14,6 +14,7 @@
       "Bash(wc *)"
     ]
   },
+  "mcpServers": {},
   "hooks": {
     "PreToolUse": [
       {
@@ -24,6 +25,26 @@
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/pre-commit-gate.sh\""
           }
         ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/safety-guard.sh\""
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-write.sh\""
+          }
+        ]
       }
     ],
     "Stop": [
@@ -32,6 +53,16 @@
           {
             "type": "prompt",
             "prompt": "Trước khi kết thúc, kiểm tra: (1) Có uncommitted changes quan trọng không? (2) Task đang làm dở chưa cập nhật progress? (3) Có blocker nào chưa ghi lại? Nếu có vấn đề, trả về {\"decision\": \"block\", \"reason\": \"[mô tả]\"}. Nếu OK, trả về {\"decision\": \"allow\"}."
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/progress-ping.sh\""
           }
         ]
       }
