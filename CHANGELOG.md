@@ -1,6 +1,60 @@
-# Changelog — dv-workflow-kit
+# Changelog — dw-kit
 
 > **Maintainer**: [huygdv](mailto:huygdv19@gmail.com) · **Repo**: https://github.com/dv-workflow/dv-workflow
+
+---
+
+## [v2.0.0] — 2026-03-23
+
+### Architecture: 4-Layer System
+
+**Breaking Changes** (migration: `bash scripts/migrate-v03-to-v2.sh`):
+- `dv-workflow.config.yml` → `config/dw.config.yml` (symlink backward-compat provided)
+- `level: 1/2/3` → `workflow.default_depth: quick/standard/thorough`
+- 17 feature flags → depth defaults + role-based availability
+
+### Added — Portable Core (`core/`)
+- `core/WORKFLOW.md`: 6-phase methodology với section anchors `<!-- @phase:X -->`
+- `core/THINKING.md`: thinking framework + First Principles section
+- `core/QUALITY.md`: 4-layer quality strategy (Requirements→TDD→Cross-Review→QA Gates)
+- `core/ROLES.md`: BA/TL/Dev/QC/PM definitions với decision authority per phase
+- `core/templates/vi/`: guided questionnaire templates (context/plan/progress)
+
+### Added — Upgrade Safety (`adapters/claude-cli/`)
+- `adapters/claude-cli/generated/`: auto-generated skill shells (DO NOT edit)
+- `adapters/claude-cli/overrides/`: team customizations (NEVER overwritten by upgrade)
+- `adapters/claude-cli/extensions/`: net-new team skills
+- `scripts/upgrade.sh`: override-aware upgrade với `--dry-run` + merge settings.json
+- `scripts/migrate-v03-to-v2.sh`: v0.3→v2 migration, config mapping, symlink compat
+
+### Added — Generic Adapter (`adapters/generic/`)
+- `adapters/generic/AGENT.md`: methodology reference cho Cursor/Windsurf/Copilot
+- Honest về limitations: không replicate agent delegation hay hooks
+
+### Enhanced — Claude Execution Layer
+- `agents/researcher.md`: +`mcp__ide__getDiagnostics`, +confidence level per finding
+- `agents/planner.md`: +Deep Analysis Protocol (≥3 approaches, devil's advocate)
+- `agents/reviewer.md`: +JSON output block cho CI/CD parsing
+- `agents/executor.md`: NEW agent với Write/Edit/Bash tools, TDD workflow, worktree support
+
+### Enhanced — Hook System (4 hooks)
+- `hooks/safety-guard.sh`: block `rm -rf` nguy hiểm, force push main, SQL không WHERE
+- `hooks/post-write.sh`: auto-lint trên file vừa write (non-blocking)
+- `hooks/progress-ping.sh`: remind update progress (Notification hook)
+- `settings.json`: expanded 2→4 hooks (PreToolUse×2, PostToolUse, Stop, Notification)
+- `settings.json`: `mcpServers: {}` slot ready
+
+### Added — Config Layer 2
+- `config/dw.config.yml`: v2 config với `claude:` section (models, structured_output, worktree_execution, mcp)
+- `config/config.schema.json`: JSON Schema validation, strict additionalProperties
+- `config/presets/`: solo-quick, small-team, enterprise presets
+- `setup.sh`: generate `mcpServers` trong settings.json từ `claude.mcp` config
+
+### Design Decisions
+- WORKFLOW.md là on-demand document, KHÔNG always-loaded — ngăn context bloat
+- CLAUDE.md redesigned thành tiered loader (~150 lines)
+- Agent system enhanced, không simplified — "portable core ≠ thin execution layer"
+- Generic adapter honest về limitations thay vì false equivalence
 
 ---
 
