@@ -1,45 +1,93 @@
-# dv-workflow-kit — Hướng Dẫn Sử Dụng
+# dw-kit — Hướng Dẫn Sử Dụng
 
-Bộ toolkit workflow cho dev team kết hợp với Claude Code Agent.
+Bộ workflow toolkit cho dev team kết hợp với Claude Code Agent.
 
-> **Version**: v0.1 (beta) · **Maintainer**: [huygdv](mailto:huygdv19@gmail.com) · **Repo**: [github.com/dv-workflow/dv-workflow](https://github.com/dv-workflow/dv-workflow)
+> **Version**: v2.0 · **Maintainer**: [huygdv](mailto:huygdv19@gmail.com) · **Repo**: [github.com/dv-workflow/dv-workflow](https://github.com/dv-workflow/dv-workflow)
+>
+> Migration từ v0.3: `bash scripts/migrate-v03-to-v2.sh`
 
 ---
 
 ## Bắt Đầu Nhanh
 
-### 1. Copy vào dự án mới
+### 1. Cài đặt toolkit
 
 ```bash
-# Trong thư mục dự án của bạn
-cp -r path/to/dv-workflow-kit/.claude .
-cp -r path/to/dv-workflow-kit/templates .
-cp -r path/to/dv-workflow-kit/skills .
-cp path/to/dv-workflow-kit/CLAUDE.md .
+git submodule add https://github.com/dv-workflow/dv-workflow.git .dv-workflow
+bash .dv-workflow/setup.sh
 ```
 
-### 2. Chọn config template
+### 2. Cấu hình
 
-```bash
-# Dự án mới (new product)
-cp path/to/dv-workflow-kit/project-templates/new-product/dv-workflow.config.yml .
-
-# Dự án cũ/Maintenance
-cp path/to/dv-workflow-kit/project-templates/old-maintenance/dv-workflow.config.yml .
+Sửa `config/dw.config.yml`:
+```yaml
+project:
+  name: "my-project"
+workflow:
+  default_depth: "standard"   # quick | standard | thorough
+team:
+  roles: [dev, techlead]
+quality:
+  test_command: "npm test"
+  lint_command: "npm run lint"
 ```
 
-### 3. Cập nhật config
-
-Sửa `dv-workflow.config.yml`:
-- `project.name` — tên dự án
-- `team.roles` — roles thực tế trong team
-- Bật/tắt flags theo nhu cầu
-
-### 4. Khởi tạo
+### 3. Bắt đầu task đầu tiên
 
 ```
-/dw-config-init [project-name]
+/dw-task-init tên-feature
 ```
+
+### 4. Thêm MCP servers (tuỳ chọn)
+
+```yaml
+# config/dw.config.yml
+claude:
+  mcp:
+    - name: "github"
+      command: "npx @modelcontextprotocol/server-github"
+      env:
+        GITHUB_TOKEN: "${GITHUB_TOKEN}"
+```
+
+Chạy lại `setup.sh` để generate `settings.json` với MCP config.
+
+---
+
+## Cấu Trúc Dự Án (v2)
+
+```
+your-project/
+├── core/                         ← Portable methodology (read-only reference)
+│   ├── WORKFLOW.md               ← 6-phase workflow với guided questions
+│   ├── THINKING.md               ← Critical/Systems/Multi-perspective thinking
+│   ├── QUALITY.md                ← 4-layer quality strategy
+│   └── ROLES.md                  ← BA/TL/Dev/QC/PM definitions
+├── config/
+│   ├── dw.config.yml             ← Project config (~45 lines)
+│   ├── config.schema.json        ← Validation schema
+│   └── presets/                  ← solo-quick | small-team | enterprise
+├── adapters/
+│   ├── claude-cli/
+│   │   ├── overrides/            ← Team customizations (NEVER overwritten)
+│   │   └── extensions/           ← Net-new team skills
+│   └── generic/AGENT.md          ← For Cursor/Windsurf/Copilot
+├── .claude/                      ← skills, agents, rules, hooks (Claude Code)
+├── .dw/tasks/                    ← Task documentation (runtime)
+└── scripts/
+    ├── upgrade.sh                ← Upgrade toolkit (override-aware)
+    └── migrate-v03-to-v2.sh      ← Migration helper
+```
+
+---
+
+## Depth System (thay thế Level 1/2/3)
+
+| Depth | Khi nào | Phases |
+|-------|---------|--------|
+| `quick` | ≤2 files, hotfix, familiar module | Understand → Execute → Close |
+| `standard` | 3-5 files, module mới | Tất cả 6 phases |
+| `thorough` | 6+ files, API/DB/security | Full + arch-review + test-plan |
 
 ---
 
