@@ -1,0 +1,37 @@
+# dw-kit Preset: Solo Developer — Quick Workflow
+# Dùng cho: 1 dev, task nhỏ, prototype, side project
+# Kế thừa từ: config/dw.config.yml (copy và modify)
+
+project:
+  name: "my-project"
+  language: "vi"
+
+workflow:
+  default_depth: "quick"
+
+team:
+  roles:
+    - dev
+
+quality:
+  test_command: ""
+  lint_command: ""
+  block_on_fail: false
+
+tracking:
+  estimation: false
+  log_work: false
+
+paths:
+  tasks: ".dw/tasks"
+  docs: ".dw/docs"
+
+claude:
+  structured_output: false
+  worktree_execution: false
+  mcp: []
+
+_toolkit:
+  core_version: "2.0"
+  platform_version: "1.0"
+  capability_version: "1.0"

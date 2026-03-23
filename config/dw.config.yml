@@ -1,0 +1,82 @@
+# ============================================================================
+# dw-kit Configuration — v2
+# ============================================================================
+# Copy file này vào project và tùy chỉnh theo nhu cầu.
+# Toolkit đọc file này để điều chỉnh behavior per project.
+# ============================================================================
+
+# --- Project Info -----------------------------------------------------------
+project:
+  name: "my-project"
+  language: "vi"               # vi | en
+
+# --- Workflow ----------------------------------------------------------------
+workflow:
+  default_depth: "standard"   # quick | standard | thorough
+  # AI assesses per-task và có thể recommend depth khác nhau:
+  #   quick    : ≤2 files, hotfix, familiar module
+  #   standard : 3-5 files, module mới, unfamiliar code
+  #   thorough : 6+ files, API contract changes, DB schema, security
+
+# --- Team -------------------------------------------------------------------
+team:
+  roles:
+    - dev              # luôn có
+    - techlead         # architecture review, plan approval
+    # - ba             # requirements, user stories
+    # - qc             # test plans, QA sign-off
+    # - pm             # dashboard, reports
+
+# --- Quality Gates ----------------------------------------------------------
+quality:
+  test_command: ""     # ví dụ: "npm test" | "pytest" | "go test ./..."
+  lint_command: ""     # ví dụ: "npm run lint" | "ruff check ." | "golangci-lint run"
+  block_on_fail: false # true = block commit nếu test/lint fail
+
+# --- Tracking ---------------------------------------------------------------
+tracking:
+  estimation: false
+  log_work: false
+  estimation_unit: "hours"    # hours | story-points | t-shirt
+
+# --- Paths ------------------------------------------------------------------
+paths:
+  tasks: ".dw/tasks"
+  docs: ".dw/docs"
+
+# --- Claude Capabilities (Layer 2) ------------------------------------------
+# Tính năng đặc thù của Claude Code.
+claude:
+  # Model per phase — để trống = dùng model mặc định từ Claude Code settings
+  models:
+    plan: ""           # ví dụ: "claude-opus-4-6" cho complex planning
+    execute: ""        # ví dụ: "claude-sonnet-4-6"
+    review: ""
+
+  # Structured JSON output từ reviewer và estimate skills
+  structured_output: true
+
+  # Isolate execution trong git worktree (cho risky refactors)
+  worktree_execution: false
+
+  # MCP servers — Claude Code sẽ load các servers này
+  mcp: []
+  # Ví dụ:
+  # mcp:
+  #   - name: "github"
+  #     command: "npx @modelcontextprotocol/server-github"
+  #     env:
+  #       GITHUB_TOKEN: "${GITHUB_TOKEN}"
+  #   - name: "jira"
+  #     command: "npx @anthropic/mcp-server-jira"
+  #     env:
+  #       JIRA_URL: "${JIRA_URL}"
+  #       JIRA_TOKEN: "${JIRA_TOKEN}"
+
+# --- Toolkit Version (do not edit manually) ---------------------------------
+_toolkit:
+  core_version: "2.0"
+  platform_version: "1.0"
+  capability_version: "1.0"
+  installed: "2026-03-23"
+  last_upgrade: "2026-03-23"

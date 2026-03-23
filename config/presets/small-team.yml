@@ -1,0 +1,39 @@
+# dw-kit Preset: Small Team — Standard Workflow
+# Dùng cho: 2-5 devs, có TL, sprint-based development
+# Kế thừa từ: config/dw.config.yml (copy và modify)
+
+project:
+  name: "my-project"
+  language: "vi"
+
+workflow:
+  default_depth: "standard"
+
+team:
+  roles:
+    - dev
+    - techlead
+
+quality:
+  test_command: ""     # điền vào: "npm test" | "pytest" | ...
+  lint_command: ""     # điền vào: "npm run lint" | "ruff check ." | ...
+  block_on_fail: false
+
+tracking:
+  estimation: true
+  log_work: false
+  estimation_unit: "hours"
+
+paths:
+  tasks: ".dw/tasks"
+  docs: ".dw/docs"
+
+claude:
+  structured_output: true
+  worktree_execution: false
+  mcp: []
+
+_toolkit:
+  core_version: "2.0"
+  platform_version: "1.0"
+  capability_version: "1.0"

@@ -216,6 +216,112 @@ fi
 # Tạo runtime directories (gom vào .dw/ để không pollute root)
 mkdir -p .dw/tasks .dw/docs .dw/metrics .dw/reports
 
+# =============================================================================
+# V2: Generate config/dw.config.yml và settings.json từ MCP config
+# =============================================================================
+
+# Copy config mới nếu chưa có (v2 structure)
+if [ ! -f "config/dw.config.yml" ] && [ -f "$TOOLKIT_DIR/config/dw.config.yml" ]; then
+  mkdir -p config/presets
+  cp "$TOOLKIT_DIR/config/dw.config.yml" "config/dw.config.yml"
+  cp "$TOOLKIT_DIR/config/config.schema.json" "config/config.schema.json" 2>/dev/null || true
+  cp "$TOOLKIT_DIR/config/presets/"* "config/presets/" 2>/dev/null || true
+fi
+
+# Generate settings.json từ claude.mcp config (nếu có python3 + có mcp config)
+generate_mcp_settings() {
+  local config_file="${1:-config/dw.config.yml}"
+  [ ! -f "$config_file" ] && return 0
+  [ ! -f ".claude/settings.json" ] && return 0
+  command -v python3 &>/dev/null || return 0
+
+  python3 - "$config_file" ".claude/settings.json" <<'PYEOF' 2>/dev/null || true
+import sys, json, re
+
+config_path   = sys.argv[1]
+settings_path = sys.argv[2]
+
+with open(config_path) as f:
+    content = f.read()
+
+# Extract MCP servers từ YAML (simple parser — không cần PyYAML)
+mcp_servers = {}
+in_mcp = False
+current_server = None
+
+for line in content.split('\n'):
+    stripped = line.rstrip()
+    # Detect mcp: block
+    if re.match(r'\s*mcp:\s*$', stripped):
+        in_mcp = True
+        continue
+    if in_mcp:
+        # New top-level key = end of mcp block
+        if re.match(r'^[a-z_]', stripped) or re.match(r'^_toolkit', stripped):
+            in_mcp = False
+            continue
+        # Server entry: - name: "..."
+        m = re.match(r'\s*-\s*name:\s*["\']?([^"\']+)["\']?', stripped)
+        if m:
+            current_server = m.group(1).strip()
+            mcp_servers[current_server] = {}
+            continue
+        if current_server:
+            # command:
+            m = re.match(r'\s+command:\s*["\']?([^"\']+)["\']?', stripped)
+            if m:
+                mcp_servers[current_server]['command'] = m.group(1).strip()
+            # args: (array — simplified)
+            m = re.match(r'\s+args:\s*\[([^\]]*)\]', stripped)
+            if m:
+                args = [a.strip().strip('"').strip("'") for a in m.group(1).split(',') if a.strip()]
+                mcp_servers[current_server]['args'] = args
+
+if not mcp_servers:
+    sys.exit(0)
+
+# Update settings.json
+with open(settings_path) as f:
+    settings = json.load(f)
+
+settings['mcpServers'] = {}
+for name, server in mcp_servers.items():
+    settings['mcpServers'][name] = {
+        'command': server.get('command', ''),
+        'args': server.get('args', [])
+    }
+
+with open(settings_path, 'w') as f:
+    json.dump(settings, f, indent=2, ensure_ascii=False)
+    f.write('\n')
+
+print(f"  MCP servers configured: {', '.join(mcp_servers.keys())}")
+PYEOF
+}
+
+generate_mcp_settings "config/dw.config.yml"
+
+# Validate config nếu có python3 và jsonschema
+if command -v python3 &>/dev/null && [ -f "config/dw.config.yml" ] && [ -f "config/config.schema.json" ]; then
+  python3 -c "import jsonschema" 2>/dev/null && \
+  python3 - "config/dw.config.yml" "config/config.schema.json" <<'PYEOF' 2>/dev/null || true
+import sys, json
+try:
+    import yaml
+    with open(sys.argv[1]) as f:
+        config = yaml.safe_load(f)
+    import jsonschema
+    with open(sys.argv[2]) as f:
+        schema = json.load(f)
+    jsonschema.validate(config, schema)
+    print("  config/dw.config.yml: valid")
+except jsonschema.ValidationError as e:
+    print(f"  ⚠  Config validation warning: {e.message}")
+except Exception:
+    pass
+PYEOF
+fi
+
 # Gitignore
 if [ -f ".gitignore" ]; then
   if ! grep -q ".dw/metrics" .gitignore; then
