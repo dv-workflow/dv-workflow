@@ -1,4 +1,4 @@
-# Demo A: Bug Fix — Old-Maintenance Workflow
+﻿# Demo A: Bug Fix — Old-Maintenance Workflow
 
 **Scenario**: Dự án web e-commerce đang chạy (maintenance phase). QC báo bug: "Giỏ hàng bị mất sau khi đăng nhập."
 
@@ -35,7 +35,7 @@ git submodule add https://github.com/dv-workflow/dv-workflow.git .dv-workflow
 bash .dw-module/integration-guide/setup.sh
 
 # Chọn template old-maintenance
-cp .dw-module/project-templates/old-maintenance/config/dw.config.yml .
+cp .dw-module/project-templates/old-maintenance/.dw/config/dw.config.yml .
 # Sửa project.name trong config
 ```
 

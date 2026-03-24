@@ -1,14 +1,14 @@
-<!-- dw-kit | core: 2.0 | platform: 1.0 -->
+﻿<!-- dw-kit | core: 1.0 | platform: 1.0 -->
 # dw-kit
 
-Workflow toolkit cho dev team. Config: `config/dw.config.yml`
+Workflow toolkit cho dev team. Config: `.dw/config/dw.config.yml`
 Methodology: `core/WORKFLOW.md` (load on demand — không phải always-loaded)
 
 ---
 
 ## Quy Tắc Vàng
 
-1. **Config-driven**: Đọc `config/dw.config.yml` trước mọi action
+1. **Config-driven**: Đọc `.dw/config/dw.config.yml` trước mọi action
 2. **Research trước, code sau**: Task ≥3 files BẮT BUỘC qua research → plan → execute
 3. **Thinking framework**: Áp dụng `core/THINKING.md` khi planning
 4. **TDD**: Viết test trước khi code
@@ -32,7 +32,7 @@ Không chắc scope → dùng `standard`. Assess dựa trên facts (file count, 
 
 ## Session Start
 
-1. Đọc `config/dw.config.yml` → depth, roles, quality commands
+1. Đọc `.dw/config/dw.config.yml` → depth, roles, quality commands
 2. Kiểm tra `.dw/tasks/` → active tasks
 3. Đọc `[task]-progress.md` của task đang dở → tiếp tục từ subtask cuối
 

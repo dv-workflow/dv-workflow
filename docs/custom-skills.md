@@ -1,4 +1,4 @@
-# Hướng Dẫn Tạo Custom Skills
+﻿# Hướng Dẫn Tạo Custom Skills
 
 > Dùng khi team muốn thêm skill riêng chưa có trong bộ mặc định.
 > Ví dụ: `/dw-deploy`, `/dw-migration`, `/dw-seed-data`.
@@ -33,7 +33,7 @@ user-invocable: true
 
 ## Đọc Config (nếu cần)
 
-Đọc `dv-workflow.config.yml` để lấy config liên quan.
+Đọc `.dw/config/dw.config.yml` để lấy config liên quan.
 
 ## Bước 1: [Tên bước]
 
@@ -66,7 +66,7 @@ user-invocable: true
 
 ## Điều Kiện Tiên Quyết
 
-- Đọc `dv-workflow.config.yml` → lấy deploy config
+- Đọc `.dw/config/dw.config.yml` → lấy deploy config
 - Kiểm tra không có uncommitted changes: `git status`
 - Chạy tests lần cuối
 

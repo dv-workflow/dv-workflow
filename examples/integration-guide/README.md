@@ -1,4 +1,4 @@
-# Integration Guide — dv-workflow-kit
+﻿# Integration Guide — dv-workflow-kit
 
 > **v0.3** · Repo: [github.com/dv-workflow/dv-workflow](https://github.com/dv-workflow/dv-workflow)
 
@@ -21,7 +21,7 @@ Dự án của bạn/
 │   └── settings.json
 ├── .dw/tasks/            ← task docs (runtime)
 ├── .dw/docs/             ← living docs (runtime)
-└── config/dw.config.yml ← config của bạn
+└── .dw/config/dw.config.yml ← config của bạn
 ```
 
 ---
@@ -54,14 +54,14 @@ bash .dw-module/setup.sh --silent
 
 Script sẽ tự động:
 - Copy `.claude/` (skills, agents, rules, hooks, **templates**) — không overwrite files đã có
-- Tạo `config/dw.config.yml` từ template phù hợp
+- Tạo `.dw/config/dw.config.yml` từ template phù hợp
 - Tạo `CLAUDE.md` nếu chưa có
 - Tạo runtime directories: `.dw/tasks/`, `.dw/docs/`, `.dw/metrics/`, `.dw/reports/`
 - Thêm `.gitignore` entries
 
 ---
 
-## Bước 3: Cấu Hình `config/dw.config.yml`
+## Bước 3: Cấu Hình `.dw/config/dw.config.yml`
 
 Mở file vừa được tạo và cập nhật:
 
@@ -185,7 +185,7 @@ dự-án-của-bạn/
 ├── .dw/metrics/                 # runtime metrics (gitignore)
 ├── .dw/reports/                 # generated reports (gitignore)
 │
-├── config/dw.config.yml        # config của bạn
+├── .dw/config/dw.config.yml        # config của bạn
 └── CLAUDE.md                     # instructions của bạn
 
 # NOTE (v0.2+): templates/ và skills/ KHÔNG còn ở project root.

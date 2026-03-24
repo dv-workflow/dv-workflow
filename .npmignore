@@ -1,0 +1,35 @@
+# Dev/internal files - exclude from npm package
+docs/
+examples/
+.dw/tasks/
+.dw/docs/
+.dw/metrics/
+.dw/reports/
+.dev-tasks/
+project-templates/
+schemas/
+.github/
+.gitignore
+.npmignore
+.cursor/
+
+# Task and plan files
+*.plan.md
+dv-workflow.config.yml
+
+# Test files
+src/**/*.test.mjs
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+package-lock.json

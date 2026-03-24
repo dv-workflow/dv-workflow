@@ -1,51 +1,51 @@
-# dv-workflow-kit — Cheatsheet
+﻿# dw-kit — Cheatsheet (v1)
 
 > Bảng tham chiếu nhanh. In ra hoặc ghim lên màn hình.
 
 ---
 
-## Skills Theo Workflow Order
+## Skills Theo Workflow
 
-### 1. Bắt Đầu Task
+### 1) Start
 
-| Skill | Khi nào | Level |
-|-------|---------|-------|
-| `/dw-config-init [name]` | Lần đầu setup project | any |
-| `/dw-task-init [name]` | Mỗi task/feature mới | any |
-| `/dw-requirements [name]` | BA viết requirements trước | any |
+| Skill | Khi nào | Gợi ý depth |
+|-------|---------|-------------|
+| `/dw-config-init [name]` | Lần đầu setup project | all |
+| `/dw-task-init [name]` | Mỗi task/feature mới | all |
+| `/dw-requirements [name]` | BA viết requirements trước | standard+ |
 
-### 2. Research & Plan
+### 2) Research & Plan
 
-| Skill | Khi nào | Level |
-|-------|---------|-------|
-| `/dw-research [name]` | Khảo sát codebase, tìm dependencies | any |
-| `/dw-plan [name]` | Lập kế hoạch sau research — DỪNG chờ approve | 2+ |
-| `/dw-arch-review [name]` | TL review kiến trúc + approve plan | 2+ |
-| `/dw-estimate [name]` | Ước lượng effort (sau plan) | 2+ |
+| Skill | Khi nào | Gợi ý depth |
+|-------|---------|-------------|
+| `/dw-research [name]` | Khảo sát codebase, tìm dependencies | all |
+| `/dw-plan [name]` | Lập kế hoạch sau research — dừng chờ approve | standard+ |
+| `/dw-arch-review [name]` | TL review kiến trúc + approve plan | thorough |
+| `/dw-estimate [name]` | Ước lượng effort (sau plan) | standard+ |
 
-### 3. Execute
+### 3) Execute
 
-| Skill | Khi nào | Level |
-|-------|---------|-------|
-| `/dw-execute [name]` | Implement theo plan (TDD) | any |
-| `/dw-test-plan [name]` | QC tạo test cases (song song với execute) | any |
-| `/dw-log-work [name]` | Ghi effort sau mỗi subtask | 2+ |
+| Skill | Khi nào | Gợi ý depth |
+|-------|---------|-------------|
+| `/dw-execute [name]` | Implement theo plan (TDD) | all |
+| `/dw-test-plan [name]` | QC tạo test cases (song song với execute) | thorough |
+| `/dw-log-work [name]` | Ghi effort sau mỗi subtask | standard+ |
 
-### 4. Review & Close
+### 4) Review & Close
 
-| Skill | Khi nào | Level |
-|-------|---------|-------|
-| `/dw-review [target]` | Code review trước commit | 2+ |
-| `/dw-commit [msg]` | Smart commit với quality checks | any |
-| `/dw-docs-update [scope]` | Cập nhật living docs sau thay đổi | 3 |
+| Skill | Khi nào | Gợi ý depth |
+|-------|---------|-------------|
+| `/dw-review [target]` | Code review trước commit | standard+ |
+| `/dw-commit [msg]` | Smart commit với quality checks | all |
+| `/dw-docs-update [scope]` | Cập nhật living docs sau thay đổi | thorough |
 
-### 5. Collaboration & Tracking
+### 5) Collaboration & Tracking
 
-| Skill | Khi nào | Level |
-|-------|---------|-------|
-| `/dw-handoff [name]` | Cuối session, trước khi bàn giao | any |
-| `/dw-debug [issue]` | Debug: investigate → diagnose → fix | any |
-| `/dw-dashboard [period]` | PM xem báo cáo tổng hợp | 3 |
+| Skill | Khi nào | Gợi ý depth |
+|-------|---------|-------------|
+| `/dw-handoff [name]` | Cuối session, trước khi bàn giao | all |
+| `/dw-debug [issue]` | Debug: investigate → diagnose → fix | all |
+| `/dw-dashboard [period]` | PM xem báo cáo tổng hợp | thorough |
 
 ---
 
@@ -72,13 +72,13 @@ Task 6+ files   →  Chia sub-tasks, mỗi phần chạy riêng
 
 ---
 
-## Flag States (trong config)
+## Depth Routing Nhanh
 
-| Giá trị | Ý nghĩa |
-|---------|---------|
-| `true` | Skill hoạt động, bắt buộc trong workflow |
-| `false` | Skill bị tắt, bỏ qua |
-| `"skip"` | Skill có sẵn nhưng optional, user tự quyết |
+| Scope | Depth khuyến nghị |
+|------|--------------------|
+| 1-2 files, hotfix | `quick` |
+| 3-5 files, feature thông thường | `standard` |
+| 6+ files, API/DB/security | `thorough` |
 
 ---
 
@@ -86,7 +86,7 @@ Task 6+ files   →  Chia sub-tasks, mỗi phần chạy riêng
 
 | Triệu chứng | Fix |
 |-------------|-----|
-| Skill không chạy | Kiểm tra flag trong `config/dw.config.yml` |
+| Skill không chạy | Kiểm tra `team.roles` và `workflow.default_depth` trong `.dw/config/dw.config.yml` |
 | Agent không có tools | Đọc agent constraint trong `.claude/agents/` |
 | Execute bị block | Kiểm tra plan đã được approve chưa |
 | Context mất | Đọc `.dw/tasks/[name]/*-progress.md` |

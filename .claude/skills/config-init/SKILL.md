@@ -1,4 +1,4 @@
----
+﻿---
 name: dw-config-init
 description: "Khởi tạo dv-workflow-kit cho dự án mới. Tạo config file, thư mục, và cấu trúc cần thiết."
 argument-hint: "[project-name]"
@@ -19,7 +19,7 @@ Nếu chưa có đủ thông tin, hỏi user:
 
 ### 2. Tạo config file
 
-Copy `config/dw.config.yml` vào root dự án.
+Copy `.dw/config/dw.config.yml` vào root dự án.
 Cập nhật các giá trị:
 - `project.name` = tên dự án
 - `project.type` = loại dự án

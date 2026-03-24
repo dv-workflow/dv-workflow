@@ -47,7 +47,7 @@ Ghi vào findings nếu có errors liên quan đến task.
 6. **History**: Git log/blame cho context thay đổi gần đây
 7. **Diagnostics**: Kiểm tra IDE errors/warnings nếu có mcp__ide__getDiagnostics
 
-## Tư Duy Phản Biện (từ core/THINKING.md)
+## Tư Duy Phản Biện (từ .dw/core/THINKING.md)
 
 Khi khảo sát, luôn tự hỏi:
 - Giả định nào đang dùng? Có kiểm chứng được không?

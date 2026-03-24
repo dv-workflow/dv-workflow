@@ -51,7 +51,7 @@ Sau khi đã exhausted góc nhìn → chọn approach tối ưu và ghi lý do r
 
 **Chỉ sau khi hoàn thành 3 bước trên, mới viết plan.**
 
-## Framework Tư Duy (từ core/THINKING.md)
+## Framework Tư Duy (từ .dw/core/THINKING.md)
 
 ### Critical Thinking
 - Giả định nào đang dùng? Có thể sai không?

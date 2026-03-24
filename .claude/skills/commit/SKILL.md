@@ -1,4 +1,4 @@
----
+﻿---
 name: dw-commit
 description: "Tạo commit thông minh với quality checks tùy theo config. Chạy tests/lint trước commit nếu flags bật."
 argument-hint: "[commit message]"
@@ -10,7 +10,7 @@ Message: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `config/dw.config.yml` → lấy:
+Đọc `.dw/config/dw.config.yml` → lấy:
 - `flags.pre_commit_tests` → chạy tests?
 - `flags.pre_commit_lint` → chạy lint?
 - `flags.block_commit_on_fail` → block nếu fail?

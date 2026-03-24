@@ -6,7 +6,7 @@
       "WebFetch(domain:docs.anthropic.com)",
       "Bash(grep -rL \"^name:\" .claude/skills/*/SKILL.md)",
       "Bash(grep -c '\\\\$ARGUMENTS\\\\|context: fork\\\\|allowed-tools' adapters/generic/AGENT.md)",
-      "Bash(grep [v2.0.0] CHANGELOG.md)"
+      "Bash(grep [v1.0.0] CHANGELOG.md)"
     ]
   }
 }

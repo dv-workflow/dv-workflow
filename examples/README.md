@@ -1,4 +1,4 @@
-# Examples — dv-workflow-kit
+﻿# Examples — dv-workflow-kit
 
 Thư mục này chứa ví dụ thực tế về cách áp dụng dv-workflow-kit vào dự án Node.js + TypeScript.
 
@@ -83,7 +83,7 @@ git submodule add https://github.com/YOUR_ORG/dv-workflow-kit .dv-workflow
 bash .dw-module/integration-guide/setup.sh new-product
 
 # 3. Cấu hình
-# Sửa config/dw.config.yml: project.name, level, roles, flags
+# Sửa .dw/config/dw.config.yml: project.name, level, roles, flags
 
 # 4. Bắt đầu
 claude  # → /config-init hoặc /task-init [task-name]

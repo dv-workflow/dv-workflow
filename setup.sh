@@ -1,6 +1,14 @@
-#!/bin/bash
+﻿#!/bin/bash
 # =============================================================================
-# dw-kit — Interactive Setup Wizard
+# dw-kit — Interactive Setup Wizard (LEGACY)
+# =============================================================================
+# ⚠  DEPRECATED: Use `dw init` instead (npm install -g dw-kit)
+#
+#    npm install -g dw-kit
+#    dw init
+#
+# This script is kept for environments without Node.js.
+# New features will only be added to the `dw` CLI.
 # =============================================================================
 # Chạy từ root của dự án của bạn. Hỏi 4 câu, tự cấu hình mọi thứ.
 # Thời gian: ~1-2 phút
@@ -28,7 +36,7 @@ NC='\033[0m'
 # Kiểm tra submodule
 if [ ! -d "$TOOLKIT_DIR/.claude" ]; then
   echo "Toolkit chưa được add. Chạy trước:"
-  echo "  git submodule add https://github.com/dv-workflow/dv-workflow.git .dv-workflow"
+  echo "  git submodule add https://github.com/dv-workflow/dv-workflow.git .dw-module"
   exit 1
 fi
 
@@ -151,15 +159,15 @@ fi
 
 # Chọn base config theo level
 if [ "$LEVEL" = "3" ]; then
-  BASE_CONFIG="$TOOLKIT_DIR/project-templates/enterprise/config/dw.config.yml"
+  BASE_CONFIG="$TOOLKIT_DIR/project-templates/enterprise/.dw/config/dw.config.yml"
 elif [ "$LEVEL" = "1" ]; then
-  BASE_CONFIG="$TOOLKIT_DIR/project-templates/old-maintenance/config/dw.config.yml"
+  BASE_CONFIG="$TOOLKIT_DIR/project-templates/old-maintenance/.dw/config/dw.config.yml"
 else
-  BASE_CONFIG="$TOOLKIT_DIR/project-templates/new-product/config/dw.config.yml"
+  BASE_CONFIG="$TOOLKIT_DIR/project-templates/new-product/.dw/config/dw.config.yml"
 fi
 
 # Ghi config với giá trị user đã chọn
-if [ ! -f "config/dw.config.yml" ]; then
+if [ ! -f ".dw/.dw/config/dw.config.yml" ]; then
   ROLES_YAML="  roles:\n    - dev"
   $HAS_TL && ROLES_YAML="$ROLES_YAML\n    - techlead"
   $HAS_BA && ROLES_YAML="$ROLES_YAML\n    - ba"
@@ -170,7 +178,7 @@ if [ ! -f "config/dw.config.yml" ]; then
     -e "s|name: \"your.*\"|name: \"$PROJECT_NAME\"|" \
     -e "s|name: \"your-enterprise-project\"|name: \"$PROJECT_NAME\"|" \
     -e "s|language: \"vi\"|language: \"$LANG\"|" \
-    "$BASE_CONFIG" > "config/dw.config.yml"
+    "$BASE_CONFIG" > ".dw/.dw/config/dw.config.yml"
 
   # Inject roles (replace toàn bộ roles section) — pure awk, no Python needed
   ROLES_LINES="    - dev"
@@ -220,11 +228,11 @@ mkdir -p .dw/tasks .dw/docs .dw/metrics .dw/reports
 # V2: Generate config/dw.config.yml và settings.json từ MCP config
 # =============================================================================
 
-# Copy config mới nếu chưa có (v2 structure)
-if [ ! -f "config/dw.config.yml" ] && [ -f "$TOOLKIT_DIR/config/dw.config.yml" ]; then
+# Copy config mới nếu chưa có (v1 structure)
+if [ ! -f ".dw/.dw/config/dw.config.yml" ] && [ -f "$TOOLKIT_DIR/.dw/config/dw.config.yml" ]; then
   mkdir -p config/presets
-  cp "$TOOLKIT_DIR/config/dw.config.yml" "config/dw.config.yml"
-  cp "$TOOLKIT_DIR/config/config.schema.json" "config/config.schema.json" 2>/dev/null || true
+  cp "$TOOLKIT_DIR/.dw/config/dw.config.yml" ".dw/.dw/config/dw.config.yml"
+  cp "$TOOLKIT_DIR/config/config.schema.json" ".dw/config/config.schema.json" 2>/dev/null || true
   cp "$TOOLKIT_DIR/config/presets/"* "config/presets/" 2>/dev/null || true
 fi
 
@@ -299,12 +307,12 @@ print(f"  MCP servers configured: {', '.join(mcp_servers.keys())}")
 PYEOF
 }
 
-generate_mcp_settings "config/dw.config.yml"
+generate_mcp_settings ".dw/.dw/config/dw.config.yml"
 
 # Validate config nếu có python3 và jsonschema
-if command -v python3 &>/dev/null && [ -f "config/dw.config.yml" ] && [ -f "config/config.schema.json" ]; then
+if command -v python3 &>/dev/null && [ -f ".dw/.dw/config/dw.config.yml" ] && [ -f ".dw/config/config.schema.json" ]; then
   python3 -c "import jsonschema" 2>/dev/null && \
-  python3 - "config/dw.config.yml" "config/config.schema.json" <<'PYEOF' 2>/dev/null || true
+  python3 - ".dw/.dw/config/dw.config.yml" ".dw/config/config.schema.json" <<'PYEOF' 2>/dev/null || true
 import sys, json
 try:
     import yaml

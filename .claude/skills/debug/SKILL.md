@@ -1,4 +1,4 @@
----
+﻿---
 name: dw-debug
 description: "Debug có hệ thống theo quy trình Investigate → Diagnose → Fix. Dùng khi gặp lỗi, test fail, hoặc behavior bất thường."
 argument-hint: "[mô tả vấn đề]"
@@ -10,7 +10,7 @@ Vấn đề: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `config/dw.config.yml` → `flags.debug`. Nếu `false` → thông báo và DỪNG.
+Đọc `.dw/config/dw.config.yml` → `flags.debug`. Nếu `false` → thông báo và DỪNG.
 
 ---
 

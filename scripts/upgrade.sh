@@ -1,5 +1,6 @@
-#!/bin/bash
+﻿#!/bin/bash
 # scripts/upgrade.sh
+# ⚠ DEPRECATED: Prefer `dw upgrade` from npm CLI.
 # Upgrade dw-kit: update generated/ files, preserve overrides/ và extensions/
 # Usage: bash scripts/upgrade.sh [--dry-run] [--layer core|platform|all]
 
@@ -46,7 +47,7 @@ do_mkdir() {
 }
 
 # ── Read current versions ─────────────────────────────────────────────────────
-CONFIG_FILE="$PROJECT_ROOT/config/dw.config.yml"
+CONFIG_FILE="$PROJECT_ROOT/.dw/config/dw.config.yml"
 CURRENT_CORE="unknown"
 CURRENT_PLATFORM="unknown"
 
@@ -58,7 +59,7 @@ if [ -f "$CONFIG_FILE" ]; then
 fi
 
 TOOLKIT_CORE=$(grep -m1 "core-version:" "$PROJECT_ROOT/core/WORKFLOW.md" 2>/dev/null \
-  | sed 's/.*core-version:[[:space:]]*//' | tr -d ' -->' | head -1 || echo "2.0")
+  | sed 's/.*core-version:[[:space:]]*//' | tr -d ' -->' | head -1 || echo "1.0")
 
 echo ""
 echo "══════════════════════════════════════════"
@@ -73,7 +74,7 @@ echo "════════════════════════�
 # ── Phase 1: Update generated/ ───────────────────────────────────────────────
 info "Phase 1: Update generated files"
 
-GENERATED="$PROJECT_ROOT/adapters/claude-cli/generated"
+GENERATED="$PROJECT_ROOT/.dw/adapters/claude-cli/generated"
 CLAUDE_DIR="$PROJECT_ROOT/.claude"
 
 if [ "$LAYER" = "all" ] || [ "$LAYER" = "platform" ]; then
@@ -81,7 +82,7 @@ if [ "$LAYER" = "all" ] || [ "$LAYER" = "platform" ]; then
   if [ -d "$GENERATED/skills" ]; then
     for skill_dir in "$GENERATED/skills"/*/; do
       skill_name=$(basename "$skill_dir")
-      override="$PROJECT_ROOT/adapters/claude-cli/overrides/skills/$skill_name"
+      override="$PROJECT_ROOT/.dw/adapters/claude-cli/overrides/skills/$skill_name"
 
       if [ -d "$override" ]; then
         warn "Skill '$skill_name': override exists → keeping override"
@@ -103,7 +104,7 @@ if [ "$LAYER" = "all" ] || [ "$LAYER" = "platform" ]; then
     for agent_file in "$GENERATED/agents"/*.md; do
       [ -f "$agent_file" ] || continue
       agent_name=$(basename "$agent_file")
-      override="$PROJECT_ROOT/adapters/claude-cli/overrides/agents/$agent_name"
+      override="$PROJECT_ROOT/.dw/adapters/claude-cli/overrides/agents/$agent_name"
 
       if [ -f "$override" ]; then
         warn "Agent '$agent_name': override exists → keeping override"
@@ -119,7 +120,7 @@ fi
 # ── Phase 2: Copy extensions/ ────────────────────────────────────────────────
 info "Phase 2: Copy extensions (team-specific skills)"
 
-EXTENSIONS="$PROJECT_ROOT/adapters/claude-cli/extensions"
+EXTENSIONS="$PROJECT_ROOT/.dw/adapters/claude-cli/extensions"
 if [ -d "$EXTENSIONS" ]; then
   ext_count=0
   for ext_dir in "$EXTENSIONS"/*/; do
@@ -214,19 +215,19 @@ fi
 # ── Phase 5: Check for CI/CD references needing manual update ────────────────
 info "Phase 5: Check backward compatibility"
 
-OLD_CONFIG="$PROJECT_ROOT/config/dw.config.yml"
+OLD_CONFIG="$PROJECT_ROOT/.dw/config/dw.config.yml"
 if [ -f "$OLD_CONFIG" ]; then
   if [ -L "$OLD_CONFIG" ]; then
     ok "config/dw.config.yml: symlink intact (backward compat)"
   else
-    warn "config/dw.config.yml exists as real file. Run scripts/migrate-v03-to-v2.sh first."
+    warn "config/dw.config.yml exists as real file. Run scripts/migrate-v03-to-v1.sh first."
   fi
 fi
 
 # Check for CI references
 for ci_file in ".github/workflows/"*.yml ".gitlab-ci.yml" "Makefile" ".circleci/config.yml"; do
   full_path="$PROJECT_ROOT/$ci_file"
-  if [ -f "$full_path" ] && grep -q "config/dw.config.yml" "$full_path" 2>/dev/null; then
+  if [ -f "$full_path" ] && grep -q ".dw/.dw/config/dw.config.yml" "$full_path" 2>/dev/null; then
     warn "CI file '$ci_file' references config/dw.config.yml — update manually"
   fi
 done

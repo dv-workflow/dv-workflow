@@ -1,4 +1,4 @@
----
+﻿---
 name: dw-upgrade
 description: "Upgrade dv-workflow-kit lên version mới. So sánh toolkit files, báo cáo thay đổi, cho phép selective update mà không overwrite customizations."
 argument-hint: ""
@@ -31,10 +31,10 @@ Hiển thị 5 commits mới nhất của upstream để user biết có gì tha
 
 Trước khi update, backup config hiện tại:
 ```bash
-cp config/dw.config.yml config/dw.config.yml.backup-$(date +%Y%m%d)
+cp .dw/config/dw.config.yml .dw/config/dw.config.yml.backup-$(date +%Y%m%d)
 ```
 
-Thông báo: "Config đã backup tại `config/dw.config.yml.backup-[date]`"
+Thông báo: "Config đã backup tại `.dw/config/dw.config.yml.backup-[date]`"
 
 ## Bước 4: Update submodule
 
@@ -68,7 +68,7 @@ Files đã thay đổi trong toolkit (KHÔNG tự động update vì bạn có t
   ~ .claude/agents/planner.md
 
 Files của bạn (giữ nguyên):
-  = config/dw.config.yml  (backup tại .backup-[date])
+  = .dw/config/dw.config.yml  (backup tại .backup-[date])
 
 Lưu ý:
   - Review các files "đã thay đổi" và merge thủ công nếu cần
@@ -79,4 +79,4 @@ Lưu ý:
 ## Bước 7: Cleanup backup (tùy chọn)
 
 Hỏi user: "Bạn có muốn xóa file backup config không? (y/n)"
-Nếu y: `rm config/dw.config.yml.backup-*`
+Nếu y: `rm .dw/config/dw.config.yml.backup-*`

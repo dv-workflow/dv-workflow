@@ -1,0 +1,52 @@
+# dw-kit Preset: Enterprise — Full Workflow
+# Dùng cho: 5+ devs, full team roles, metrics tracking
+# Kế thừa từ: config/dw.config.yml (copy và modify)
+
+project:
+  name: "my-project"
+  language: "vi"
+
+workflow:
+  default_depth: "thorough"
+
+team:
+  roles:
+    - dev
+    - techlead
+    - ba
+    - qc
+    - pm
+
+quality:
+  test_command: ""     # BẮT BUỘC điền: "npm test" | "pytest" | ...
+  lint_command: ""     # BẮT BUỘC điền: "npm run lint" | ...
+  block_on_fail: true  # Block commit nếu fail
+
+tracking:
+  estimation: true
+  log_work: true
+  estimation_unit: "story-points"
+
+paths:
+  tasks: ".dw/tasks"
+  docs: ".dw/docs"
+
+claude:
+  models:
+    plan: "claude-opus-4-6"     # Dùng model mạnh nhất cho planning
+    execute: "claude-sonnet-4-6"
+    review: "claude-sonnet-4-6"
+  structured_output: true
+  worktree_execution: true      # Isolate risky refactors
+  mcp: []
+  # Uncomment và điền env vars để enable external integrations:
+  # mcp:
+  #   - name: "github"
+  #     command: "npx @modelcontextprotocol/server-github"
+  #     env:
+  #       GITHUB_TOKEN: "${GITHUB_TOKEN}"
+
+_toolkit:
+  core_version: "1.0"
+  platform_version: "1.0"
+  capability_version: "1.0"

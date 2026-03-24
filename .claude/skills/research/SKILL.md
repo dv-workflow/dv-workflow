@@ -1,4 +1,4 @@
----
+﻿---
 name: dw-research
 description: "Khảo sát và phân tích codebase trước khi lập kế hoạch. Tìm patterns, dependencies, và ảnh hưởng của thay đổi. Dùng khi cần hiểu code trước khi implement."
 argument-hint: "[task-name]"
@@ -22,7 +22,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `config/dw.config.yml` → lấy `paths.tasks` để biết output location.
+Đọc `.dw/config/dw.config.yml` → lấy `paths.tasks` để biết output location.
 
 ## Bước 1: Đọc yêu cầu
 

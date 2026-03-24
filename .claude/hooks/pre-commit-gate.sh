@@ -1,7 +1,7 @@
 #!/bin/bash
 # .claude/hooks/pre-commit-gate.sh
 # Quality gate: chạy trước mỗi Bash tool call.
-# Intercepts `git commit` để kiểm tra config flags.
+# Intercepts `git commit` để kiểm tra quality config (v1 schema).
 # exit 0 = allow (có thể warn), exit 2 = block
 
 INPUT=$(cat)
@@ -15,13 +15,13 @@ if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit'; then
 fi
 
 # Đọc config
-CONFIG_FILE="$CLAUDE_PROJECT_DIR/config/dw.config.yml"
+CONFIG_FILE="$CLAUDE_PROJECT_DIR/.dw/config/dw.config.yml"
 if [ ! -f "$CONFIG_FILE" ]; then
   exit 0
 fi
 
-# Parse flags từ YAML — pure grep/sed, no Python needed
-get_flag() {
+# Parse values từ YAML — pure grep/sed, no Python needed
+get_value() {
   local key="$1"
   grep -m1 "^[[:space:]]*${key}:" "$CONFIG_FILE" 2>/dev/null \
     | sed 's/.*:[[:space:]]*//' \
@@ -29,20 +29,24 @@ get_flag() {
     | tr -d '"'"'"' \
     | tr '[:upper:]' '[:lower:]' \
     | tr -d '[:space:]' \
-    || echo "false"
+    || echo ""
 }
 
-PRE_COMMIT_TESTS=$(get_flag "pre_commit_tests")
-PRE_COMMIT_LINT=$(get_flag "pre_commit_lint")
-BLOCK_ON_FAIL=$(get_flag "block_commit_on_fail")
+BLOCK_ON_FAIL=$(get_value "block_on_fail")
+TEST_COMMAND=$(get_value "test_command")
+LINT_COMMAND=$(get_value "lint_command")
+HAS_TESTS=false
+HAS_LINT=false
+[ -n "$TEST_COMMAND" ] && HAS_TESTS=true
+[ -n "$LINT_COMMAND" ] && HAS_LINT=true
 
-# Nếu tất cả flags là false/skip → allow
-if [ "$PRE_COMMIT_TESTS" = "false" ] && [ "$PRE_COMMIT_LINT" = "false" ]; then
+# Nếu không cấu hình test/lint command → allow (chỉ chạy safety checks)
+if [ "$HAS_TESTS" = false ] && [ "$HAS_LINT" = false ]; then
   exit 0
 fi
 
 # Thông báo quality gate đang check
-echo "⚙️  dv-workflow quality gate đang kiểm tra..." >&2
+echo "⚙️  dw-kit quality gate đang kiểm tra..." >&2
 
 ISSUES=0
 
@@ -68,10 +72,15 @@ if [ -n "$SENSITIVE" ]; then
   fi
 fi
 
-# Reminder về tests (nếu flag là true hoặc skip)
-if [ "$PRE_COMMIT_TESTS" = "true" ]; then
+# Reminder về tests/lint theo config v1
+if [ "$HAS_TESTS" = true ]; then
   echo "📋 Reminder: Hãy đảm bảo tests đã pass trước khi commit." >&2
-  echo "   Chạy: /commit sẽ tự kiểm tra, hoặc verify thủ công." >&2
+  echo "   Test command: $TEST_COMMAND" >&2
+fi
+
+if [ "$HAS_LINT" = true ]; then
+  echo "📋 Reminder: Hãy đảm bảo lint đã pass trước khi commit." >&2
+  echo "   Lint command: $LINT_COMMAND" >&2
 fi
 
 if [ "$ISSUES" -eq 0 ]; then

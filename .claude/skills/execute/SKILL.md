@@ -1,4 +1,4 @@
----
+﻿---
 name: dw-execute
 description: "Thực hiện implementation theo plan đã được approve. Tuân thủ TDD, commit sau mỗi subtask. Chỉ dùng khi plan đã được duyệt."
 argument-hint: "[task-name]"
@@ -10,7 +10,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `config/dw.config.yml` → lấy:
+Đọc `.dw/config/dw.config.yml` → lấy:
 - `paths.tasks` → location task docs
 - `flags.pre_commit_tests` → chạy tests trước commit?
 - `flags.log_work` → ghi effort?

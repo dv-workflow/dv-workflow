@@ -1,4 +1,4 @@
----
+﻿---
 name: dw-plan
 description: "Lập kế hoạch implementation chi tiết sau khi đã research. Thiết kế giải pháp, phân chia subtasks, xác định rủi ro. DỪNG để chờ approval trước khi execute."
 argument-hint: "[task-name]"
@@ -14,7 +14,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `config/dw.config.yml` → lấy:
+Đọc `.dw/config/dw.config.yml` → lấy:
 - `paths.tasks` → location task docs
 - `flags.estimation` → có cần estimate không
 - `team.roles` → ai cần approve

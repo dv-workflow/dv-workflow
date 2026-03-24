@@ -1,4 +1,4 @@
----
+﻿---
 name: dw-dashboard
 description: "Tạo báo cáo tổng hợp cho PM: trạng thái tasks, metrics DORA, effort tracking, velocity. Ghi ra file report để share."
 argument-hint: "[sprint-name | period: last-week | last-month | all]"
@@ -17,7 +17,7 @@ Period: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `config/dw.config.yml`:
+Đọc `.dw/config/dw.config.yml`:
 - `flags.dashboard_skill` — nếu `false` → DỪNG
 - `metrics.dora` → thresholds để so sánh
 - `paths.tasks`, `paths.metrics`, `paths.reports`

@@ -1,8 +1,8 @@
-# dw-kit
+﻿# dw-kit
 
 > Bộ workflow toolkit cho dev team sử dụng Claude Code Agent — từ requirements đến dashboard.
 
-**v2.0** · [Docs](docs/README.md) · [Cheatsheet](docs/cheatsheet.md) · [Migration v0.3→v2](scripts/migrate-v03-to-v2.sh)
+**v1.0** · `npm install -g dw-kit` · [Docs](docs/README.md) · [Cheatsheet](docs/cheatsheet.md) · [Migration v0.3→v1](scripts/migrate-v03-to-v1.sh)
 
 ---
 
@@ -18,23 +18,61 @@ Với đầy đủ hỗ trợ cho các roles trong team: BA · TL · Dev · QC �
 
 ---
 
-## Quick Start (2 bước)
+## Quick Start
 
-### Bước 1 — Setup (~1-2 phút)
+### Option A — npm (recommended)
 
 ```bash
-git submodule add https://github.com/dv-workflow/dv-workflow.git .dv-workflow
+npm install -g dw-kit
+```
+
+Then in your project directory:
+
+```bash
+dw init
+```
+
+Interactive wizard asks 3 questions (project, depth, language) and auto-selects roles by depth. Or use presets:
+
+```bash
+dw init --preset small-team     # skip wizard
+dw init --preset solo-quick     # solo dev, minimal ceremony
+dw init --preset enterprise     # full team, all features
+```
+
+Zero-install (one-time use):
+
+```bash
+npx dw-kit init
+```
+
+### Option B — Git submodule (legacy)
+
+```bash
+git submodule add https://github.com/dv-workflow/dv-workflow.git .dw-module
 bash .dw-module/setup.sh
 ```
 
-Wizard sẽ hỏi và tự cấu hình: project name, depth, roles, language.
+`setup.sh` là luồng legacy/fallback. Luồng khuyến nghị cho v1 là `npm install -g dw-kit` + `dw init`.
 
-### Bước 2 — Bắt đầu
+### Start working
 
-Mở Claude Code trong thư mục dự án, chạy:
+Open Claude Code in your project directory:
 
 ```
 /dw-task-init tên-feature
+```
+
+### CLI Commands
+
+```bash
+dw init              # Setup wizard
+dw upgrade           # Update toolkit files (override-aware)
+dw upgrade --dry-run # Preview changes
+dw upgrade --check   # Check for updates only
+dw validate          # Validate config against schema
+dw doctor            # Check installation health
+dw migrate           # Migrate from v0.3 to v1
 ```
 
 ---
@@ -47,15 +85,17 @@ Mở Claude Code trong thư mục dự án, chạy:
 | `standard` | Team nhỏ, feature mới | Tất cả 6 phases |
 | `thorough` | Enterprise, API/DB/security changes | Full workflow + arch-review + test-plan |
 
-Cấu hình trong `config/dw.config.yml`:
+Cấu hình trong `.dw/config/dw.config.yml`:
 ```yaml
 workflow:
   default_depth: "standard"
 ```
 
+`default_depth` là baseline. Với task cụ thể, bạn có thể override sang `thorough` khi scope/risk tăng (API/DB/security), kể cả project nhỏ.
+
 ---
 
-## Kiến Trúc v2 (4 Layers)
+## Kiến Trúc v1 (4 Layers)
 
 ```
 Layer 0: core/            ← Portable methodology (platform-agnostic)
@@ -88,7 +128,7 @@ dự-án-của-bạn/
 ├── .dw/                          ← tasks, docs, metrics, reports
 └── scripts/
     ├── upgrade.sh                ← upgrade toolkit (--dry-run)
-    └── migrate-v03-to-v2.sh      ← migration từ v0.3
+    └── migrate-v03-to-v1.sh      ← migration từ v0.3
 ```
 
 ---
@@ -102,14 +142,23 @@ Xem [docs/cheatsheet.md](docs/cheatsheet.md) để có bảng tham chiếu nhanh
 ## Migrating từ v0.3
 
 ```bash
-bash scripts/migrate-v03-to-v2.sh --dry-run   # preview
-bash scripts/migrate-v03-to-v2.sh             # apply
+dw migrate --dry-run   # preview changes
+dw migrate             # apply migration
 ```
 
-Script sẽ:
+Or via bash (legacy):
+
+```bash
+bash scripts/migrate-v03-to-v1.sh --dry-run
+bash scripts/migrate-v03-to-v1.sh
+```
+
+`scripts/upgrade.sh` và `scripts/migrate-v03-to-v1.sh` được giữ cho backward-compat; ưu tiên dùng `dw upgrade` và `dw migrate`.
+
+Migration sẽ:
 - Map `level: 2` → `default_depth: standard`
-- Preserve customized skills vào `adapters/claude-cli/overrides/`
-- Tạo symlink backward-compat cho `config/dw.config.yml`
+- Preserve customized skills vào `.dw/adapters/claude-cli/overrides/`
+- Backup old config, create new `.dw/config/dw.config.yml`
 
 ---
 
@@ -126,7 +175,7 @@ Script sẽ:
 |----------|---------|
 | [docs/README.md](docs/README.md) | Hướng dẫn đầy đủ, setup, tips |
 | [docs/cheatsheet.md](docs/cheatsheet.md) | Bảng tham chiếu nhanh tất cả skills |
-| [docs/strategy-v2-claude-optimized.md](docs/strategy-v2-claude-optimized.md) | Chiến lược tận dụng Claude capabilities |
+| [docs/custom-skills.md](docs/custom-skills.md) | Hướng dẫn tạo custom skills |
 | [CHANGELOG.md](CHANGELOG.md) | Lịch sử thay đổi |
 
 ---

@@ -1,4 +1,4 @@
----
+﻿---
 name: dw-task-init
 description: "Khởi tạo bộ documentation cho task mới. Tạo thư mục và 3 template files (context, plan, progress)."
 argument-hint: "[task-name]"
@@ -8,7 +8,7 @@ argument-hint: "[task-name]"
 
 ## Đọc Config
 
-Đọc `config/dw.config.yml` để lấy:
+Đọc `.dw/config/dw.config.yml` để lấy:
 - `paths.tasks` → thư mục chứa task docs (mặc định: `.dw/tasks`)
 - `level` → quyết định template nào cần tạo
 - `flags.estimation` → có tạo section estimation không

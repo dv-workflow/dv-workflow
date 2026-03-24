@@ -1,0 +1,52 @@
+{
+  "name": "dw-kit",
+  "version": "1.0.0",
+  "description": "AI development workflow toolkit — structured, quality-assured, team-ready. From requirements to dashboard.",
+  "type": "module",
+  "bin": {
+    "dw": "./bin/dw.mjs"
+  },
+  "files": [
+    "bin/",
+    "src/",
+    ".dw/core/",
+    ".dw/config/",
+    ".dw/adapters/",
+    "scripts/",
+    ".claude/",
+    "CLAUDE.md",
+    "setup.sh"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node src/smoke-test.mjs",
+    "link": "npm link",
+    "test:e2e-local": "bash scripts/e2e-local-check.sh"
+  },
+  "keywords": [
+    "ai",
+    "workflow",
+    "claude",
+    "cursor",
+    "development",
+    "toolkit",
+    "tdd",
+    "code-review",
+    "agent"
+  ],
+  "author": "huygdv <huygdv19@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/dv-workflow/dv-workflow.git"
+  },
+  "homepage": "https://github.com/dv-workflow/dv-workflow#readme",
+  "dependencies": {
+    "ajv": "^8.18.0",
+    "chalk": "^5.6.2",
+    "commander": "^14.0.3",
+    "js-yaml": "^4.1.1"
+  }
+}

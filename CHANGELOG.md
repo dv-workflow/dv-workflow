@@ -1,56 +1,86 @@
-# Changelog — dw-kit
+﻿# Changelog — dw-kit
 
-> **Maintainer**: [huygdv](mailto:huygdv19@gmail.com) · **Repo**: https://github.com/dv-workflow/dv-workflow
+> **Maintainer**: [huygdv](mailto:huygdv19@gmail.com) · **Repo**: [https://github.com/dv-workflow/dv-workflow](https://github.com/dv-workflow/dv-workflow)
 
 ---
 
-## [v2.0.0] — 2026-03-23
+## [v1.0.0] — 2026-03-24
 
 ### Architecture: 4-Layer System
 
-**Breaking Changes** (migration: `bash scripts/migrate-v03-to-v2.sh`):
-- `dv-workflow.config.yml` → `config/dw.config.yml` (symlink backward-compat provided)
+**Breaking Changes** (migration: `dw migrate` or `bash scripts/migrate-v03-to-v1.sh`):
+
+- `dv-workflow.config.yml` → `.dw/config/dw.config.yml` (symlink backward-compat provided)
 - `level: 1/2/3` → `workflow.default_depth: quick/standard/thorough`
 - 17 feature flags → depth defaults + role-based availability
 
+### Added — npm Package Distribution
+
+- **npm install**: `npm install -g dw-kit` for global CLI, `npx dw-kit init` for zero-install
+- `**dw init`**: Node.js interactive wizard replacing `setup.sh` — 4 questions, presets, platform auto-detect
+- `**dw upgrade**`: Smart update with override-awareness, `--dry-run`, `--check`, `--layer` flags
+- `**dw validate**`: Config schema validation using `ajv` — reports unknown keys, invalid values, semantic warnings
+- `**dw doctor**`: Installation health check — core files, config, platform detection, version tracking
+- `**dw migrate**`: v0.3→v1 migration reimplemented in Node.js (cross-platform, no python3 dependency)
+
 ### Added — Portable Core (`core/`)
+
 - `core/WORKFLOW.md`: 6-phase methodology với section anchors `<!-- @phase:X -->`
 - `core/THINKING.md`: thinking framework + First Principles section
 - `core/QUALITY.md`: 4-layer quality strategy (Requirements→TDD→Cross-Review→QA Gates)
 - `core/ROLES.md`: BA/TL/Dev/QC/PM definitions với decision authority per phase
-- `core/templates/vi/`: guided questionnaire templates (context/plan/progress)
+- `.dw/core/templates/vi/`: guided questionnaire templates (context/plan/progress)
 
-### Added — Upgrade Safety (`adapters/claude-cli/`)
-- `adapters/claude-cli/generated/`: auto-generated skill shells (DO NOT edit)
-- `adapters/claude-cli/overrides/`: team customizations (NEVER overwritten by upgrade)
-- `adapters/claude-cli/extensions/`: net-new team skills
+### Added — Upgrade Safety (`.dw/adapters/claude-cli/`)
+
+- `.dw/adapters/claude-cli/generated/`: auto-generated skill shells (DO NOT edit)
+- `.dw/adapters/claude-cli/overrides/`: team customizations (NEVER overwritten by upgrade)
+- `.dw/adapters/claude-cli/extensions/`: net-new team skills
 - `scripts/upgrade.sh`: override-aware upgrade với `--dry-run` + merge settings.json
-- `scripts/migrate-v03-to-v2.sh`: v0.3→v2 migration, config mapping, symlink compat
+- `scripts/migrate-v03-to-v1.sh`: v0.3→v1 migration, config mapping, symlink compat
 
 ### Added — Generic Adapter (`adapters/generic/`)
+
 - `adapters/generic/AGENT.md`: methodology reference cho Cursor/Windsurf/Copilot
 - Honest về limitations: không replicate agent delegation hay hooks
 
 ### Enhanced — Claude Execution Layer
+
 - `agents/researcher.md`: +`mcp__ide__getDiagnostics`, +confidence level per finding
 - `agents/planner.md`: +Deep Analysis Protocol (≥3 approaches, devil's advocate)
 - `agents/reviewer.md`: +JSON output block cho CI/CD parsing
 - `agents/executor.md`: NEW agent với Write/Edit/Bash tools, TDD workflow, worktree support
 
 ### Enhanced — Hook System (4 hooks)
+
 - `hooks/safety-guard.sh`: block `rm -rf` nguy hiểm, force push main, SQL không WHERE
 - `hooks/post-write.sh`: auto-lint trên file vừa write (non-blocking)
 - `hooks/progress-ping.sh`: remind update progress (Notification hook)
 - `settings.json`: expanded 2→4 hooks (PreToolUse×2, PostToolUse, Stop, Notification)
 - `settings.json`: `mcpServers: {}` slot ready
 
-### Added — Config Layer 2
-- `config/dw.config.yml`: v2 config với `claude:` section (models, structured_output, worktree_execution, mcp)
+### Added — Config Layer
+
+- `.dw/config/dw.config.yml`: config với `claude:` section (models, structured_output, worktree_execution, mcp)
 - `config/config.schema.json`: JSON Schema validation, strict additionalProperties
 - `config/presets/`: solo-quick, small-team, enterprise presets
 - `setup.sh`: generate `mcpServers` trong settings.json từ `claude.mcp` config
 
+### Changed
+
+- `setup.sh` deprecated — kept as fallback for environments without Node.js
+- `scripts/upgrade.sh` and `scripts/migrate-v03-to-v1.sh` superseded by CLI commands (bash versions kept for manual use)
+- README.md updated with npm install instructions as primary setup method
+
+### Technical
+
+- ESM-only package (`"type": "module"`)
+- Minimal dependencies: `commander`, `js-yaml`, `chalk`, `ajv`
+- Node.js ≥18 required
+- CLI locates bundled files via `import.meta.url` — works regardless of npm install location
+
 ### Design Decisions
+
 - WORKFLOW.md là on-demand document, KHÔNG always-loaded — ngăn context bloat
 - CLAUDE.md redesigned thành tiered loader (~150 lines)
 - Agent system enhanced, không simplified — "portable core ≠ thin execution layer"
@@ -61,6 +91,7 @@
 ## [v0.3.0] — 2026-03-18
 
 ### Added
+
 - `rollback` skill — revert task docs về checkpoint (after-research | after-plan | clean)
 - `archive` skill — move done tasks vào `.dev-tasks/archive/YYYY-MM/`, maintain index
 - `project-templates/enterprise/dv-workflow.config.yml` — Level 3 fully enabled template
@@ -68,10 +99,12 @@
 - `examples/ci-templates/ci-docs-check.yml` — GitHub Actions: weekly living docs freshness
 
 ### Enhanced
+
 - `docs-update` SKILL: auto-scaffold `.dev-docs/` on first run, smarter git diff classification table, stale check logic
 - `dashboard` SKILL: DORA auto-calculation từ git history, HTML export (`.html` + `.md` dual output), responsive inline CSS template
 
 ### Fixed
+
 - `project-templates/new-product`: remove deprecated `paths.templates` key
 - `dv-workflow.config.yml`: comment out deprecated `paths.templates`
 
@@ -80,6 +113,7 @@
 ## [v0.2.0] — 2026-03-18
 
 ### Changed (Breaking — Integration Architecture)
+
 - `templates/` và `skills/` **đã xóa khỏi root** — nội dung chuyển vào `.claude/`
 - Templates: `templates/*.md` → `.claude/templates/*.md`
 - THINKING.md: `skills/THINKING.md` → `.claude/skills/thinking/THINKING.md`
@@ -88,6 +122,7 @@
 - `task-init` SKILL: language-aware template selection (`project.language` trong config)
 
 ### Added
+
 - `config-validate` skill — kiểm tra config: unknown keys, invalid values, level 3 beta warning
 - `upgrade` skill — update submodule + selective file sync + config backup
 - `sprint-review` skill — retrospective, lessons learned, sprint metrics
@@ -96,6 +131,7 @@
 - `schemas/effort-log.schema.json` — chuẩn hóa format effort log data
 
 ### Updated
+
 - `planner.md`, `research/SKILL.md`: reference THINKING.md path mới
 - `CLAUDE.md`: reference THINKING.md path mới
 
@@ -104,15 +140,17 @@
 ## [v0.1.x] — 2026-03-18 (patch)
 
 ### Fixed
+
 - **C2**: `pre-commit-gate.sh` — thay `grep+awk` bằng `python3 regex` để parse YAML robust hơn
 - **W3**: Demo B — fix code inconsistencies: thêm `UserModel` class-based API, align `displayName` field, thêm BEFORE/AFTER state labels
 
 ### Added
+
 - **C1**: Root `README.md` với quick start, level table, links đến docs
 - **C3**: `config-init` SKILL — validation step: known keys, level 3 beta warning, flag value check
 - **P1**: `docs/cheatsheet.md` — bảng tham chiếu 17 skills 1 trang
 - **P2**: Cross-platform notes (Windows Git Bash / WSL) vào `docs/README.md`
-- `docs/upgrade-plan.md` — kế hoạch upgrade v0.1.x → v1.0
+- kế hoạch upgrade v0.1.x → v1.0 (historical internal document)
 
 ---
 
@@ -123,6 +161,7 @@ Phiên bản đầu tiên. Kiến trúc cốt lõi và bộ skills hoàn chỉnh
 ### Added
 
 #### Core Workflow
+
 - `config-init` — Bootstrap toolkit cho dự án mới
 - `task-init` — Tạo bộ docs (context + plan + progress) cho task
 - `research` — Khảo sát codebase (researcher agent, context: fork)
@@ -131,30 +170,36 @@ Phiên bản đầu tiên. Kiến trúc cốt lõi và bộ skills hoàn chỉnh
 - `commit` — Smart commit với quality checks (debug scan, sensitive data scan)
 
 #### Quality & Debug
+
 - `review` — Code review (reviewer agent, checklist.md)
 - `debug` — Debug Investigate → Diagnose → Fix với regression test
 
 #### Tracking & Metrics
+
 - `estimate` — Ước lượng effort với Complexity×Uncertainty matrix
 - `log-work` — Ghi nhận effort thực tế, cập nhật progress file
 - `dashboard` — Báo cáo PM với DORA metrics
 
 #### Role-Specific Skills
+
 - `requirements` — BA: user stories với Given/When/Then criteria
 - `test-plan` — QC: test cases P1-P4, security checklist
 - `arch-review` — TL: review kiến trúc, approve plan
 
 #### Collaboration
+
 - `handoff` — Bàn giao session, cập nhật progress file
 - `docs-update` — Cập nhật living docs (ARCHITECTURE, API, DATA-MODELS)
 
 #### Agents
+
 - `researcher` — Read-only, Sonnet, git-safe Bash
 - `planner` — Read-only, no Bash, subtask granularity rules
 - `reviewer` — Sonnet, structured output với severity levels
 - `quality-checker` — Haiku, fast checks, JSON output
 
 #### Infrastructure
+
 - `dv-workflow.config.yml` — Config trung tâm với level + flags system
 - Level system (1: lite / 2: standard / 3: full)
 - Project templates: `new-product` và `old-maintenance`
@@ -162,6 +207,7 @@ Phiên bản đầu tiên. Kiến trúc cốt lõi và bộ skills hoàn chỉnh
 - `.claude/rules/`: commit-standards, code-style, workflow-rules
 
 #### Examples
+
 - `examples/demo-A-bug-fix/` — Bug fix workflow với Express+TS (Level 1)
 - `examples/demo-B-new-feature/` — Full-team feature workflow (Level 2)
 - `examples/integration-guide/` — Git submodule setup guide
@@ -177,14 +223,17 @@ Phiên bản đầu tiên. Kiến trúc cốt lõi và bộ skills hoàn chỉnh
 ## Roadmap
 
 ### [v0.2] — Planned
-- [ ] MCP integration cho external sync (Jira, GitHub, Linear)
-- [ ] `thinking` skill standalone invocation improvements
-- [ ] `sprint-review` skill cho team retrospective
-- [ ] English language support (`language: en`)
-- [ ] Improved DORA metrics calculation
+
+- MCP integration cho external sync (Jira, GitHub, Linear)
+- `thinking` skill standalone invocation improvements
+- `sprint-review` skill cho team retrospective
+- English language support (`language: en`)
+- Improved DORA metrics calculation
 
 ### [v0.3] — Planned
-- [ ] Level 3 full workflow với living docs automation
-- [ ] Dashboard với HTML/markdown report export
-- [ ] Multi-agent coordination patterns
-- [ ] Community skill templates (submit via PR)
+
+- Level 3 full workflow với living docs automation
+- Dashboard với HTML/markdown report export
+- Multi-agent coordination patterns
+- Community skill templates (submit via PR)
+
