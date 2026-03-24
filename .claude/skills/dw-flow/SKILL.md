@@ -1,7 +1,7 @@
 ---
 name: dw-flow
 description: "Orchestrator: chạy toàn bộ workflow từ đầu đến cuối cho một task, tự động kết nối các phases, dừng tại các human checkpoints để confirm/feedback. Mạnh nhất khi bạn muốn AI tự drive cả task."
-argument-hint: "[task-name]"
+argument-hint: "[task-name] hoặc DW_DEPTH=[depth] [task-name]"
 ---
 
 # dw-flow — Full Task Workflow Orchestrator
@@ -15,22 +15,36 @@ Task: **$ARGUMENTS**
 
 ## Bước 0: Khởi động
 
+### Parse arguments
+
+Kiểm tra `$ARGUMENTS` có dạng `DW_DEPTH=[depth] [task-name]` không:
+- Nếu có (ví dụ: `DW_DEPTH=quick fix-bug-123`) → dùng `quick` làm depth, `fix-bug-123` làm task-name
+- Nếu không → task-name = `$ARGUMENTS` toàn bộ
+
+### Đọc config
+
 Đọc `.dw/config/dw.config.yml`:
-- `workflow.default_depth` → xác định pipeline
-- `paths.tasks` → location task docs
+- `workflow.default_depth` → depth mặc định (dùng nếu không có DW_DEPTH override)
+- `paths.tasks` → location task docs (dùng làm base path — thay thế `{paths.tasks}` trong toàn bộ file này)
 - `tracking.estimation`, `tracking.log_work`
 - `team.roles` → ai cần approve gì
 
-Kiểm tra task đã có docs chưa (`{paths.tasks}/$ARGUMENTS/`):
+**Depth cuối cùng** = DW_DEPTH override (nếu có) → `workflow.default_depth` từ config.
+
+### Kiểm tra task docs
+
+Kiểm tra task đã có docs chưa (`{paths.tasks}/[task-name]/`):
 - Nếu chưa → tạo mới (follow instructions trong `.claude/skills/dw-task-init/SKILL.md`)
 - Nếu rồi → đọc progress, hỏi: "Task đã có docs. Tiếp tục từ phase nào?"
-  - Options: `research | plan | execute | review | fresh-start`
+  - Options: `research | plan | gate-c | execute | review | fresh-start`
+  - Nếu chọn `execute` → kiểm tra plan status trước (xem mục "Resume Handling")
+  - Nếu chọn `gate-c` → đọc plan và hiển thị GATE C như thể vừa xong phase Plan
 
 Hiển thị kế hoạch trước khi bắt đầu:
 
 ```
 ╔══════════════════════════════════════════════════════╗
-║  dw-flow: $ARGUMENTS
+║  dw-flow: [task-name]
 ║  Depth: [quick|standard|thorough]
 ║  Pipeline:
 ║  [danh sách phases sẽ chạy dựa trên depth]
@@ -43,23 +57,27 @@ Hiển thị kế hoạch trước khi bắt đầu:
 
 ### quick
 ```
-[1] Task Init  →  [2] Research (optional)  →  [GATE A]  →  [3] Execute  →  [GATE B]  →  [4] Commit
+[1] Task Init  →  [2] Research (optional)  →  [GATE Q1: Confirm Scope]
+→  [3] Execute  →  [GATE Q2: Approve Changes]  →  [4] Commit
 ```
 
 ### standard *(mặc định)*
 ```
-[1] Task Init  →  [2] Research  →  [3] Plan  →  [GATE A: Approve Plan]
-→  [4] Execute  →  [5] Review  →  [GATE B: Approve Changes]  →  [6] Commit
+[1] Task Init  →  [2] Research  →  [GATE A: Confirm Scope]
+→  [3] Plan  →  [GATE C: Approve Plan ← HARD GATE]
+→  [4] Execute  →  [5] Review  →  [GATE D: Approve Changes]  →  [6] Commit
 ```
 
 ### thorough
 ```
 [1] Task Init  →  [2] Requirements  →  [GATE A: Confirm Scope]
 →  [3] Estimate  →  [4] Research  →  [5] Arch Review  →  [GATE B: TL Approve Architecture]
-→  [6] Plan  →  [GATE C: Approve Plan]  →  [7] Test Plan
+→  [6] Plan  →  [GATE C: Approve Plan ← HARD GATE]  →  [7] Test Plan
 →  [8] Execute  →  [9] Review  →  [GATE D: Approve Changes]
 →  [10] Docs Update  →  [11] Log Work  →  [12] Commit
 ```
+
+> ⚠ **Thorough depth** chạy 12 phases — chỉ dùng cho critical tasks. Nếu bị gián đoạn giữa chừng, dùng `stop` + resume thay vì restart.
 
 ---
 
@@ -71,6 +89,13 @@ Với **mỗi phase**, làm như sau:
 3. Hiển thị output đầy đủ
 4. Sau phase, nếu có GATE → hiển thị checkpoint (xem mục CHECKPOINTS)
 5. Nếu không có GATE → thông báo "✓ Phase N complete" và chuyển ngay phase tiếp theo
+
+### Quy tắc khi follow sub-skill trong flow context
+
+Khi đọc và follow bất kỳ SKILL.md nào bên dưới, áp dụng các quy tắc sau:
+- **BỎ QUA** phần "Tiếp theo: /dw-xxx" ở cuối mỗi skill — dw-flow tự handle next step
+- **BỎ QUA** lệnh "DỪNG chờ approve" trong dw-plan và các skills tương tự — dw-flow sẽ hiển thị GATE thay thế
+- **CHỈ** lấy output, ghi files, hiển thị kết quả — không tự dừng workflow
 
 ### SKILL.md references (đọc và follow từng file này):
 - Task Init → `.claude/skills/dw-task-init/SKILL.md`
@@ -124,7 +149,7 @@ Tại mỗi GATE, **dừng lại** và hiển thị:
 **`stop`**
 → Dừng workflow.
 → Tóm tắt những gì đã hoàn thành.
-→ Hướng dẫn resume: "Để tiếp tục: `/dw-flow $ARGUMENTS` → chọn phase"
+→ Hướng dẫn resume: "Để tiếp tục: `/dw-flow [task-name]` → chọn phase"
 
 **Feedback tự do** (không dùng keyword trên)
 → Interpret là `revise: [feedback]`
@@ -134,7 +159,17 @@ Tại mỗi GATE, **dừng lại** và hiển thị:
 
 ## GATE Descriptions
 
-### GATE A — Confirm Scope / Approve Research (standard+)
+### GATE Q1 — Confirm Scope (quick only)
+Sau Research (nếu có) hoặc Task Init.
+Tóm tắt: phạm vi task, approach dự kiến, files sẽ thay đổi.
+→ User confirm để tiếp tục Execute trực tiếp.
+
+### GATE Q2 — Approve Changes (quick only)
+Sau Review (nếu có) hoặc Execute.
+Tóm tắt: thay đổi đã thực hiện, issues phát hiện (nếu review được chạy).
+→ User confirm để commit.
+
+### GATE A — Confirm Scope / Approve Research (standard + thorough)
 Sau Research (hoặc Requirements với thorough).
 Tóm tắt: phạm vi task, risks chính, approach gợi ý.
 → User confirm để tiếp tục Plan.
@@ -151,6 +186,11 @@ Hiển thị:
 - Estimated effort (nếu có)
 - Top risks
 - Files sẽ thay đổi
+
+**Sau khi user approve GATE C:**
+→ Cập nhật `{paths.tasks}/[task-name]/[task-name]-plan.md`: đổi `Trạng thái: Draft → cần approve` thành `Trạng thái: Approved`
+→ Sau đó mới proceed sang Execute
+
 → Chỉ execute khi có explicit "approved" / "ok"
 
 ### GATE D — Approve Changes (standard + thorough)
@@ -161,9 +201,22 @@ Tóm tắt: issues tìm được (Critical/Warning/Suggestion).
 
 ---
 
+## Resume Handling
+
+Khi user chọn resume từ `execute` mà plan chưa có `Trạng thái: Approved`:
+1. Đọc plan file
+2. Nếu status là `Draft` hoặc `cần approve` → **hiển thị GATE C** với nội dung plan hiện tại
+3. Chỉ tiến vào Execute sau khi user approve GATE C và plan status đã được cập nhật
+
+Khi user chọn `gate-c` trực tiếp:
+→ Đọc plan file, hiển thị GATE C, xử lý như bình thường.
+
+---
+
 ## Progress Tracking
 
-Cập nhật `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md` sau **mỗi phase** hoàn thành:
+Cập nhật `{paths.tasks}/[task-name]/[task-name]-progress.md` sau **mỗi phase** hoàn thành.
+*(Lưu ý: `{paths.tasks}` là template — thay bằng giá trị `paths.tasks` đã đọc từ config)*
 
 ```markdown
 ## Flow Progress
@@ -196,7 +249,7 @@ Nếu trong phase Execute, phát hiện:
 
 ```
 ╔══════════════════════════════════════════════════════╗
-║  ✅ dw-flow complete: $ARGUMENTS
+║  ✅ dw-flow complete: [task-name]
 ╠══════════════════════════════════════════════════════╣
 ║  Phases completed  : [list]
 ║  Subtasks done     : N/N
@@ -214,7 +267,8 @@ Nếu trong phase Execute, phát hiện:
 
 ## Tips
 
-- Muốn chạy nhanh nhất? Dùng với `quick` depth: `DW_DEPTH=quick /dw-flow fix-bug-123`
+- Muốn chạy nhanh nhất? Override depth: `/dw-flow DW_DEPTH=quick fix-bug-123`
 - Muốn dừng và tiếp tục sau? Gõ `stop` tại bất kỳ GATE nào
 - Muốn bỏ một phase? `skip docs-update` hoặc `skip log-work`
-- Muốn xem lại plan trước khi approve? File ở `.dw/tasks/$ARGUMENTS/$ARGUMENTS-plan.md`
+- Muốn xem lại plan trước khi approve? File ở `.dw/tasks/[task-name]/[task-name]-plan.md`
+- Dừng giữa plan và execute? Resume bằng `gate-c` để re-confirm plan trước khi execute
