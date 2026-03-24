@@ -85,7 +85,7 @@ Tài liệu này hướng dẫn cách áp dụng **tư duy phản biện tích c
 
 Khi giao task cho agent, có thể thêm:
 
-- "Khi làm task nên áp dụng kết hợp tư duy trong `.claude/skills/thinking/THINKING.md`: xem xét rủi ro và edge case, tác động lên các module khác, và ít nhất 2 góc nhìn (vd: user + security). Nếu phát hiện giả định sai hoặc thiếu, ghi vào Notes/Changelog của task."
+- "Khi làm task nên áp dụng kết hợp tư duy trong `.claude/skills/dw-thinking/THINKING.md`: xem xét rủi ro và edge case, tác động lên các module khác, và ít nhất 2 góc nhìn (vd: user + security). Nếu phát hiện giả định sai hoặc thiếu, ghi vào Notes/Changelog của task."
 - "Trước khi implement, liệt kê ngắn: (1) giả định đang dùng, (2) 2 rủi ro chính, (3) 1 phương án thay thế đã loại và lý do."
 
 Như vậy agent vừa làm đúng spec vừa bổ sung tư duy phản biện và hệ thống vào doc, giúp người review và task sau có thêm ngữ cảnh.

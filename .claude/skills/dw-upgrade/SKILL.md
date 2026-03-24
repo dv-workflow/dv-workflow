@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-upgrade
 description: "Upgrade dv-workflow-kit lên version mới. So sánh toolkit files, báo cáo thay đổi, cho phép selective update mà không overwrite customizations."
 argument-hint: ""
@@ -60,11 +60,11 @@ Từ: [old version/commit]
 Đến: [new version/commit]
 
 Files mới (đã copy):
-  + .claude/skills/[new-skill]/SKILL.md
+  + .claude/skills/dw-[new-skill]/SKILL.md
   + .claude/templates/en/task-context.md
 
 Files đã thay đổi trong toolkit (KHÔNG tự động update vì bạn có thể đã customize):
-  ~ .claude/skills/task-init/SKILL.md   — xem diff: git diff .dw-module/.claude/skills/task-init/SKILL.md
+  ~ .claude/skills/dw-task-init/SKILL.md   — xem diff: git diff .dw-module/.claude/skills/dw-task-init/SKILL.md
   ~ .claude/agents/planner.md
 
 Files của bạn (giữ nguyên):
