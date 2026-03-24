@@ -1,0 +1,1126 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Claude AI & DW Toolkit — TechLead Presentation</title>
+
+  <!--
+    CDN Links (requires internet).
+    For OFFLINE use, vendor Reveal.js:
+      1. npm install reveal.js
+      2. Copy node_modules/reveal.js/dist → vendor/reveal.js/dist
+      3. Copy node_modules/reveal.js/plugin → vendor/reveal.js/plugin
+      4. Replace the CDN links below with:
+         <link rel="stylesheet" href="vendor/reveal.js/dist/reveal.css" />
+         <link rel="stylesheet" href="vendor/reveal.js/dist/theme/black.css" id="theme" />
+         <link rel="stylesheet" href="vendor/reveal.js/plugin/highlight/monokai.css" />
+         ...and same for <script> tags at bottom
+  -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme" />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css" />
+
+  <link rel="stylesheet" href="css/custom.css" />
+</head>
+<body>
+
+<div class="reveal">
+  <div class="slides">
+
+    <!-- ═══════════════════════════════════════════════
+         PHẦN 1: CLAUDE AI TỪ A ĐẾN Z
+    ═══════════════════════════════════════════════ -->
+
+    <!-- Slide 1: Title -->
+    <section class="slide-title" data-background-gradient="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)">
+      <div class="title-content">
+        <div class="title-badge">TechLead Presentation</div>
+        <h1>Claude AI</h1>
+        <h2>Từ A đến Z</h2>
+        <p class="subtitle">+ Giới thiệu DW Workflow Toolkit</p>
+        <div class="title-meta">
+          <span>Dev Team Internal</span>
+          <span>•</span>
+          <span>2026</span>
+        </div>
+      </div>
+      <aside class="notes">
+        Chào mừng team. Hôm nay chúng ta sẽ đi qua 2 phần:
+        1. Claude AI là gì, làm được gì, dùng như thế nào
+        2. DW Toolkit — workflow hỗ trợ làm việc với Claude hiệu quả hơn
+        Tổng thời gian khoảng 45-60 phút, có Q&A ở cuối mỗi phần.
+      </aside>
+    </section>
+
+    <!-- Slide 2: Agenda -->
+    <section>
+      <h2>Agenda</h2>
+      <div class="two-col">
+        <div class="col">
+          <h3 class="section-tag">Phần 1</h3>
+          <h4>Claude AI từ A-Z</h4>
+          <ul>
+            <li>Claude là gì?</li>
+            <li>Model family</li>
+            <li>Capabilities</li>
+            <li>Claude Code CLI</li>
+            <li>Prompt Engineering</li>
+            <li>Use cases & Best practices</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h3 class="section-tag">Phần 2</h3>
+          <h4>DW Toolkit</h4>
+          <ul>
+            <li>Toolkit là gì?</li>
+            <li>Kiến trúc</li>
+            <li>Workflow depths</li>
+            <li>Key skills</li>
+            <li>/dw-flow demo</li>
+            <li>Setup & Getting started</li>
+          </ul>
+        </div>
+      </div>
+      <aside class="notes">
+        Đây là overview. Phần 1 nặng về lý thuyết + demo. Phần 2 thực hành hơn.
+        Team có thể hỏi ngay khi có thắc mắc.
+      </aside>
+    </section>
+
+    <!-- Slide 3: Claude là gì? -->
+    <section>
+      <h2>Claude là gì?</h2>
+      <div class="highlight-box">
+        <p>Claude là <strong>AI assistant</strong> của <strong>Anthropic</strong> — được thiết kế để helpful, harmless, and honest.</p>
+      </div>
+      <ul>
+        <li class="fragment">Được train bởi <strong>Anthropic</strong> (2021, safety-focused AI lab)</li>
+        <li class="fragment">Large Language Model (LLM) — hiểu và sinh text tự nhiên</li>
+        <li class="fragment">Có thể viết code, phân tích, debug, review, giải thích</li>
+        <li class="fragment">Context window lên đến <strong>200K tokens</strong> (~150K words)</li>
+        <li class="fragment">API-first — tích hợp được vào workflow</li>
+      </ul>
+      <aside class="notes">
+        Anthropic được thành lập bởi ex-OpenAI researchers. Focus vào AI safety.
+        Constitutional AI — Claude được train để tự phê bình và từ chối harmful requests.
+        Context window 200K = có thể đọc toàn bộ codebase vừa trong 1 lần.
+      </aside>
+    </section>
+
+    <!-- Slide 4: Model Family -->
+    <section>
+      <h2>Claude Model Family</h2>
+      <table class="model-table">
+        <thead>
+          <tr>
+            <th>Model</th>
+            <th>Speed</th>
+            <th>Intelligence</th>
+            <th>Cost</th>
+            <th>Best for</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="highlight-row">
+            <td><strong>Haiku</strong></td>
+            <td>⚡⚡⚡ Fastest</td>
+            <td>★★★</td>
+            <td>$</td>
+            <td>Simple tasks, high volume, realtime</td>
+          </tr>
+          <tr>
+            <td><strong>Sonnet</strong></td>
+            <td>⚡⚡ Fast</td>
+            <td>★★★★★</td>
+            <td>$$</td>
+            <td>Daily dev work — <em>default choice</em></td>
+          </tr>
+          <tr>
+            <td><strong>Opus</strong></td>
+            <td>⚡ Moderate</td>
+            <td>★★★★★+</td>
+            <td>$$$</td>
+            <td>Complex reasoning, architecture</td>
+          </tr>
+        </tbody>
+      </table>
+      <p class="tip fragment">💡 <strong>Rule of thumb</strong>: Dùng Sonnet cho daily work. Upgrade Opus khi task cần deep reasoning.</p>
+      <aside class="notes">
+        Hiện tại latest: claude-sonnet-4-6 và claude-opus-4-6.
+        Haiku tốt cho: autocomplete, quick Q&A, high-volume batch processing.
+        Sonnet: code generation, debugging, review — best value.
+        Opus: system design, complex refactoring, ambiguous problems.
+      </aside>
+    </section>
+
+    <!-- Slide 5: Capabilities -->
+    <section>
+      <h2>Capabilities</h2>
+      <div class="capabilities-grid">
+        <div class="cap-item fragment">
+          <div class="cap-icon">💻</div>
+          <h4>Code</h4>
+          <p>Generate, debug, refactor, review code trong mọi ngôn ngữ</p>
+        </div>
+        <div class="cap-item fragment">
+          <div class="cap-icon">🔍</div>
+          <h4>Analysis</h4>
+          <p>Đọc và hiểu codebase lớn, trace bugs, explain logic</p>
+        </div>
+        <div class="cap-item fragment">
+          <div class="cap-icon">✍️</div>
+          <h4>Writing</h4>
+          <p>Docs, comments, commit messages, PR descriptions</p>
+        </div>
+        <div class="cap-item fragment">
+          <div class="cap-icon">🧠</div>
+          <h4>Reasoning</h4>
+          <p>System design, trade-off analysis, architecture decisions</p>
+        </div>
+        <div class="cap-item fragment">
+          <div class="cap-icon">🛠️</div>
+          <h4>Tool Use</h4>
+          <p>Gọi functions, đọc files, chạy commands (qua agentic mode)</p>
+        </div>
+        <div class="cap-item fragment">
+          <div class="cap-icon">🔄</div>
+          <h4>Multi-turn</h4>
+          <p>Nhớ context trong conversation, iterate, refine</p>
+        </div>
+      </div>
+      <aside class="notes">
+        Tool use là game changer — Claude không chỉ trả lời mà có thể thực sự chạy code, đọc files.
+        Multi-turn: khác với search engine, Claude nhớ những gì đã nói trong conversation.
+      </aside>
+    </section>
+
+    <!-- Slide 6: Agentic Mode -->
+    <section>
+      <h2>Agentic Mode — Sức mạnh thực sự</h2>
+      <p class="subtitle-small">Claude không chỉ trả lời — nó có thể <em>tự hành động</em> trong môi trường thực</p>
+      <div class="two-col">
+        <div class="col">
+          <h4>Cách hoạt động</h4>
+          <div class="agentic-flow">
+            <div class="ag-step">📋 Nhận task từ user</div>
+            <div class="ag-arrow">↓</div>
+            <div class="ag-step">🔍 Research: đọc files, grep code</div>
+            <div class="ag-arrow">↓</div>
+            <div class="ag-step">🧠 Plan: phân tích, lập kế hoạch</div>
+            <div class="ag-arrow">↓</div>
+            <div class="ag-step">⚙️ Execute: edit files, run commands</div>
+            <div class="ag-arrow">↓</div>
+            <div class="ag-step">✅ Verify: chạy tests, check output</div>
+            <div class="ag-arrow">↓</div>
+            <div class="ag-step">📊 Report kết quả cho user</div>
+          </div>
+        </div>
+        <div class="col">
+          <h4>Tools có sẵn</h4>
+          <div class="tools-list">
+            <div class="tool-item fragment"><span class="tool-icon">📂</span><span><code>Read/Write/Edit</code> — Đọc, ghi, sửa files</span></div>
+            <div class="tool-item fragment"><span class="tool-icon">🔎</span><span><code>Grep/Glob</code> — Tìm kiếm trong codebase</span></div>
+            <div class="tool-item fragment"><span class="tool-icon">💻</span><span><code>Bash</code> — Chạy commands, tests, builds</span></div>
+            <div class="tool-item fragment"><span class="tool-icon">🌐</span><span><code>WebSearch/WebFetch</code> — Tìm kiếm web, đọc docs</span></div>
+            <div class="tool-item fragment"><span class="tool-icon">🤖</span><span><code>Agent</code> — Spawn sub-agents song song</span></div>
+            <div class="tool-item fragment"><span class="tool-icon">🔌</span><span><code>MCP Tools</code> — Extensible với custom tools</span></div>
+          </div>
+          <p class="tip fragment" style="margin-top:0.8em">💡 Agentic = Claude có thể hoàn thành task <strong>multi-step</strong> mà không cần prompt từng bước</p>
+        </div>
+      </div>
+      <aside class="notes">
+        Đây là điểm khác biệt lớn nhất giữa Claude API thuần và Claude Code agentic mode.
+        Ví dụ thực tế: "Add unit tests for UserService" → Claude tự đọc UserService, tìm methods, viết tests, chạy, fix nếu fail, commit.
+        Sub-agents: một task lớn có thể spawn nhiều agents chạy song song — research agent, implementation agent, review agent.
+        MCP (Model Context Protocol): giao thức mở để thêm custom tools — database queries, Jira integration, Slack, etc.
+      </aside>
+    </section>
+
+    <!-- Slide 7: Claude Code CLI + Extensibility -->
+    <section>
+      <h2>Claude Code CLI</h2>
+      <p class="subtitle-small">AI coding assistant chạy trong terminal — hiểu cả codebase, extensible cho mọi team</p>
+      <div class="two-col">
+        <div class="col">
+          <h4>Cài đặt & dùng ngay</h4>
+          <pre><code class="language-bash">npm install -g @anthropic-ai/claude-code
+claude  # Interactive session
+
+# Hỏi về codebase
+claude "Explain how auth works here"
+
+# Fix bug cụ thể
+claude "Fix failing test in user.test.ts"</code></pre>
+          <h4 style="margin-top:0.8em">Extensibility</h4>
+          <div class="tools-list" style="margin-top:0.3em">
+            <div class="tool-item"><span class="tool-icon">⚡</span><span><strong>Slash commands</strong> — Custom workflows: <code>/my-deploy</code>, <code>/pr-review</code></span></div>
+            <div class="tool-item"><span class="tool-icon">📋</span><span><strong>CLAUDE.md + Rules</strong> — Code style, conventions persist across sessions</span></div>
+            <div class="tool-item"><span class="tool-icon">🔌</span><span><strong>MCP Servers</strong> — Connect DB, Jira, Slack, GitHub trực tiếp</span></div>
+          </div>
+        </div>
+        <div class="col">
+          <h4>Điểm mạnh so với Copilot/Cursor</h4>
+          <ul>
+            <li class="fragment">Đọc <strong>toàn bộ codebase</strong> → hiểu đúng context</li>
+            <li class="fragment">Edit files, chạy tests, git — <strong>end-to-end</strong></li>
+            <li class="fragment">Permission model rõ ràng — user approve từng action</li>
+            <li class="fragment">CLAUDE.md = "onboard" Claude vào project của bạn</li>
+            <li class="fragment">Sub-agents chạy song song cho tasks phức tạp</li>
+            <li class="fragment">Open extensibility qua MCP protocol</li>
+          </ul>
+        </div>
+      </div>
+      <aside class="notes">
+        Claude Code khác Copilot: không chỉ autocomplete mà thực sự hiểu project context và thực hiện multi-step tasks.
+        CLAUDE.md: viết 1 lần, Claude đọc mỗi session — giống như onboarding doc cho AI.
+        MCP (Model Context Protocol): open standard, cộng đồng đang build rất nhiều MCP servers.
+        Permission model: Claude hỏi trước khi write/delete files — an toàn hơn auto-apply.
+      </aside>
+    </section>
+
+    <!-- Slide 7: Prompt Engineering Basics -->
+    <section>
+      <h2>Prompt Engineering Basics</h2>
+      <div class="pe-grid">
+        <div class="pe-item fragment">
+          <h4>1. Clear Context</h4>
+          <pre><code class="language-markdown">❌ "Fix this bug"
+
+✅ "In src/auth/login.ts, the JWT
+   validation fails when token has
+   no expiry. Fix using our existing
+   verifyToken() helper"</code></pre>
+        </div>
+        <div class="pe-item fragment">
+          <h4>2. Specify Output</h4>
+          <pre><code class="language-markdown">✅ "Return only the fixed function,
+   no explanation needed"
+
+✅ "Give me a markdown table comparing
+   these 3 approaches"</code></pre>
+        </div>
+        <div class="pe-item fragment">
+          <h4>3. Examples Help</h4>
+          <pre><code class="language-markdown">✅ "Write tests like this example:
+   [paste existing test]
+   Now write tests for UserService"</code></pre>
+        </div>
+        <div class="pe-item fragment">
+          <h4>4. Role Framing</h4>
+          <pre><code class="language-markdown">✅ "You are a security engineer.
+   Review this auth middleware
+   for vulnerabilities"</code></pre>
+        </div>
+      </div>
+      <aside class="notes">
+        Prompt engineering không phải magic — chỉ là communication skill.
+        Tốt nhất: treat Claude như một senior dev mới join team. Cho context, give examples, specify what you want.
+        Iteration is fine — nếu không đúng, refine và ask again.
+      </aside>
+    </section>
+
+    <!-- Slide 8: Use Cases + Best Practices (merged) -->
+    <section>
+      <h2>Use Cases & Best Practices</h2>
+      <div class="two-col">
+        <div class="col">
+          <h4>High-value tasks</h4>
+          <div class="usecase-list">
+            <div class="usecase fragment">
+              <span class="usecase-badge high">★★★</span>
+              <div><strong>Code Review</strong> — Tìm bugs, security issues, performance problems</div>
+            </div>
+            <div class="usecase fragment">
+              <span class="usecase-badge high">★★★</span>
+              <div><strong>Test Generation</strong> — Generate unit/integration tests từ existing code</div>
+            </div>
+            <div class="usecase fragment">
+              <span class="usecase-badge high">★★★</span>
+              <div><strong>Debugging</strong> — Trace errors, explain stack traces, suggest fixes</div>
+            </div>
+            <div class="usecase fragment">
+              <span class="usecase-badge medium">★★</span>
+              <div><strong>Refactoring + Docs + Boilerplate</strong> — Extract functions, generate README, CRUD</div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <h4>Best practices</h4>
+          <div class="practices-list" style="gap:0.4em">
+            <div class="practice fragment">
+              <span class="num" style="font-size:1em">01</span>
+              <div style="font-size:0.8em"><strong>Small focused prompts</strong> — 1 task = 1 prompt, đừng mix</div>
+            </div>
+            <div class="practice fragment">
+              <span class="num" style="font-size:1em">02</span>
+              <div style="font-size:0.8em"><strong>Review mọi output</strong> — Treat như code của junior dev</div>
+            </div>
+            <div class="practice fragment">
+              <span class="num" style="font-size:1em">03</span>
+              <div style="font-size:0.8em"><strong>Iterate với feedback cụ thể</strong> — "Fix X, keep Y, add Z"</div>
+            </div>
+            <div class="practice fragment">
+              <span class="num" style="font-size:1em">04</span>
+              <div style="font-size:0.8em"><strong>Paste context đầy đủ</strong> — Error message, relevant code, expected behavior</div>
+            </div>
+            <div class="practice fragment">
+              <span class="num" style="font-size:1em">05</span>
+              <div style="font-size:0.8em"><strong>Dùng Agentic mode</strong> — Cho tasks multi-step, Claude tự research + execute</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        High value: nơi Claude tiết kiệm nhiều thời gian nhất — code review không mệt, test gen viết 80% đúng.
+        Best practice quan trọng nhất: review output. Claude không biết business logic riêng của project bạn.
+        Agentic mode đặc biệt tốt cho: "add tests to all services in this module" — 1 prompt, Claude tự làm hết.
+      </aside>
+    </section>
+
+    <!-- Slide 11: Limitations & Gotchas (expanded) -->
+    <section>
+      <h2>Điểm yếu cần lưu ý — Claude</h2>
+      <div class="limitations-expanded">
+        <div class="lim-row fragment">
+          <div class="lim-header">
+            <span class="lim-icon">⚠️</span>
+            <h4>Hallucination — Nguy hiểm nhất</h4>
+          </div>
+          <div class="lim-body">
+            <div class="lim-example">
+              <span class="bad">❌ Thực tế</span> Claude tạo function <code>getUserById()</code> gọi đến <code>db.findUser()</code> — method này không tồn tại trong codebase của bạn
+            </div>
+            <div class="lim-fix">
+              <span class="good">✅ Phòng tránh</span> Review mọi generated code như review junior dev. Run tests. Grep để verify function names thực sự tồn tại.
+            </div>
+          </div>
+        </div>
+        <div class="lim-row fragment">
+          <div class="lim-header">
+            <span class="lim-icon">🌀</span>
+            <h4>Context Drift — Trong sessions dài</h4>
+          </div>
+          <div class="lim-body">
+            <div class="lim-example">
+              <span class="bad">❌ Thực tế</span> Sau 50+ turns, Claude "quên" conventions ban đầu, bắt đầu mix coding styles hoặc đi lạc khỏi requirement
+            </div>
+            <div class="lim-fix">
+              <span class="good">✅ Phòng tránh</span> Break tasks thành sessions nhỏ. Tóm tắt context quan trọng khi bắt đầu session mới. Nhắc lại key constraints khi cần.
+            </div>
+          </div>
+        </div>
+        <div class="lim-row fragment">
+          <div class="lim-header">
+            <span class="lim-icon">📅</span>
+            <h4>Knowledge Cutoff + Library Versions</h4>
+          </div>
+          <div class="lim-body">
+            <div class="lim-example">
+              <span class="bad">❌ Thực tế</span> Claude suggest API của React 18 khi project đang dùng React 19, hoặc dùng deprecated pattern của NestJS v9
+            </div>
+            <div class="lim-fix">
+              <span class="good">✅ Phòng tránh</span> Ghi rõ version trong <code>CLAUDE.md</code> (Claude Code) hoặc paste relevant docs vào context. Luôn verify với official docs.
+            </div>
+          </div>
+        </div>
+        <div class="lim-row fragment">
+          <div class="lim-header">
+            <span class="lim-icon">🔐</span>
+            <h4>Data Privacy — Không paste sensitive data</h4>
+          </div>
+          <div class="lim-body">
+            <div class="lim-example">
+              <span class="bad">❌ Tránh</span> Paste API keys, database credentials, customer PII, hoặc proprietary business logic vào prompt
+            </div>
+            <div class="lim-fix">
+              <span class="good">✅ Rule</span> Dùng placeholder (<code>SECRET_KEY</code>, <code>USER_DATA</code>). Enterprise tier có data isolation. Đọc data governance policy.
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Hallucination: case thực tế — Claude generate unit test gọi method không tồn tại, test pass khi mock nhưng fail ở integration. Luôn run actual tests.
+        Context drift: nếu thấy output quality giảm → start new session với context summary.
+        Privacy: nhiều công ty có policy về AI tools. Đảm bảo team biết và tuân thủ.
+        Knowledge cutoff hiện tại: August 2025. Mọi thứ sau đó Claude không biết.
+      </aside>
+    </section>
+
+    <!-- Slide: Claude Demo -->
+    <section>
+      <h2>Demo — Claude Code trong thực tế</h2>
+      <p class="subtitle-small">Scenario: Fix bug + viết test cho một API endpoint</p>
+      <div class="demo-steps">
+        <div class="demo-step fragment">
+          <span class="demo-num">1</span>
+          <div class="demo-content">
+            <h4>Mô tả bug</h4>
+            <pre><code class="language-bash">claude "The POST /api/users endpoint returns 500
+when email already exists. It should return 409
+Conflict. Fix it and add a test."</code></pre>
+          </div>
+        </div>
+        <div class="demo-step fragment">
+          <span class="demo-num">2</span>
+          <div class="demo-content">
+            <h4>Claude tự research</h4>
+            <pre><code class="language-bash">▶ Reading src/api/users.controller.ts ...
+▶ Reading src/services/user.service.ts ...
+▶ Found: no duplicate email check before insert
+▶ Reading users.controller.spec.ts ...</code></pre>
+          </div>
+        </div>
+        <div class="demo-step fragment">
+          <span class="demo-num">3</span>
+          <div class="demo-content">
+            <h4>Fix + test</h4>
+            <pre><code class="language-typescript">// Thêm check trước khi insert
+const exists = await this.userService.findByEmail(dto.email);
+if (exists) throw new ConflictException('Email already exists');
+// + viết test case cho 409 scenario</code></pre>
+          </div>
+        </div>
+        <div class="demo-step fragment">
+          <span class="demo-num">4</span>
+          <div class="demo-content">
+            <h4>Verify</h4>
+            <pre><code class="language-bash">▶ Running: npm test -- users.controller.spec
+✓ POST /users → 201 Created
+✓ POST /users duplicate email → 409 Conflict
+All tests passed.</code></pre>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Demo live nếu có môi trường sẵn, hoặc walk through scenario này.
+        Key insight: Claude không chỉ "suggest" — nó đọc actual code, fix đúng pattern của project, viết test theo existing style.
+        Toàn bộ flow từ bước 1 đến khi test pass: ~2 phút. Manual: 15-30 phút.
+        Nhấn mạnh: dev vẫn phải review code trước khi commit.
+      </aside>
+    </section>
+
+    <!-- Slide: Claude Section Summary -->
+    <section data-background-gradient="linear-gradient(135deg, #0f3460 0%, #16213e 100%)">
+      <h2>Tóm Tắt Phần 1</h2>
+      <div class="summary-grid">
+        <div class="summary-item">
+          <strong>Claude</strong>
+          <p>AI assistant của Anthropic, safety-focused</p>
+        </div>
+        <div class="summary-item">
+          <strong>Models</strong>
+          <p>Haiku (fast) → Sonnet (balanced) → Opus (smart)</p>
+        </div>
+        <div class="summary-item">
+          <strong>Claude Code CLI</strong>
+          <p>AI coding assistant với full codebase context</p>
+        </div>
+        <div class="summary-item">
+          <strong>Key Rule</strong>
+          <p>Review everything. Be specific. Iterate.</p>
+        </div>
+      </div>
+      <p class="fragment" style="margin-top: 2rem; font-size: 1.2em;">
+        👉 Tiếp theo: <strong>DW Workflow Toolkit</strong> — workflow để làm việc với Claude có hệ thống hơn
+      </p>
+      <aside class="notes">
+        Q&A nhanh trước khi qua phần 2?
+        Phần 2 sẽ practical hơn — show cách team dùng DW Toolkit với Claude Code.
+      </aside>
+    </section>
+
+    <!-- ═══════════════════════════════════════════════
+         PHẦN 2: DW WORKFLOW TOOLKIT
+    ═══════════════════════════════════════════════ -->
+
+    <!-- Slide 12: DW Section Title -->
+    <section class="slide-title" data-background-gradient="linear-gradient(135deg, #1a1a2e 0%, #0f3460 50%, #533483 100%)">
+      <div class="title-content">
+        <div class="title-badge">Phần 2</div>
+        <h1>DW Toolkit</h1>
+        <h2>Workflow cho Dev Team</h2>
+        <p class="subtitle">Làm việc với AI có hệ thống, reproducible, và scalable</p>
+      </div>
+      <aside class="notes">
+        DW = Dev Workflow. Toolkit này sinh ra để giải quyết vấn đề: "Dùng Claude thế nào cho đúng, consistent, không phụ thuộc vào từng dev biết prompt hay không"
+      </aside>
+    </section>
+
+    <!-- Slide 13: Vấn đề cần giải quyết -->
+    <section>
+      <h2>Vấn đề cần giải quyết</h2>
+      <div class="problem-list">
+        <div class="problem fragment">
+          <span class="problem-icon">😵</span>
+          <div>
+            <strong>Mỗi người dùng Claude một kiểu</strong> — Không có standard workflow, output inconsistent
+          </div>
+        </div>
+        <div class="problem fragment">
+          <span class="problem-icon">🤷</span>
+          <div>
+            <strong>Không có handoff</strong> — Session mới mất context, AI không biết đang ở đâu
+          </div>
+        </div>
+        <div class="problem fragment">
+          <span class="problem-icon">🏃</span>
+          <div>
+            <strong>AI code thẳng không có plan</strong> — Vào execute ngay, scope creep, bugs khó track
+          </div>
+        </div>
+        <div class="problem fragment">
+          <span class="problem-icon">📊</span>
+          <div>
+            <strong>Không track được effort</strong> — AI làm bao nhiêu? Estimate có đúng không?
+          </div>
+        </div>
+        <div class="problem fragment">
+          <span class="problem-icon">🔒</span>
+          <div>
+            <strong>Thiếu gates</strong> — Không có checkpoint để human review trước khi AI execute
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Những vấn đề này phổ biến khi team bắt đầu dùng AI coding tools.
+        DW Toolkit giải quyết bằng cách chuẩn hóa workflow với AI.
+      </aside>
+    </section>
+
+    <!-- Slide 14: DW Toolkit là gì? -->
+    <section>
+      <h2>DW Toolkit là gì?</h2>
+      <div class="highlight-box">
+        <p>Một bộ <strong>skills + workflow methodology</strong> chạy trên Claude Code CLI — biến AI thành một team member có quy trình làm việc bài bản.</p>
+      </div>
+      <div class="three-col" style="margin-top: 2rem;">
+        <div class="col-item fragment">
+          <div class="col-icon">⚙️</div>
+          <h4>Config-driven</h4>
+          <p>1 file YAML điều khiển toàn bộ behavior</p>
+        </div>
+        <div class="col-item fragment">
+          <div class="col-icon">🔌</div>
+          <h4>Platform-agnostic</h4>
+          <p>Methodology thuần, adapter cho từng AI platform</p>
+        </div>
+        <div class="col-item fragment">
+          <div class="col-icon">🎭</div>
+          <h4>Multi-role</h4>
+          <p>AI đóng vai BA, Dev, TL, QC, PM theo context</p>
+        </div>
+      </div>
+      <aside class="notes">
+        Config-driven là key insight: không hard-code workflow, project nào cũng config khác nhau.
+        Platform-agnostic: logic nằm trong WORKFLOW.md, không phải trong Claude-specific syntax.
+        Multi-role: cùng 1 agent có thể switch vai tùy phase của workflow.
+      </aside>
+    </section>
+
+    <!-- Slide 15: Kiến trúc -->
+    <section>
+      <h2>Kiến Trúc</h2>
+      <div class="two-col">
+        <div class="col">
+          <h4>Cấu trúc thư mục</h4>
+          <pre><code class="language-bash">your-project/
+├── CLAUDE.md          # Project instructions
+├── .claude/
+│   ├── skills/        # /dw-* commands
+│   │   ├── dw-flow/
+│   │   ├── dw-plan/
+│   │   └── ...
+│   ├── rules/         # Code style, workflow
+│   └── templates/     # Task doc templates
+└── .dw/
+    ├── config/
+    │   └── dw.config.yml  # ← Main config
+    ├── tasks/         # Task documentation
+    │   └── [task]/
+    │       ├── context.md
+    │       ├── plan.md
+    │       └── progress.md
+    └── core/          # Methodology docs</code></pre>
+        </div>
+        <div class="col">
+          <h4>Config file</h4>
+          <pre><code class="language-yaml">workflow:
+  default_depth: standard
+
+team:
+  roles: [dev, techlead, qc]
+
+tracking:
+  estimation: true
+  log_work: true
+
+quality:
+  test_command: "npm test"
+  lint_command: "npm run lint"
+  block_on_fail: true</code></pre>
+          <p class="tip" style="margin-top: 1rem;">💡 Đọc config đầu tiên trước mọi action</p>
+        </div>
+      </div>
+      <aside class="notes">
+        .claude/ là Claude Code-specific: skills, rules, templates.
+        .dw/ là platform-agnostic: config, task docs, core methodology.
+        dw.config.yml là source of truth cho mọi behavior.
+      </aside>
+    </section>
+
+    <!-- Slide 16: Workflow Depths -->
+    <section>
+      <h2>Workflow Depths</h2>
+      <p>AI tự assess scope, chọn depth phù hợp:</p>
+      <table class="depth-table">
+        <thead>
+          <tr>
+            <th>Depth</th>
+            <th>Khi nào</th>
+            <th>Phases</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="fragment">
+            <td><span class="badge quick">quick</span></td>
+            <td>≤2 files, hotfix, familiar module</td>
+            <td>Understand → Execute → Close</td>
+          </tr>
+          <tr class="fragment">
+            <td><span class="badge standard">standard</span></td>
+            <td>3-5 files, module mới</td>
+            <td>Tất cả 6 phases</td>
+          </tr>
+          <tr class="fragment">
+            <td><span class="badge thorough">thorough</span></td>
+            <td>6+ files, API/DB/security changes</td>
+            <td>Full + arch-review + test-plan</td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="fragment" style="margin-top: 1.5rem;">
+        <h4>6 Core Phases</h4>
+        <div class="phases-flow">
+          <span class="phase">Initialize</span>
+          <span class="arrow">→</span>
+          <span class="phase">Understand</span>
+          <span class="arrow">→</span>
+          <span class="phase">Plan</span>
+          <span class="arrow">→</span>
+          <span class="phase">Execute</span>
+          <span class="arrow">→</span>
+          <span class="phase">Verify</span>
+          <span class="arrow">→</span>
+          <span class="phase">Close</span>
+        </div>
+      </div>
+      <aside class="notes">
+        Default depth từ config, nhưng AI có thể override theo từng task.
+        Quick: hotfix lúc 2am không cần full ceremony.
+        Thorough: database migration, auth changes, public API changes.
+        6 phases = Init, Understand (research), Plan, Execute, Verify (review), Close (commit).
+      </aside>
+    </section>
+
+    <!-- Slide 17: Key Skills Cheat Sheet -->
+    <section>
+      <h2>Key Skills — Cheat Sheet</h2>
+      <table class="skills-table">
+        <thead>
+          <tr><th>Skill</th><th>Mô tả</th><th>Depth</th></tr>
+        </thead>
+        <tbody>
+          <tr><td><code>/dw-flow</code></td><td>🎯 Orchestrator: chạy toàn bộ workflow tự động</td><td>all</td></tr>
+          <tr><td><code>/dw-task-init</code></td><td>Khởi tạo task docs (context/plan/progress)</td><td>all</td></tr>
+          <tr><td><code>/dw-research</code></td><td>Khảo sát codebase, tìm dependencies</td><td>all</td></tr>
+          <tr><td><code>/dw-plan</code></td><td>Lập kế hoạch, phân subtasks — chờ approve</td><td>standard+</td></tr>
+          <tr><td><code>/dw-execute</code></td><td>Implement theo plan đã approve (TDD)</td><td>all</td></tr>
+          <tr><td><code>/dw-review</code></td><td>Code review: Critical/Warning/Suggestion</td><td>standard+</td></tr>
+          <tr><td><code>/dw-commit</code></td><td>Smart commit với quality gates</td><td>all</td></tr>
+          <tr><td><code>/dw-debug</code></td><td>Debug: Investigate → Diagnose → Fix</td><td>all</td></tr>
+          <tr><td><code>/dw-handoff</code></td><td>Bàn giao session cho người/agent tiếp theo</td><td>all</td></tr>
+        </tbody>
+      </table>
+      <aside class="notes">
+        /dw-flow là entry point quan trọng nhất — nó orchestrate tất cả skills khác.
+        /dw-plan có hard gate: AI DỪNG và chờ approve trước khi execute.
+        /dw-debug có quy trình riêng: không random fix, phải investigate trước.
+      </aside>
+    </section>
+
+    <!-- Slide 18: /dw-flow Demo -->
+    <section>
+      <h2>/dw-flow — Orchestrator</h2>
+      <p class="subtitle-small">Một command, toàn bộ workflow từ A-Z với human checkpoints</p>
+      <div class="two-col">
+        <div class="col">
+          <h4>Dùng như thế nào</h4>
+          <pre><code class="language-bash"># Standard workflow
+/dw-flow add-user-authentication
+
+# Override depth
+/dw-flow DW_DEPTH=quick fix-login-bug
+
+# Thorough với full ceremony
+/dw-flow DW_DEPTH=thorough redesign-payment-api</code></pre>
+
+          <h4>Human Checkpoints (Gates)</h4>
+          <ul style="font-size: 0.85em;">
+            <li><strong>GATE A</strong>: Confirm scope sau Research</li>
+            <li><strong>GATE C</strong>: Approve plan ← <em>HARD GATE</em></li>
+            <li><strong>GATE D</strong>: Approve changes sau Review</li>
+          </ul>
+        </div>
+        <div class="col">
+          <h4>Thorough Pipeline</h4>
+          <div class="pipeline">
+            <div class="pipeline-step">Task Init</div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step">Requirements</div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step gate">GATE A</div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step">Research + Arch Review</div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step">Plan</div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step gate">GATE C ← HARD</div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step">Execute + Review</div>
+            <div class="pipeline-arrow">↓</div>
+            <div class="pipeline-step">Commit</div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Gate C là quan trọng nhất: AI không được execute nếu chưa có plan approval.
+        User có thể gõ "revise: [feedback]" tại bất kỳ gate nào để AI chỉnh lại.
+        Gõ "stop" để dừng workflow bất kỳ lúc nào.
+      </aside>
+    </section>
+
+    <!-- Slide 19: Setup cho Project Mới -->
+    <section>
+      <h2>Setup cho Project Mới</h2>
+      <div class="setup-steps">
+        <div class="setup-step fragment">
+          <span class="step-num">1</span>
+          <div>
+            <h4>Cài dw-kit</h4>
+            <pre><code class="language-bash">npm install -g dw-kit
+# hoặc copy từ repo nội bộ</code></pre>
+          </div>
+        </div>
+        <div class="setup-step fragment">
+          <span class="step-num">2</span>
+          <div>
+            <h4>Init trong project</h4>
+            <pre><code class="language-bash">cd your-project
+/dw-config-init
+# Trả lời các câu hỏi về team, depth, roles</code></pre>
+          </div>
+        </div>
+        <div class="setup-step fragment">
+          <span class="step-num">3</span>
+          <div>
+            <h4>Cập nhật CLAUDE.md</h4>
+            <pre><code class="language-markdown"># Thêm tech stack của project
+## Tech Stack
+- Framework: NestJS
+- Database: PostgreSQL
+- Testing: Jest</code></pre>
+          </div>
+        </div>
+        <div class="setup-step fragment">
+          <span class="step-num">4</span>
+          <div>
+            <h4>Bắt đầu task đầu tiên</h4>
+            <pre><code class="language-bash">/dw-flow tên-task-của-bạn</code></pre>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Setup chỉ làm 1 lần per project.
+        CLAUDE.md là doc quan trọng nhất — Claude đọc file này ở mỗi session.
+        /dw-config-validate để check config sau khi setup.
+      </aside>
+    </section>
+
+    <!-- Slide 20: Tips & Best Practices (DW) -->
+    <section>
+      <h2>Tips khi dùng DW Toolkit</h2>
+      <div class="tips-grid">
+        <div class="tip-item fragment">
+          <span class="tip-icon">🎯</span>
+          <div>
+            <strong>Dùng /dw-flow cho tasks mới</strong> — Đừng nhảy thẳng vào execute
+          </div>
+        </div>
+        <div class="tip-item fragment">
+          <span class="tip-icon">📝</span>
+          <div>
+            <strong>Đọc plan trước khi approve</strong> — Gate C là checkpoint quan trọng nhất
+          </div>
+        </div>
+        <div class="tip-item fragment">
+          <span class="tip-icon">🔄</span>
+          <div>
+            <strong>Dùng "revise: [feedback]"</strong> — Nếu output chưa đúng, iterate tại gate
+          </div>
+        </div>
+        <div class="tip-item fragment">
+          <span class="tip-icon">💾</span>
+          <div>
+            <strong>Commit sau mỗi subtask</strong> — Small commits, dễ rollback
+          </div>
+        </div>
+        <div class="tip-item fragment">
+          <span class="tip-icon">📊</span>
+          <div>
+            <strong>Track effort thực tế</strong> — /dw-log-work để cải thiện estimate dần
+          </div>
+        </div>
+        <div class="tip-item fragment">
+          <span class="tip-icon">🚀</span>
+          <div>
+            <strong>Override depth khi cần</strong> — DW_DEPTH=quick cho hotfixes
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Tip quan trọng nhất: đọc plan kỹ tại Gate C. Đây là lúc bạn control được AI direction.
+        "Revise" là powerful: bạn có thể request changes mà không phải restart toàn bộ flow.
+        Effort tracking giúp team estimate tốt hơn theo thời gian.
+      </aside>
+    </section>
+
+    <!-- Slide: DW Toolkit — Điểm yếu cần lưu ý -->
+    <section>
+      <h2>DW Toolkit — Điểm yếu cần lưu ý</h2>
+      <p class="subtitle-small">Honest assessment: những gì chưa tốt và cần team chú ý</p>
+      <div class="weaknesses-list">
+        <div class="weakness-item fragment">
+          <div class="w-icon">⏱️</div>
+          <div class="w-content">
+            <h4>Thorough depth = nhiều ceremony</h4>
+            <p>12 phases cho thorough có thể quá nặng cho tasks nhỏ. Team cần discipline để chọn đúng depth, không áp dụng máy móc.</p>
+            <div class="w-mitigation">👉 Override: <code>DW_DEPTH=quick</code> cho hotfixes, config <code>default_depth: standard</code> cho projects nhỏ</div>
+          </div>
+        </div>
+        <div class="weakness-item fragment">
+          <div class="w-icon">🔌</div>
+          <div class="w-content">
+            <h4>Phụ thuộc vào Claude Code CLI</h4>
+            <p>Hiện tại DW Toolkit optimize cho Claude Code. Nếu team switch AI tool (Cursor, Copilot…), cần adaptation work.</p>
+            <div class="w-mitigation">👉 Methodology trong <code>WORKFLOW.md</code> là platform-agnostic. Adapters có thể build cho platforms khác.</div>
+          </div>
+        </div>
+        <div class="weakness-item fragment">
+          <div class="w-icon">📚</div>
+          <div class="w-content">
+            <h4>Learning curve ban đầu</h4>
+            <p>Team mới cần thời gian làm quen với skills, gates, config. Estimate đầu tiên thường không chính xác.</p>
+            <div class="w-mitigation">👉 Bắt đầu với 1-2 devs pilot, document learnings, rồi roll out dần cho cả team.</div>
+          </div>
+        </div>
+        <div class="weakness-item fragment">
+          <div class="w-icon">📝</div>
+          <div class="w-content">
+            <h4>Task docs có thể stale</h4>
+            <p>Nếu không maintain đều, context/plan/progress files bị lạc hậu — mất đi giá trị handoff.</p>
+            <div class="w-mitigation">👉 Rule: luôn update progress trước khi end session. <code>/dw-handoff</code> giúp automate việc này.</div>
+          </div>
+        </div>
+        <div class="weakness-item fragment">
+          <div class="w-icon">🧪</div>
+          <div class="w-content">
+            <h4>Quality chỉ tốt khi config đúng</h4>
+            <p>Nếu <code>test_command</code> và <code>lint_command</code> bỏ trống, quality gates không có tác dụng.</p>
+            <div class="w-mitigation">👉 Setup <code>dw.config.yml</code> với đúng commands ngay từ đầu. <code>/dw-config-validate</code> để kiểm tra.</div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Transparency quan trọng: không có tool nào perfect. Biết điểm yếu để dùng đúng chỗ.
+        Ceremony concern: một dev từng phàn nàn "dw-flow mất 30 phút cho một bug fix 5 dòng" → lesson learned, dùng DW_DEPTH=quick cho cases đó.
+        Stale docs: giống như stale tests, stale docs worse than no docs. Cần team culture để maintain.
+        Platform dependency: Anthropic đang develop Agent SDK để cho phép build workflows phức tạp hơn nữa.
+      </aside>
+    </section>
+
+    <!-- Slide: Roadmap & Kế hoạch sắp tới -->
+    <section>
+      <h2>Roadmap & Kế hoạch sắp tới</h2>
+      <div class="two-col">
+        <div class="col">
+          <h4>🤖 Claude — Upcoming Features</h4>
+          <div class="roadmap-list">
+            <div class="roadmap-item fragment">
+              <span class="status-badge available">Available</span>
+              <div>
+                <strong>Extended Thinking</strong> — Claude "suy nghĩ sâu" trước khi trả lời, tốt hơn cho complex reasoning
+              </div>
+            </div>
+            <div class="roadmap-item fragment">
+              <span class="status-badge available">Available</span>
+              <div>
+                <strong>Computer Use</strong> — Claude điều khiển desktop/browser như người dùng thực
+              </div>
+            </div>
+            <div class="roadmap-item fragment">
+              <span class="status-badge available">Available</span>
+              <div>
+                <strong>Agent SDK</strong> — Build multi-agent systems với Claude (orchestrator + subagents)
+              </div>
+            </div>
+            <div class="roadmap-item fragment">
+              <span class="status-badge coming">Coming</span>
+              <div>
+                <strong>Memory & Persistence</strong> — Claude nhớ cross-session không cần CLAUDE.md manual
+              </div>
+            </div>
+            <div class="roadmap-item fragment">
+              <span class="status-badge coming">Coming</span>
+              <div>
+                <strong>Multimodal Agents</strong> — Xử lý images, diagrams, UI screenshots trong workflow
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="col">
+          <h4>🛠️ DW Toolkit — Kế hoạch team</h4>
+          <div class="roadmap-list">
+            <div class="roadmap-item fragment">
+              <span class="status-badge now">Now</span>
+              <div>
+                <strong>Pilot với 1-2 projects</strong> — Validate workflow, collect feedback
+              </div>
+            </div>
+            <div class="roadmap-item fragment">
+              <span class="status-badge now">Now</span>
+              <div>
+                <strong>Setup config.yml cho mỗi project</strong> — test_command, lint_command, roles
+              </div>
+            </div>
+            <div class="roadmap-item fragment">
+              <span class="status-badge soon">Q2 2026</span>
+              <div>
+                <strong>Custom skills cho team</strong> — Build /deploy, /pr-create, /db-migrate skills
+              </div>
+            </div>
+            <div class="roadmap-item fragment">
+              <span class="status-badge soon">Q2 2026</span>
+              <div>
+                <strong>MCP integration</strong> — Connect Claude với Jira, Slack, internal tools
+              </div>
+            </div>
+            <div class="roadmap-item fragment">
+              <span class="status-badge later">Q3 2026</span>
+              <div>
+                <strong>Metrics dashboard</strong> — Track velocity, AI contribution, estimate accuracy
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <aside class="notes">
+        Extended Thinking: như System 2 thinking — Claude dành time để reason through complex problems. Tốt cho architecture decisions.
+        Computer Use: beta nhưng promising — imagine Claude tự test UI, fill forms, navigate apps.
+        Agent SDK: cho phép build "AI team" — BA agent, Dev agent, QC agent phối hợp.
+        Team plan: quan trọng nhất là pilot ngay. Đừng over-plan, học từ thực tế.
+        Custom skills: mỗi team có thể build skills cho internal workflow — CI/CD, deployment, monitoring.
+      </aside>
+    </section>
+
+    <!-- Slide 21: Q&A + Resources -->
+    <section data-background-gradient="linear-gradient(135deg, #1a1a2e 0%, #533483 50%, #0f3460 100%)">
+      <h2>Getting Started & Resources</h2>
+      <div class="resources-grid">
+        <div class="resource-item fragment">
+          <h4>📚 Đọc ngay</h4>
+          <ul>
+            <li><code>CLAUDE.md</code> — Project instructions</li>
+            <li><code>.dw/core/WORKFLOW.md</code> — Methodology</li>
+            <li><code>.dw/config/dw.config.yml</code> — Config</li>
+          </ul>
+        </div>
+        <div class="resource-item fragment">
+          <h4>🚀 Thử ngay</h4>
+          <pre><code class="language-bash"># Mở Claude Code
+claude
+
+# Chạy flow đầu tiên
+/dw-flow DW_DEPTH=quick my-first-task</code></pre>
+        </div>
+        <div class="resource-item fragment">
+          <h4>❓ Cần help?</h4>
+          <ul>
+            <li>/dw-config-validate — check setup</li>
+            <li>/dw-thinking — brainstorm với AI</li>
+            <li>Hỏi TechLead hoặc team channel</li>
+          </ul>
+        </div>
+      </div>
+      <div class="fragment" style="margin-top: 2rem; text-align: center; font-size: 1.4em;">
+        🙋 <strong>Q&A</strong>
+      </div>
+      <aside class="notes">
+        Khuyến khích team thử /dw-flow với một task nhỏ ngay hôm nay.
+        Quick depth là cách tốt nhất để làm quen: không quá nhiều ceremony.
+        Mọi thắc mắc, ping team channel hoặc TechLead.
+      </aside>
+    </section>
+
+    <!-- Slide 22: Thank You -->
+    <section class="slide-title" data-background-gradient="linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #533483 100%)">
+      <div class="title-content">
+        <h2 style="font-size: 2.5em;">Cảm ơn! 🚀</h2>
+        <p class="subtitle" style="margin-top: 1.5rem;">
+          <strong>Claude</strong> + <strong>DW Toolkit</strong><br/>
+          = Dev team làm việc hiệu quả hơn với AI
+        </p>
+        <div class="title-meta" style="margin-top: 3rem;">
+          <span>Happy coding!</span>
+        </div>
+      </div>
+      <aside class="notes">
+        Kết thúc. Nhắc lại: bắt đầu nhỏ với DW_DEPTH=quick, iterate dần.
+        Claude là tool, không phải magic — value của nó phụ thuộc vào cách bạn dùng.
+      </aside>
+    </section>
+
+  </div>
+</div>
+
+<!-- Reveal.js CDN scripts -->
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/highlight.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/notes/notes.js"></script>
+
+<!--
+  For OFFLINE: replace CDN scripts above with:
+  <script src="vendor/reveal.js/dist/reveal.js"></script>
+  <script src="vendor/reveal.js/plugin/highlight/highlight.js"></script>
+  <script src="vendor/reveal.js/plugin/notes/notes.js"></script>
+-->
+
+<script>
+  Reveal.initialize({
+    hash: true,
+    slideNumber: 'c/t',
+    progress: true,
+    controls: true,
+    transition: 'slide',
+    transitionSpeed: 'default',
+    backgroundTransition: 'fade',
+    center: true,
+    width: 1280,
+    height: 720,
+    margin: 0.04,
+    plugins: [RevealHighlight, RevealNotes]
+  });
+</script>
+
+</body>
+</html>

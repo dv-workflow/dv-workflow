@@ -1,0 +1,37 @@
+project:
+  name: new-project-test-v1.0.0
+  language: vi
+workflow:
+  default_depth: thorough
+team:
+  roles:
+    - dev
+    - techlead
+    - ba
+    - qc
+    - pm
+quality:
+  test_command: ""
+  lint_command: ""
+  block_on_fail: false
+tracking:
+  estimation: true
+  log_work: true
+  estimation_unit: hours
+paths:
+  tasks: .dw/tasks
+  docs: .dw/docs
+claude:
+  models:
+    plan: ""
+    execute: ""
+    review: ""
+  structured_output: true
+  worktree_execution: false
+  mcp: []
+_toolkit:
+  core_version: "1.0"
+  platform_version: "1.0"
+  capability_version: "1.0"
+  installed: "2026-03-24"
+  last_upgrade: "2026-03-24"
