@@ -91,7 +91,13 @@ Skills là các `/command` bạn gọi trong Claude Code (hoặc Cursor):
 
 ## 5. Danh sách đầy đủ Skills
 
-### 🔵 Core Workflow (dùng hàng ngày)
+### 🚀 Orchestrator (bắt đầu ở đây)
+
+| Skill | Argument | Mô tả |
+|-------|----------|-------|
+| `/dw-flow` | `[task-name]` | **Chạy toàn bộ workflow một mạch** — AI tự drive từ research → plan → execute → review → commit, dừng tại human checkpoints để bạn approve/feedback |
+
+### 🔵 Core Workflow (dùng từng bước)
 
 | Skill | Argument | Mô tả |
 |-------|----------|-------|
@@ -136,7 +142,86 @@ Skills là các `/command` bạn gọi trong Claude Code (hoặc Cursor):
 
 ---
 
-## 6. Workflow theo Depth
+## 6. dw-flow — Workflow Một Mạch (Khuyến Nghị)
+
+Thay vì gọi từng skill một, dùng `/dw-flow` để AI tự drive toàn bộ:
+
+```
+/dw-flow user-auth
+```
+
+AI sẽ tự động:
+1. Tạo task docs
+2. Khảo sát codebase
+3. Lập kế hoạch → **[GATE: bạn approve hoặc revise]**
+4. Implement từng subtask
+5. Review code → **[GATE: bạn confirm hoặc yêu cầu fix]**
+6. Commit
+
+**Các options tại mỗi checkpoint:**
+```
+→ ok / continue          Tiếp tục
+→ revise: [feedback]     AI chỉnh sửa rồi hỏi lại
+→ skip [phase]           Bỏ qua phase
+→ stop                   Dừng, tiếp tục sau
+```
+
+**Ví dụ interaction:**
+```
+/dw-flow payment-refund
+
+▶ Phase 1: Task Init... ✓
+▶ Phase 2: Research... ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [GATE A] — Confirm Research
+  • Found: RefundService.ts, payment-gateway adapter
+  • Risk: Stripe webhook idempotency cần xử lý
+  • Suggest: thorough depth vì payment-critical
+  Options: ok / revise: ... / stop
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+> ok
+
+▶ Phase 3: Plan... ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [GATE C] — Approve Plan ← HARD GATE
+  • 4 subtasks, ~8h estimate
+  • Risk: idempotency key (medium)
+  • Files: RefundService.ts, refund.test.ts, webhook.ts
+  Options: approved / revise: ... / stop
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+> revise: thêm subtask validate refund amount không vượt original charge
+
+[AI cập nhật plan với subtask mới]
+
+━━ [GATE C lại] ━━
+> approved
+
+▶ Phase 4: Execute... (4/4 subtasks) ✓
+▶ Phase 5: Review... ✓
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  [GATE D] — Approve Changes
+  • 0 Critical, 1 Warning (missing error log), 2 Suggestions
+  Options: ok / revise: fix warning / stop
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+> revise: fix the warning
+
+[AI fix error log, re-run review]
+> ok
+
+▶ Commit... ✓
+
+╔════════════════════════════════════╗
+║  ✅ Complete: payment-refund
+║  4/4 subtasks, 3 commits, ~7.5h
+╚════════════════════════════════════╝
+```
+
+---
+
+## 7. Workflow từng bước (Manual)
 
 ### Quick — Solo dev / Hotfix
 
