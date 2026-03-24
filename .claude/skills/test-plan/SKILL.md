@@ -15,7 +15,8 @@ Feature/Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Kiểm tra `flags.test_plan_skill`. Nếu `false` → DỪNG.
+Đọc `.dw/config/dw.config.yml` → `paths.tasks`, `workflow.default_depth`.
+Skill này dành cho depth: `standard` hoặc `thorough` (QC role).
 
 ## Đọc Tài Liệu Liên Quan
 

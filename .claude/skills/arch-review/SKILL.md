@@ -18,7 +18,8 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Kiểm tra `flags.arch_review_skill`. Nếu `false` → DỪNG.
+Đọc `.dw/config/dw.config.yml` → `paths.tasks`, `workflow.default_depth`.
+Skill này dành cho depth: `thorough` (TL role). Với `standard`, tùy TL quyết định.
 
 ## Role: Tech Lead
 

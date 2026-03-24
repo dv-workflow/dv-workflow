@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-docs-update
 description: "Cập nhật living docs khi code thay đổi. Phát hiện docs lỗi thời và cập nhật tự động. Dùng sau khi execute hoặc commit."
 argument-hint: "[scope: all | architecture | api | models | task-name]"
@@ -11,8 +11,8 @@ Scope: **$ARGUMENTS**
 ## Đọc Config
 
 Đọc `.dw/config/dw.config.yml` → kiểm tra:
-- `flags.living_docs` — nếu `false` → thông báo "Living docs chưa bật" và DỪNG
 - `paths.docs` → thư mục living docs (mặc định: `.dw/docs`)
+- `workflow.default_depth` → nếu `quick`, gợi ý nhưng không bắt buộc
 
 ## Living Docs Structure
 

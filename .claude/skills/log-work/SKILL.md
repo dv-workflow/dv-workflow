@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-log-work
 description: "Ghi nhận effort thực tế cho task hoặc subtask. So sánh với estimate. Cập nhật metrics tracking. Dùng sau khi hoàn thành subtask/task."
 argument-hint: "[task-name]"
@@ -11,10 +11,9 @@ Task: **$ARGUMENTS**
 ## Đọc Config
 
 Đọc `.dw/config/dw.config.yml`:
-- `flags.log_work` — nếu `false` → DỪNG
-- `estimation.unit` → đơn vị
-- `estimation.track_actual` → có so sánh estimate vs actual không
-- `paths.tasks`, `paths.metrics`
+- `tracking.log_work` — nếu `false` → thông báo "Log work chưa bật cho project này" và DỪNG
+- `tracking.estimation_unit` → đơn vị (hours / story-points / t-shirt)
+- `paths.tasks` → location task docs
 
 ## Hỏi User (Interactive)
 
@@ -37,8 +36,7 @@ Cập nhật `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md` → mục "Effort
 
 ## Cập Nhật Metrics File
 
-Nếu `flags.metrics_tracking = true`:
-Ghi vào `{paths.metrics}/effort-log.json`:
+Ghi vào `.dw/metrics/effort-log.json`:
 
 ```json
 {

@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-plan
 description: "Lập kế hoạch implementation chi tiết sau khi đã research. Thiết kế giải pháp, phân chia subtasks, xác định rủi ro. DỪNG để chờ approval trước khi execute."
 argument-hint: "[task-name]"
@@ -16,8 +16,10 @@ Task: **$ARGUMENTS**
 
 Đọc `.dw/config/dw.config.yml` → lấy:
 - `paths.tasks` → location task docs
-- `flags.estimation` → có cần estimate không
-- `team.roles` → ai cần approve
+- `tracking.estimation` → có include estimation trong plan không
+- `tracking.estimation_unit` → đơn vị (hours / story-points / t-shirt)
+- `team.roles` → ai cần approve (có `techlead` → plan cần TL review)
+- `workflow.default_depth` → `thorough` = cần arch-review trước execute
 
 ## QUAN TRỌNG
 - KHÔNG implement bất cứ gì
@@ -49,7 +51,7 @@ Mỗi subtask PHẢI có:
 - **Files**: Danh sách files cần thay đổi
 - **Acceptance criteria**: Điều kiện hoàn thành rõ ràng
 - **Dependencies**: Subtask nào phải xong trước
-- **Estimate** (nếu `flags.estimation = true`): Effort dự kiến
+- **Estimate** (nếu `tracking.estimation = true`): Effort dự kiến theo `tracking.estimation_unit`
 
 Thứ tự subtasks theo dependency graph:
 1. Schema/data changes trước

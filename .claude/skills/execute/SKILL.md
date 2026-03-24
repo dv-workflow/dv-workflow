@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-execute
 description: "Thực hiện implementation theo plan đã được approve. Tuân thủ TDD, commit sau mỗi subtask. Chỉ dùng khi plan đã được duyệt."
 argument-hint: "[task-name]"
@@ -12,10 +12,11 @@ Task: **$ARGUMENTS**
 
 Đọc `.dw/config/dw.config.yml` → lấy:
 - `paths.tasks` → location task docs
-- `flags.pre_commit_tests` → chạy tests trước commit?
-- `flags.log_work` → ghi effort?
-- `flags.living_docs` → cập nhật docs?
-- `flags.docs_update_on_commit` → auto docs-update?
+- `quality.test_command` → lệnh chạy tests (nếu có)
+- `quality.lint_command` → lệnh chạy linter (nếu có)
+- `quality.block_on_fail` → có block commit khi fail không
+- `tracking.log_work` → ghi effort tracking không
+- `workflow.default_depth` → `thorough` = cần docs-update, review bắt buộc
 
 ## Trước Khi Bắt Đầu
 
@@ -46,8 +47,9 @@ Nếu có progress → tiếp tục từ subtask cuối cùng chưa done.
 
 ### Step 4: Verify
 - Chạy test → confirm PASS (green)
-- Chạy linter nếu `flags.pre_commit_lint = true`
-- Nếu fail → sửa và chạy lại
+- Nếu `quality.lint_command` không rỗng: chạy linter
+- Nếu `quality.block_on_fail = true` và fail → DỪNG, fix trước
+- Nếu `quality.block_on_fail = false` → cảnh báo, cho phép tiếp tục
 
 ### Step 5: Cập nhật Progress
 Cập nhật `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md`:
@@ -55,7 +57,7 @@ Cập nhật `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md`:
 | ST-N | [Subtask name] | Done | abc1234 | [ghi chú] |
 ```
 
-Nếu `flags.log_work = true`, ghi thêm:
+Nếu `tracking.log_work = true`, ghi effort thực tế vào:
 ```markdown
 ### Effort Log
 | Subtask | Estimate | Actual | Ghi chú |
@@ -91,6 +93,6 @@ Subtask ST-N of $ARGUMENTS
 
 1. Cập nhật progress: Trạng thái → `Done`
 2. Tóm tắt: subtasks completed, commits, issues encountered
-3. Nếu `flags.review = true`: "Tiếp theo: chạy `/dw-review`"
-4. Nếu `flags.living_docs = true`: "Cần chạy `/dw-docs-update`"
-5. Nếu `flags.log_work = true`: Hiển thị estimate vs actual
+3. Luôn gợi ý: "Tiếp theo: `/dw-review $ARGUMENTS`"
+4. Nếu `workflow.default_depth = thorough`: "Cần chạy `/dw-docs-update $ARGUMENTS`"
+5. Nếu `tracking.log_work = true`: Hiển thị estimate vs actual, gợi ý `/dw-log-work $ARGUMENTS`

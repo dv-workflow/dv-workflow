@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-handoff
 description: "Tạo tài liệu bàn giao session để người hoặc agent tiếp theo có thể tiếp tục không cần hỏi lại. Dùng cuối session hoặc khi chuyển task."
 argument-hint: "[task-name]"
@@ -10,8 +10,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `.dw/config/dw.config.yml` → `flags.handoff`. Nếu `false` → skip.
-Lấy `paths.tasks` để biết location.
+Đọc `.dw/config/dw.config.yml` → `paths.tasks`, `workflow.default_depth`.
 
 ## Thu Thập Thông Tin
 

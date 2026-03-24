@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-estimate
 description: "Ước lượng effort cho task. Phân tích subtasks từ plan và đưa ra estimate theo đơn vị cấu hình (hours/story-points/t-shirt). Dùng sau /plan."
 argument-hint: "[task-name]"
@@ -15,9 +15,8 @@ Task: **$ARGUMENTS**
 ## Đọc Config
 
 Đọc `.dw/config/dw.config.yml`:
-- `flags.estimation` — nếu `false` → thông báo "Estimation chưa bật" và DỪNG
-- `estimation.unit` → đơn vị (hours / story-points / t-shirt)
-- `estimation.categories` → các loại công việc cần estimate
+- `tracking.estimation` — nếu `false` → thông báo "Estimation chưa bật cho project này" và DỪNG
+- `tracking.estimation_unit` → đơn vị (hours / story-points / t-shirt)
 - `paths.tasks` → location task docs
 
 ## Điều Kiện

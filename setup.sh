@@ -64,13 +64,13 @@ if [ -n "$SILENT" ] && [ "$SILENT" = "--silent" ]; then
   LANG="${DW_LANG:-vi}"
 else
   # ---- Câu 1: Project name ----
-  echo -e "${BOLD}[1/4] Tên project?${NC}"
+  echo -e "${BOLD}[Project] Tên project?${NC}"
   read -r -p "  > " PROJECT_NAME
   PROJECT_NAME="${PROJECT_NAME:-my-project}"
   echo ""
 
   # ---- Câu 2: Level ----
-  echo -e "${BOLD}[2/4] Chọn level workflow:${NC}"
+  echo -e "${BOLD}[Level] Chọn level workflow:${NC}"
   echo "  1 = Lite      — research → execute → commit           (solo dev, hotfix nhanh)"
   echo "  2 = Standard  — research → plan → execute → review    (team, feature mới)  [default]"
   echo "  3 = Enterprise — full workflow + living docs + metrics (team lớn, audit trail)"
@@ -79,7 +79,7 @@ else
   echo ""
 
   # ---- Câu 3: Roles ----
-  echo -e "${BOLD}[3/4] Team có những roles nào? (Dev luôn được bật)${NC}"
+  echo -e "${BOLD}[Role] Team có những roles nào? (Dev luôn được bật)${NC}"
   echo "  Nhập số cách nhau bởi dấu phẩy, hoặc Enter để chọn dev+techlead:"
   echo "  1 = Dev (luôn bật)"
   echo "  2 = Tech Lead  — architecture review, approve plans"
@@ -91,7 +91,7 @@ else
   echo ""
 
   # ---- Câu 4: Language ----
-  echo -e "${BOLD}[4/4] Ngôn ngữ docs output?${NC}"
+  echo -e "${BOLD}[Lang] Ngôn ngữ docs output?${NC}"
   echo "  vi = Tiếng Việt  [default]"
   echo "  en = English"
   read -r -p "  Language [vi/en]: " LANG

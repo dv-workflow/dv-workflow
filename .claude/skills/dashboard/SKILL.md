@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-dashboard
 description: "Tạo báo cáo tổng hợp cho PM: trạng thái tasks, metrics DORA, effort tracking, velocity. Ghi ra file report để share."
 argument-hint: "[sprint-name | period: last-week | last-month | all]"
@@ -18,9 +18,9 @@ Period: **$ARGUMENTS**
 ## Đọc Config
 
 Đọc `.dw/config/dw.config.yml`:
-- `flags.dashboard_skill` — nếu `false` → DỪNG
-- `metrics.dora` → thresholds để so sánh
-- `paths.tasks`, `paths.metrics`, `paths.reports`
+- `paths.tasks` → location task docs
+- `tracking.log_work` → có data effort tracking không
+- `workflow.default_depth` → level of reporting detail
 
 ## Thu Thập Dữ Liệu
 
@@ -47,7 +47,7 @@ git log --format="%ad" --date=short | sort | uniq -c
 ```
 
 ### 3. Effort Data
-Đọc `{paths.metrics}/effort-log.json` nếu có.
+Đọc `{.dw/metrics}/effort-log.json` nếu có.
 
 ### 4. Quality Metrics
 Đọc review reports (nếu có) để lấy:
@@ -80,7 +80,7 @@ git log --oneline --after="[start]" | grep -iE "(hotfix|revert|fix:)" | wc -l
 # MTTR: thời gian từ "fix commit" đến "hotfix commit" liền sau (nếu có)
 ```
 
-Xếp loại theo thresholds trong config: `metrics.dora`.
+Xếp loại theo DORA elite benchmarks: Deployment Frequency (daily), Lead Time (<1h), MTTR (<1h), Change Failure Rate (<5%).
 
 ## Tạo Report (Markdown + HTML)
 

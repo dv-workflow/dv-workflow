@@ -14,7 +14,8 @@ Feature: **$ARGUMENTS**
 
 ## Đọc Config
 
-Kiểm tra `flags.requirements_skill`. Nếu `false` → DỪNG.
+Đọc `.dw/config/dw.config.yml` → `paths.tasks`, `team.roles`, `workflow.default_depth`.
+Skill này dành cho depth: `standard` hoặc `thorough`.
 
 ## Quy Trình
 

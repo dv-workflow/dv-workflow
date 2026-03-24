@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-review
 description: "Review code thay đổi gần đây hoặc cả task. Kiểm tra correctness, security, conventions, test coverage. Tạo báo cáo phân loại Critical/Warning/Suggestion."
 argument-hint: "[task-name | branch | file]"
@@ -19,8 +19,7 @@ Target: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `.dw/config/dw.config.yml` → kiểm tra `flags.review`.
-Nếu `false` → thông báo và DỪNG.
+Đọc `.dw/config/dw.config.yml` → `paths.tasks`, `workflow.default_depth`.
 
 ## Xác Định Scope
 

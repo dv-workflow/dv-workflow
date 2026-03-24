@@ -1,4 +1,4 @@
-﻿---
+---
 name: dw-commit
 description: "Tạo commit thông minh với quality checks tùy theo config. Chạy tests/lint trước commit nếu flags bật."
 argument-hint: "[commit message]"
@@ -11,11 +11,11 @@ Message: **$ARGUMENTS**
 ## Đọc Config
 
 Đọc `.dw/config/dw.config.yml` → lấy:
-- `flags.pre_commit_tests` → chạy tests?
-- `flags.pre_commit_lint` → chạy lint?
-- `flags.block_commit_on_fail` → block nếu fail?
-- `flags.docs_update_on_commit` → trigger docs-update?
-- `flags.metrics_tracking` → ghi metrics?
+- `quality.test_command` → lệnh chạy tests (bỏ qua nếu rỗng)
+- `quality.lint_command` → lệnh chạy linter (bỏ qua nếu rỗng)
+- `quality.block_on_fail` → block commit nếu fail
+- `workflow.default_depth` → `thorough` = gợi ý `/dw-docs-update` sau commit
+- `tracking.log_work` → ghi metrics effort
 
 ## Quy Trình
 
@@ -26,17 +26,16 @@ git diff --staged --stat
 ```
 Nếu không có changes → thông báo "Không có gì để commit."
 
-### 2. Quality Checks (theo flags)
+### 2. Quality Checks
 
-**Nếu `pre_commit_tests = true`:**
-- Chạy test suite (hoặc tests liên quan đến files changed)
+**Nếu `quality.test_command` không rỗng:**
+- Chạy: `quality.test_command` (hoặc tests liên quan đến files changed)
 - Nếu FAIL:
-  - `block_commit_on_fail = true` → **DỪNG**, báo lỗi, yêu cầu fix
-  - `block_commit_on_fail = false` → cảnh báo, hỏi user có muốn tiếp tục
-- Nếu `pre_commit_tests = "skip"` → thông báo "Tests skipped (flag=skip)"
+  - `quality.block_on_fail = true` → **DỪNG**, báo lỗi, yêu cầu fix
+  - `quality.block_on_fail = false` → cảnh báo, hỏi user có muốn tiếp tục
 
-**Nếu `pre_commit_lint = true`:**
-- Chạy linter
+**Nếu `quality.lint_command` không rỗng:**
+- Chạy: `quality.lint_command`
 - Xử lý tương tự tests
 
 ### 3. Kiểm tra sensitive files
@@ -67,13 +66,13 @@ git add [relevant files]
 git commit -m "<message>"
 ```
 
-### 7. Post-commit (theo flags)
+### 7. Post-commit
 
-**Nếu `docs_update_on_commit = true`:**
+**Nếu `workflow.default_depth = thorough`:**
 - Thông báo: "Living docs cần cập nhật. Chạy `/dw-docs-update`?"
 
-**Nếu `metrics_tracking = true`:**
-- Ghi commit vào metrics: timestamp, type, scope, files changed
+**Nếu `tracking.log_work = true`:**
+- Ghi commit vào `.dw/metrics/`: timestamp, type, scope, files changed
 
 ### 8. Hiển thị kết quả
 - Commit hash

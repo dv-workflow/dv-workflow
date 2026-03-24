@@ -82,11 +82,11 @@ export async function initCommand(opts) {
 
 async function askProjectName(projectDir) {
   const guess = guessProjectName(projectDir);
-  return ask('[1/4] Project name?', guess);
+  return ask('[Project] Project name?', guess);
 }
 
 async function askDepth() {
-  return choose('[2/3] Default workflow depth:', [
+  return choose('[Depth] Default workflow depth:', [
     { value: 'quick', label: 'Solo dev, hotfix, familiar code — minimal ceremony' },
     { value: 'standard', label: 'Team, feature — full 6-phase workflow' },
     { value: 'thorough', label: 'Enterprise — full workflow + arch-review + test-plan' },
@@ -94,7 +94,7 @@ async function askDepth() {
 }
 
 async function askLanguage() {
-  return choose('[3/3] Documentation language:', [
+  return choose('[Lang] Documentation language:', [
     { value: 'vi', label: 'Tiếng Việt' },
     { value: 'en', label: 'English' },
   ], 'vi');
