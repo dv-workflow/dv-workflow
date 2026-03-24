@@ -17,7 +17,7 @@ Period: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml`:
+Đọc `config/dw.config.yml`:
 - `flags.dashboard_skill` — nếu `false` → DỪNG
 - `metrics.dora` → thresholds để so sánh
 - `paths.tasks`, `paths.metrics`, `paths.reports`

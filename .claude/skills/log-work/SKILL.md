@@ -10,7 +10,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml`:
+Đọc `config/dw.config.yml`:
 - `flags.log_work` — nếu `false` → DỪNG
 - `estimation.unit` → đơn vị
 - `estimation.track_actual` → có so sánh estimate vs actual không

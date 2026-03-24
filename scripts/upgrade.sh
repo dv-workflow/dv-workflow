@@ -214,20 +214,20 @@ fi
 # ── Phase 5: Check for CI/CD references needing manual update ────────────────
 info "Phase 5: Check backward compatibility"
 
-OLD_CONFIG="$PROJECT_ROOT/dv-workflow.config.yml"
+OLD_CONFIG="$PROJECT_ROOT/config/dw.config.yml"
 if [ -f "$OLD_CONFIG" ]; then
   if [ -L "$OLD_CONFIG" ]; then
-    ok "dv-workflow.config.yml: symlink intact (backward compat)"
+    ok "config/dw.config.yml: symlink intact (backward compat)"
   else
-    warn "dv-workflow.config.yml exists as real file. Run scripts/migrate-v03-to-v2.sh first."
+    warn "config/dw.config.yml exists as real file. Run scripts/migrate-v03-to-v2.sh first."
   fi
 fi
 
 # Check for CI references
 for ci_file in ".github/workflows/"*.yml ".gitlab-ci.yml" "Makefile" ".circleci/config.yml"; do
   full_path="$PROJECT_ROOT/$ci_file"
-  if [ -f "$full_path" ] && grep -q "dv-workflow.config.yml" "$full_path" 2>/dev/null; then
-    warn "CI file '$ci_file' references dv-workflow.config.yml — update manually"
+  if [ -f "$full_path" ] && grep -q "config/dw.config.yml" "$full_path" 2>/dev/null; then
+    warn "CI file '$ci_file' references config/dw.config.yml — update manually"
   fi
 done
 

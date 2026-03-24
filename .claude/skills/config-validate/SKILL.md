@@ -1,16 +1,16 @@
 ---
 name: dw-config-validate
-description: "Kiểm tra dv-workflow.config.yml có hợp lệ không. Phát hiện unknown keys, typos, invalid values. Chạy sau khi sửa config thủ công."
+description: "Kiểm tra config/dw.config.yml có hợp lệ không. Phát hiện unknown keys, typos, invalid values. Chạy sau khi sửa config thủ công."
 argument-hint: ""
 ---
 
 # Validate Config
 
-Kiểm tra `dv-workflow.config.yml` trong project hiện tại.
+Kiểm tra `config/dw.config.yml` trong project hiện tại.
 
 ## Bước 1: Đọc config
 
-Đọc toàn bộ `dv-workflow.config.yml`.
+Đọc toàn bộ `config/dw.config.yml`.
 
 ## Bước 2: Kiểm tra top-level keys
 
@@ -55,7 +55,7 @@ Nếu giá trị khác → **ERROR**: "Flag `[key]` có giá trị không hợp 
 ```
 === Config Validation Report ===
 
-File: dv-workflow.config.yml
+File: config/dw.config.yml
 Project: [project.name]
 Level: [level]
 Language: [language]

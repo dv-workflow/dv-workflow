@@ -6,12 +6,12 @@ Hướng dẫn tích hợp dv-workflow-kit vào dự án thực tế của bạn
 
 ## Phương Thức Tích Hợp: Git Submodule
 
-Toolkit được thêm vào dự án của bạn dưới dạng git submodule trong thư mục `.dv-workflow/`.
+Toolkit được thêm vào dự án của bạn dưới dạng git submodule trong thư mục `.dw-module/`.
 Sau khi setup, bạn copy files cần thiết vào project. Workflow:
 
 ```
 Dự án của bạn/
-├── .dv-workflow/          ← git submodule (dv-workflow-kit, read-only)
+├── .dw-module/          ← git submodule (dv-workflow-kit, read-only)
 ├── .claude/               ← được copy từ toolkit, bạn customize
 │   ├── skills/            ← 22 skills (bao gồm thinking/THINKING.md)
 │   ├── agents/
@@ -21,7 +21,7 @@ Dự án của bạn/
 │   └── settings.json
 ├── .dw/tasks/            ← task docs (runtime)
 ├── .dw/docs/             ← living docs (runtime)
-└── dv-workflow.config.yml ← config của bạn
+└── config/dw.config.yml ← config của bạn
 ```
 
 ---
@@ -42,26 +42,26 @@ git submodule update --init
 ## Bước 2: Chạy Setup Wizard
 
 ```bash
-bash .dv-workflow/setup.sh
+bash .dw-module/setup.sh
 ```
 
 Wizard hỏi 4 câu (~1-2 phút) và tự cấu hình tất cả. Silent mode cho CI:
 
 ```bash
 DW_NAME="my-app" DW_LEVEL=2 DW_ROLES="dev,techlead" DW_LANG="vi" \
-bash .dv-workflow/setup.sh --silent
+bash .dw-module/setup.sh --silent
 ```
 
 Script sẽ tự động:
 - Copy `.claude/` (skills, agents, rules, hooks, **templates**) — không overwrite files đã có
-- Tạo `dv-workflow.config.yml` từ template phù hợp
+- Tạo `config/dw.config.yml` từ template phù hợp
 - Tạo `CLAUDE.md` nếu chưa có
 - Tạo runtime directories: `.dw/tasks/`, `.dw/docs/`, `.dw/metrics/`, `.dw/reports/`
 - Thêm `.gitignore` entries
 
 ---
 
-## Bước 3: Cấu Hình `dv-workflow.config.yml`
+## Bước 3: Cấu Hình `config/dw.config.yml`
 
 Mở file vừa được tạo và cập nhật:
 
@@ -139,7 +139,7 @@ Khi dv-workflow-kit có version mới:
 cd .dv-workflow && git pull origin main && cd ..
 
 # Re-run setup để merge files mới (không overwrite customizations của bạn)
-bash .dv-workflow/integration-guide/setup.sh
+bash .dw-module/integration-guide/setup.sh
 ```
 
 > Lưu ý: `cp -n` (no-clobber) đảm bảo files đã customize không bị overwrite.
@@ -151,7 +151,7 @@ bash .dv-workflow/integration-guide/setup.sh
 
 ```
 dự-án-của-bạn/
-├── .dv-workflow/                 # submodule (read-only)
+├── .dw-module/                 # submodule (read-only)
 │   └── ...toolkit source...
 │
 ├── .claude/                      # customizable
@@ -185,7 +185,7 @@ dự-án-của-bạn/
 ├── .dw/metrics/                 # runtime metrics (gitignore)
 ├── .dw/reports/                 # generated reports (gitignore)
 │
-├── dv-workflow.config.yml        # config của bạn
+├── config/dw.config.yml        # config của bạn
 └── CLAUDE.md                     # instructions của bạn
 
 # NOTE (v0.2+): templates/ và skills/ KHÔNG còn ở project root.

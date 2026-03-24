@@ -2,7 +2,7 @@
 
 ## Config-Driven Behavior
 
-Trước khi thực hiện bất kỳ skill nào, PHẢI đọc `dv-workflow.config.yml`:
+Trước khi thực hiện bất kỳ skill nào, PHẢI đọc `config/dw.config.yml`:
 
 1. Kiểm tra `flags.<skill_name>` — nếu `false` → KHÔNG chạy, thông báo user
 2. Kiểm tra `level` — nếu skill yêu cầu level cao hơn → thông báo và hỏi user

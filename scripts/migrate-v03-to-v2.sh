@@ -20,7 +20,7 @@ do_action() {
   if [ "$DRY_RUN" = true ]; then echo "  [dry] $*"; else eval "$*"; fi
 }
 
-OLD_CONFIG="$PROJECT_ROOT/dv-workflow.config.yml"
+OLD_CONFIG="$PROJECT_ROOT/config/dw.config.yml"
 NEW_CONFIG_DIR="$PROJECT_ROOT/config"
 NEW_CONFIG="$NEW_CONFIG_DIR/dw.config.yml"
 
@@ -34,17 +34,17 @@ echo "════════════════════════�
 info "Step 1: Validate source config"
 
 if [ ! -f "$OLD_CONFIG" ]; then
-  echo "  No dv-workflow.config.yml found. Already on v2 or fresh install."
+  echo "  No config/dw.config.yml found. Already on v2 or fresh install."
   exit 0
 fi
 
 if [ -L "$OLD_CONFIG" ]; then
-  warn "dv-workflow.config.yml is already a symlink → migration may have already run."
+  warn "config/dw.config.yml is already a symlink → migration may have already run."
   read -r -p "  Continue anyway? [y/N] " confirm
   [[ "$confirm" =~ ^[Yy]$ ]] || exit 0
 fi
 
-ok "Found dv-workflow.config.yml"
+ok "Found config/dw.config.yml"
 
 # ── Step 2: Detect customized skills ─────────────────────────────────────────
 info "Step 2: Detect customized skills"
@@ -81,7 +81,7 @@ else
 fi
 
 # ── Step 3: Migrate config ────────────────────────────────────────────────────
-info "Step 3: Migrate config (dv-workflow.config.yml → config/dw.config.yml)"
+info "Step 3: Migrate config (config/dw.config.yml → config/dw.config.yml)"
 
 if [ -f "$NEW_CONFIG" ]; then
   warn "config/dw.config.yml already exists. Skipping config migration."
@@ -187,7 +187,7 @@ with open(new_path, 'w') as f:
 PYEOF
       ok "config/dw.config.yml created (migrated from level: $level_str → depth: $(grep default_depth "$NEW_CONFIG" | head -1))"
     else
-      dry "Would create config/dw.config.yml from dv-workflow.config.yml"
+      dry "Would create config/dw.config.yml from config/dw.config.yml"
     fi
   fi
 fi
@@ -199,13 +199,13 @@ if [ -f "$NEW_CONFIG" ] && [ ! -L "$OLD_CONFIG" ]; then
   if [ "$DRY_RUN" = false ]; then
     # Backup original
     cp "$OLD_CONFIG" "${OLD_CONFIG}.bak"
-    ok "Backed up original to dv-workflow.config.yml.bak"
+    ok "Backed up original to config/dw.config.yml.bak"
     # Create symlink
     rm "$OLD_CONFIG"
     ln -s "config/dw.config.yml" "$OLD_CONFIG"
-    ok "Created symlink: dv-workflow.config.yml → config/dw.config.yml"
+    ok "Created symlink: config/dw.config.yml → config/dw.config.yml"
   else
-    dry "Would create symlink: dv-workflow.config.yml → config/dw.config.yml"
+    dry "Would create symlink: config/dw.config.yml → config/dw.config.yml"
   fi
 fi
 

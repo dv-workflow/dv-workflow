@@ -10,7 +10,7 @@ Message: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml` → lấy:
+Đọc `config/dw.config.yml` → lấy:
 - `flags.pre_commit_tests` → chạy tests?
 - `flags.pre_commit_lint` → chạy lint?
 - `flags.block_commit_on_fail` → block nếu fail?

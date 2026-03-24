@@ -8,7 +8,7 @@ PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 
 # ── Tìm active tasks ──────────────────────────────────────────────────────────
 CONFIG_FILE="$PROJECT_DIR/config/dw.config.yml"
-[ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="$PROJECT_DIR/dv-workflow.config.yml"
+[ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="$PROJECT_DIR/config/dw.config.yml"
 
 TASKS_DIR="$PROJECT_DIR/.dw/tasks"
 

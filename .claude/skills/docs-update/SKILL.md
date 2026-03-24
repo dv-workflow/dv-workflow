@@ -10,7 +10,7 @@ Scope: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml` → kiểm tra:
+Đọc `config/dw.config.yml` → kiểm tra:
 - `flags.living_docs` — nếu `false` → thông báo "Living docs chưa bật" và DỪNG
 - `paths.docs` → thư mục living docs (mặc định: `.dw/docs`)
 

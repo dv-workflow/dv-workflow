@@ -32,10 +32,10 @@ demo-A-bug-fix/
 ```bash
 # Trong dự án thực của bạn:
 git submodule add https://github.com/dv-workflow/dv-workflow.git .dv-workflow
-bash .dv-workflow/integration-guide/setup.sh
+bash .dw-module/integration-guide/setup.sh
 
 # Chọn template old-maintenance
-cp .dv-workflow/project-templates/old-maintenance/dv-workflow.config.yml .
+cp .dw-module/project-templates/old-maintenance/config/dw.config.yml .
 # Sửa project.name trong config
 ```
 

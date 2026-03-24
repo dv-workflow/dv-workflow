@@ -10,7 +10,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml` → lấy:
+Đọc `config/dw.config.yml` → lấy:
 - `paths.tasks` → location task docs
 - `flags.pre_commit_tests` → chạy tests trước commit?
 - `flags.log_work` → ghi effort?

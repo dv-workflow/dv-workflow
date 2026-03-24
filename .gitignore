@@ -3,16 +3,7 @@
 # ============================================================================
 # Runtime directories (tạo khi dùng toolkit trong project thực)
 # Uncomment nếu muốn track task docs trong git (recommended cho team)
-
-# Task documentation (active work)
-# .dw/tasks/
-
-# Living docs (nếu muốn exclude)
-# .dw/docs/
-
-# Metrics data
-.dw/metrics/
-.dw/reports/
+.dw/
 
 # Local overrides
 CLAUDE.local.md

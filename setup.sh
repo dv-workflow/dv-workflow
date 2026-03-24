@@ -1,21 +1,21 @@
 #!/bin/bash
 # =============================================================================
-# dv-workflow-kit — Interactive Setup Wizard
+# dw-kit — Interactive Setup Wizard
 # =============================================================================
 # Chạy từ root của dự án của bạn. Hỏi 4 câu, tự cấu hình mọi thứ.
 # Thời gian: ~1-2 phút
 #
 # Usage:
-#   bash .dv-workflow/setup.sh
+#   bash .dw-module/setup.sh
 #
 # Silent mode (CI/scripted):
 #   DW_NAME="my-app" DW_LEVEL=2 DW_ROLES="dev,techlead" DW_LANG="vi" \
-#   bash .dv-workflow/setup.sh --silent
+#   bash .dw-module/setup.sh --silent
 # =============================================================================
 
 set -e
 
-TOOLKIT_DIR=".dv-workflow"
+TOOLKIT_DIR=".dw-module"
 SILENT="${1:-}"
 
 
@@ -151,15 +151,15 @@ fi
 
 # Chọn base config theo level
 if [ "$LEVEL" = "3" ]; then
-  BASE_CONFIG="$TOOLKIT_DIR/project-templates/enterprise/dv-workflow.config.yml"
+  BASE_CONFIG="$TOOLKIT_DIR/project-templates/enterprise/config/dw.config.yml"
 elif [ "$LEVEL" = "1" ]; then
-  BASE_CONFIG="$TOOLKIT_DIR/project-templates/old-maintenance/dv-workflow.config.yml"
+  BASE_CONFIG="$TOOLKIT_DIR/project-templates/old-maintenance/config/dw.config.yml"
 else
-  BASE_CONFIG="$TOOLKIT_DIR/project-templates/new-product/dv-workflow.config.yml"
+  BASE_CONFIG="$TOOLKIT_DIR/project-templates/new-product/config/dw.config.yml"
 fi
 
 # Ghi config với giá trị user đã chọn
-if [ ! -f "dv-workflow.config.yml" ]; then
+if [ ! -f "config/dw.config.yml" ]; then
   ROLES_YAML="  roles:\n    - dev"
   $HAS_TL && ROLES_YAML="$ROLES_YAML\n    - techlead"
   $HAS_BA && ROLES_YAML="$ROLES_YAML\n    - ba"
@@ -170,7 +170,7 @@ if [ ! -f "dv-workflow.config.yml" ]; then
     -e "s|name: \"your.*\"|name: \"$PROJECT_NAME\"|" \
     -e "s|name: \"your-enterprise-project\"|name: \"$PROJECT_NAME\"|" \
     -e "s|language: \"vi\"|language: \"$LANG\"|" \
-    "$BASE_CONFIG" > "dv-workflow.config.yml"
+    "$BASE_CONFIG" > "config/dw.config.yml"
 
   # Inject roles (replace toàn bộ roles section) — pure awk, no Python needed
   ROLES_LINES="    - dev"
@@ -188,8 +188,8 @@ if [ ! -f "dv-workflow.config.yml" ]; then
     }
     in_roles && /^    -/ { next }
     { in_roles = 0; print }
-  ' dv-workflow.config.yml > dv-workflow.config.yml.tmp \
-    && mv dv-workflow.config.yml.tmp dv-workflow.config.yml
+  ' config/dw.config.yml > config/dw.config.yml.tmp \
+    && mv config/dw.config.yml.tmp config/dw.config.yml
 fi
 
 # Tạo CLAUDE.md
@@ -325,7 +325,7 @@ fi
 # Gitignore
 if [ -f ".gitignore" ]; then
   if ! grep -q ".dw/metrics" .gitignore; then
-    printf "\n# dv-workflow-kit\n.dw/metrics/\n.dw/reports/\nCLAUDE.local.md\n" >> .gitignore
+    printf "\n# dw-kit\n.dw/metrics/\n.dw/reports/\nCLAUDE.local.md\n" >> .gitignore
   fi
 else
   cp "$TOOLKIT_DIR/.gitignore" .
@@ -351,7 +351,7 @@ echo ""
 echo ""
 echo "  Files tạo:"
 echo "    .claude/          — 22 skills, agents, rules, hooks, templates"
-echo "    dv-workflow.config.yml"
+echo "    config/dw.config.yml"
 echo "    CLAUDE.md"
 echo "    .dw/tasks/  .dw/docs/  .dw/metrics/  .dw/reports/"
 echo ""
@@ -369,6 +369,6 @@ echo "  1. Mở Claude Code trong thư mục này"
 echo "  2. Cập nhật Tech Stack trong CLAUDE.md (tuỳ chọn nhưng nên làm)"
 echo "  3. Chạy: /dw-task-init [tên-feature-đầu-tiên]"
 echo ""
-echo "  Docs: .dv-workflow/docs/README.md"
-echo "  Cheatsheet: .dv-workflow/docs/cheatsheet.md"
+echo "  Docs: .dw-module/docs/README.md"
+echo "  Cheatsheet: .dw-module/docs/cheatsheet.md"
 echo ""

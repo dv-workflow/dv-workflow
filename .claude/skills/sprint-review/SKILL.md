@@ -8,7 +8,7 @@ argument-hint: "[sprint-name hoặc period: e.g. sprint-3, 2026-03]"
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml`:
+Đọc `config/dw.config.yml`:
 - `paths.tasks` → tìm task docs
 - `paths.metrics` → tìm effort data
 - `flags.estimation`, `flags.log_work` → biết có data nào

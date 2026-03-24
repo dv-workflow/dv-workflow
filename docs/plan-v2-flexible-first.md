@@ -340,7 +340,7 @@ Estimate (Phase 3) → Log Actual (Phase 4) → Compare (Phase 6)
 | `dv-workflow.config.yml` | `dw.config.yml` | Shorter |
 | `dv-workflow-kit` | `dw-kit` | Brand stays, daily use is `dw` |
 | `/dw-plan`, `/dw-research`... | `/dw-task`, `/dw-debug`... | 22 → 5-7 consolidated |
-| `.dv-workflow/` | `.dw-kit/` or `.dw/` | Consistent prefix |
+| `.dw-module/` | `.dw-kit/` or `.dw/` | Consistent prefix |
 
 ---
 

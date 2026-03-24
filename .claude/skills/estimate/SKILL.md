@@ -14,7 +14,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml`:
+Đọc `config/dw.config.yml`:
 - `flags.estimation` — nếu `false` → thông báo "Estimation chưa bật" và DỪNG
 - `estimation.unit` → đơn vị (hours / story-points / t-shirt)
 - `estimation.categories` → các loại công việc cần estimate

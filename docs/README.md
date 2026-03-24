@@ -14,7 +14,7 @@ Bộ workflow toolkit cho dev team kết hợp với Claude Code Agent.
 
 ```bash
 git submodule add https://github.com/dv-workflow/dv-workflow.git .dv-workflow
-bash .dv-workflow/setup.sh
+bash .dw-module/setup.sh
 ```
 
 ### 2. Cấu hình
@@ -197,7 +197,7 @@ Mỗi task tạo ra:
 
 ## Level & Flags
 
-Sửa trong `dv-workflow.config.yml`:
+Sửa trong `config/dw.config.yml`:
 
 ```yaml
 level: 2  # 1 (lite) | 2 (standard) | 3 (full)
@@ -232,7 +232,7 @@ Không cần cấu hình thêm. Hook script chạy với bash mặc định.
 
 ```bash
 # Mở Git Bash, cd vào project, chạy:
-bash .dv-workflow/examples/integration-guide/setup.sh
+bash .dw-module/examples/integration-guide/setup.sh
 ```
 
 **WSL (Windows Subsystem for Linux)** cũng hoạt động tốt — chạy như Linux.

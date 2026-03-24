@@ -80,10 +80,10 @@ Hướng dẫn từng bước để add dv-workflow-kit vào dự án của bạ
 git submodule add https://github.com/YOUR_ORG/dv-workflow-kit .dv-workflow
 
 # 2. Chạy setup
-bash .dv-workflow/integration-guide/setup.sh new-product
+bash .dw-module/integration-guide/setup.sh new-product
 
 # 3. Cấu hình
-# Sửa dv-workflow.config.yml: project.name, level, roles, flags
+# Sửa config/dw.config.yml: project.name, level, roles, flags
 
 # 4. Bắt đầu
 claude  # → /config-init hoặc /task-init [task-name]

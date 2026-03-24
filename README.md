@@ -24,7 +24,7 @@ Với đầy đủ hỗ trợ cho các roles trong team: BA · TL · Dev · QC �
 
 ```bash
 git submodule add https://github.com/dv-workflow/dv-workflow.git .dv-workflow
-bash .dv-workflow/setup.sh
+bash .dw-module/setup.sh
 ```
 
 Wizard sẽ hỏi và tự cấu hình: project name, depth, roles, language.
@@ -70,7 +70,7 @@ Layer 3: adapters/overrides/ ← Team customizations (never overwritten by upgra
 
 ```
 dự-án-của-bạn/
-├── .dv-workflow/                 ← toolkit (git submodule, read-only)
+├── .dw-module/                 ← toolkit (git submodule, read-only)
 ├── core/                         ← portable methodology
 │   ├── WORKFLOW.md               ← 6-phase workflow
 │   ├── THINKING.md               ← thinking framework
@@ -109,7 +109,7 @@ bash scripts/migrate-v03-to-v2.sh             # apply
 Script sẽ:
 - Map `level: 2` → `default_depth: standard`
 - Preserve customized skills vào `adapters/claude-cli/overrides/`
-- Tạo symlink backward-compat cho `dv-workflow.config.yml`
+- Tạo symlink backward-compat cho `config/dw.config.yml`
 
 ---
 

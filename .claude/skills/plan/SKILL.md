@@ -14,7 +14,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml` → lấy:
+Đọc `config/dw.config.yml` → lấy:
 - `paths.tasks` → location task docs
 - `flags.estimation` → có cần estimate không
 - `team.roles` → ai cần approve

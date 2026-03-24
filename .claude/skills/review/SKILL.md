@@ -19,7 +19,7 @@ Target: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml` → kiểm tra `flags.review`.
+Đọc `config/dw.config.yml` → kiểm tra `flags.review`.
 Nếu `false` → thông báo và DỪNG.
 
 ## Xác Định Scope

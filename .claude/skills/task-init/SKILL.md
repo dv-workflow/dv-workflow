@@ -8,7 +8,7 @@ argument-hint: "[task-name]"
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml` để lấy:
+Đọc `config/dw.config.yml` để lấy:
 - `paths.tasks` → thư mục chứa task docs (mặc định: `.dw/tasks`)
 - `level` → quyết định template nào cần tạo
 - `flags.estimation` → có tạo section estimation không

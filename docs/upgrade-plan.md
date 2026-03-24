@@ -69,7 +69,7 @@ v1.0.0            — Production-ready: trial project-team (open-source target)
 **Cấu trúc sau khi fix:**
 ```
 project-root/
-├── .dv-workflow/           ← submodule (read-only)
+├── .dw-module/           ← submodule (read-only)
 ├── .claude/                ← TẤT CẢ dw content nằm đây
 │   ├── skills/
 │   ├── agents/

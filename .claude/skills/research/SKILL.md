@@ -22,7 +22,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml` → lấy `paths.tasks` để biết output location.
+Đọc `config/dw.config.yml` → lấy `paths.tasks` để biết output location.
 
 ## Bước 1: Đọc yêu cầu
 

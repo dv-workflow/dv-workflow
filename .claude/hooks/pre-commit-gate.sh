@@ -15,7 +15,7 @@ if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit'; then
 fi
 
 # Đọc config
-CONFIG_FILE="$CLAUDE_PROJECT_DIR/dv-workflow.config.yml"
+CONFIG_FILE="$CLAUDE_PROJECT_DIR/config/dw.config.yml"
 if [ ! -f "$CONFIG_FILE" ]; then
   exit 0
 fi

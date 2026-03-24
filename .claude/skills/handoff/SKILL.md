@@ -10,7 +10,7 @@ Task: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml` → `flags.handoff`. Nếu `false` → skip.
+Đọc `config/dw.config.yml` → `flags.handoff`. Nếu `false` → skip.
 Lấy `paths.tasks` để biết location.
 
 ## Thu Thập Thông Tin

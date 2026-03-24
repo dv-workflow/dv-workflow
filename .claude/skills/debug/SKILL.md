@@ -10,7 +10,7 @@ Vấn đề: **$ARGUMENTS**
 
 ## Đọc Config
 
-Đọc `dv-workflow.config.yml` → `flags.debug`. Nếu `false` → thông báo và DỪNG.
+Đọc `config/dw.config.yml` → `flags.debug`. Nếu `false` → thông báo và DỪNG.
 
 ---
 
