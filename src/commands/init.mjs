@@ -302,8 +302,7 @@ function printSummary({ projectName, depth, roles, language, adapter }) {
   console.log(`  Platform : ${platformLabel(adapter)}`);
   console.log();
   console.log(`  Files created:`);
-  console.log(`    .dw/core/          — portable methodology`);
-  console.log(`    .dw/config/dw.config.yml`);
+  console.log(`    .dw/               — core/, config/, adapters/, tasks, docs`);
   if (adapter === 'claude-cli') {
     console.log(`    .claude/           — skills, agents, hooks, rules`);
     console.log(`    CLAUDE.md`);
@@ -313,13 +312,12 @@ function printSummary({ projectName, depth, roles, language, adapter }) {
   } else {
     console.log(`    AGENT.md           — methodology reference`);
   }
-  console.log(`    .dw/               — core/, config/, adapters/, tasks, docs`);
   console.log();
   if (adapter === 'claude-cli') {
     console.log(`  Next steps:`);
-    console.log(`    1. Open Claude Code in this directory`);
-    console.log(`    2. Update Tech Stack in CLAUDE.md`);
-    console.log(`    3. Run: /dw-task-init [feature-name]`);
+    console.log(`    Run: claude (to open Claude Code in this directory in terminal)`);
+    console.log(`    Run: /dw-flow [task-name]`);
+    console.log(`    Suggested: Update Tech Stack in CLAUDE.md (optional, recommended)`);
   } else if (adapter === 'cursor') {
     console.log(`  Next steps:`);
     console.log(`    1. Open Cursor in this directory`);
