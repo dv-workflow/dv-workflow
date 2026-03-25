@@ -1,183 +1,124 @@
-﻿# dw-kit
+# dw-kit
 
-> Bộ workflow toolkit cho dev team sử dụng Claude Code Agent — từ requirements đến dashboard.
+> An AI development workflow toolkit for teams using agentic IDEs (Claude Code, Cursor) — from idea to review-ready commits.
 
-**v1.0** · `npm install -g dw-kit` · [Docs](docs/README.md) · [Cheatsheet](docs/cheatsheet.md) · [Migration v0.3→v1](scripts/migrate-v03-to-v1.sh)
-
----
-
-## Toolkit Này Làm Gì?
-
-Thay vì để Claude tự do code, dw-kit tạo ra **rails có cấu trúc**:
-
-```
-Research  →  Plan  →  Execute (TDD)  →  Review  →  Commit
-```
-
-Với đầy đủ hỗ trợ cho các roles trong team: BA · TL · Dev · QC · PM.
+**v1.0** · `npm install -g dw-kit` · [Docs](docs/README.md) · [Get started](docs/get-started.md) · [Cheatsheet](docs/cheatsheet.md)
 
 ---
 
-## Quick Start
+## What is dw-kit?
 
-### Option A — npm (recommended)
+dw-kit helps your team run AI-assisted development with a **repeatable workflow** and clear checkpoints:
+
+```
+Initialize → Understand → Plan → Execute (TDD) → Verify → Close
+```
+
+```mermaid
+%%{init: {'flowchart': {'nodeSpacing': 10, 'rankSpacing': 18}}}%%
+flowchart LR
+  classDef extra fill:#f3f4f6,stroke:#9ca3af,stroke-width:1px,color:#111;
+
+  D[Init + Understand] --> P[Plan (approve)]
+  P -->|approved| E[Execute (TDD)]
+  P -->|revise| P
+
+  E --> V[Verify (gates)]
+  V -->|sign-off| C[Close (handoff + archive)]
+  V -->|revise (fix)| E
+
+  subgraph Extra[Depth=thorough]
+    R[Req] --> Est[Est] --> AR[Arch] --> P
+    P -.-> TP[Test] -.-> E
+    E -.-> DU[Docs] --> LW[Log] -.-> C
+  end
+
+  class R,Est,AR,TP,DU,LW extra
+```
+
+### 6 phases (full workflow)
+- **Initialize**: clarify task scope and set up the workspace + task docs.
+- **Understand**: survey the codebase, dependencies, patterns, and test coverage (no implementation).
+- **Plan**: design the solution and subtasks; **pause for your approval**.
+- **Execute**: implement using **TDD**; each subtask produces a commit.
+- **Verify**: run quality gates + review sign-off to ensure correctness and safety.
+- **Close**: handoff notes, finalize progress, and archive when done.
+
+It’s designed for collaboration (Dev / Tech Lead / QA / PM) and keeps work auditable via lightweight task docs.
+
+---
+
+## Install
 
 ```bash
 npm install -g dw-kit
 ```
 
-Then in your project directory:
+---
+
+## Quick start
+
+From your project directory:
 
 ```bash
 dw init
 ```
 
-Interactive wizard asks 3 questions (project, depth, language) and auto-selects roles by depth. Or use presets:
+Then in **Claude Code** (Update for Cursor/Antigravity/... in the next version):
+
+```
+/dw-flow new-feature
+```
+
+## Workflow overview
+
+`dw` runs a 6-phase process (all phases for `standard` and `thorough`):
+
+Initialize → Understand → Plan (stops for approval) → Execute (TDD; 1 commit per subtask) → Verify (quality gates + review sign-off) → Close (handoff + archive when done).
+
+
+---
+
+## CLI commands
 
 ```bash
-dw init --preset small-team     # skip wizard
-dw init --preset solo-quick     # solo dev, minimal ceremony
-dw init --preset enterprise     # full team, all features
-```
-
-Zero-install (one-time use):
-
-```bash
-npx dw-kit init
-```
-
-### Option B — Git submodule (legacy)
-
-```bash
-git submodule add https://github.com/dv-workflow/dv-workflow.git .dw-module
-bash .dw-module/setup.sh
-```
-
-`setup.sh` là luồng legacy/fallback. Luồng khuyến nghị cho v1 là `npm install -g dw-kit` + `dw init`.
-
-### Start working
-
-Open Claude Code in your project directory:
-
-```
-/dw-task-init tên-feature
-```
-
-### CLI Commands
-
-```bash
-dw init              # Setup wizard
-dw upgrade           # Update toolkit files (override-aware)
-dw upgrade --dry-run # Preview changes
-dw upgrade --check   # Check for updates only
-dw validate          # Validate config against schema
-dw doctor            # Check installation health
-dw migrate           # Migrate from v0.3 to v1
+dw init                 # setup wizard / presets
+dw validate             # validate .dw/config/dw.config.yml
+dw doctor               # installation health check
+dw upgrade              # update toolkit files (override-aware)
+dw upgrade --check      # check for updates only
+dw upgrade --dry-run    # preview changes
 ```
 
 ---
 
-## Depth System (thay thế Level 1/2/3)
+## Depth system
 
-| Depth | Dành cho | Workflow |
+Pick a default depth for your project, then override per task when risk increases.
+
+| Depth | Best for | Workflow |
 |-------|----------|----------|
 | `quick` | Solo dev, hotfix, familiar code | Understand → Execute → Close |
-| `standard` | Team nhỏ, feature mới | Tất cả 6 phases |
-| `thorough` | Enterprise, API/DB/security changes | Full workflow + arch-review + test-plan |
+| `standard` | Small teams, new features | Full 6 phases |
+| `thorough` | Risky changes (API/DB/security) | Full workflow + arch-review + test-plan |
 
-Cấu hình trong `.dw/config/dw.config.yml`:
+Configured in `.dw/config/dw.config.yml`:
+
 ```yaml
 workflow:
   default_depth: "standard"
 ```
 
-`default_depth` là baseline. Với task cụ thể, bạn có thể override sang `thorough` khi scope/risk tăng (API/DB/security), kể cả project nhỏ.
-
 ---
 
-## Kiến Trúc v1 (4 Layers)
+## What gets added to your repo?
 
 ```
-Layer 0: core/            ← Portable methodology (platform-agnostic)
-Layer 1: .claude/         ← Claude Code execution (agents, hooks, skills)
-Layer 2: config/claude:   ← Model-specific features (extended thinking, MCP)
-Layer 3: adapters/overrides/ ← Team customizations (never overwritten by upgrade)
+.dw/        # methodology, config, adapters, task docs
+.claude/    # Claude Code: skills, hooks, agents, rules
+CLAUDE.md   # project context for the agent
 ```
 
 ---
 
-## Cấu Trúc Sau Khi Setup
-
-```
-dự-án-của-bạn/
-├── .dw-module/                 ← toolkit (git submodule, read-only)
-├── core/                         ← portable methodology
-│   ├── WORKFLOW.md               ← 6-phase workflow
-│   ├── THINKING.md               ← thinking framework
-│   ├── QUALITY.md                ← 4-layer quality strategy
-│   └── ROLES.md                  ← team role definitions
-├── config/
-│   ├── dw.config.yml             ← config (~45 lines)
-│   ├── config.schema.json        ← validation schema
-│   └── presets/                  ← solo-quick, small-team, enterprise
-├── adapters/
-│   ├── claude-cli/overrides/     ← team customizations (upgrade-safe)
-│   ├── claude-cli/extensions/    ← net-new team skills
-│   └── generic/AGENT.md          ← for Cursor/Windsurf/Copilot
-├── .claude/                      ← skills, agents, rules, hooks
-├── .dw/                          ← tasks, docs, metrics, reports
-└── scripts/
-    ├── upgrade.sh                ← upgrade toolkit (--dry-run)
-    └── migrate-v03-to-v1.sh      ← migration từ v0.3
-```
-
----
-
-## Skills Có Sẵn
-
-Xem [docs/cheatsheet.md](docs/cheatsheet.md) để có bảng tham chiếu nhanh.
-
----
-
-## Migrating từ v0.3
-
-```bash
-dw migrate --dry-run   # preview changes
-dw migrate             # apply migration
-```
-
-Or via bash (legacy):
-
-```bash
-bash scripts/migrate-v03-to-v1.sh --dry-run
-bash scripts/migrate-v03-to-v1.sh
-```
-
-`scripts/upgrade.sh` và `scripts/migrate-v03-to-v1.sh` được giữ cho backward-compat; ưu tiên dùng `dw upgrade` và `dw migrate`.
-
-Migration sẽ:
-- Map `level: 2` → `default_depth: standard`
-- Preserve customized skills vào `.dw/adapters/claude-cli/overrides/`
-- Backup old config, create new `.dw/config/dw.config.yml`
-
----
-
-## Demo
-
-- [Demo A](examples/demo-A-bug-fix/) — Bug fix workflow (quick depth)
-- [Demo B](examples/demo-B-new-feature/) — Full team feature workflow (BA → PM)
-
----
-
-## Tài Liệu
-
-| Tài liệu | Nội dung |
-|----------|---------|
-| [docs/README.md](docs/README.md) | Hướng dẫn đầy đủ, setup, tips |
-| [docs/cheatsheet.md](docs/cheatsheet.md) | Bảng tham chiếu nhanh tất cả skills |
-| [docs/custom-skills.md](docs/custom-skills.md) | Hướng dẫn tạo custom skills |
-| [CHANGELOG.md](CHANGELOG.md) | Lịch sử thay đổi |
-
----
-
-> Maintainer: [huygdv](mailto:huygdv19@gmail.com)
+Maintainer: [huygdv](mailto:huygdv19@gmail.com)

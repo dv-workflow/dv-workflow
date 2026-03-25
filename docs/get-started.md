@@ -330,7 +330,6 @@ dw doctor                   # Health check toàn bộ installation
 dw upgrade                  # Cập nhật toolkit files
 dw upgrade --check          # Kiểm tra có update không
 dw upgrade --dry-run        # Preview changes
-dw migrate                  # Migrate từ v0.3 lên v1
 ```
 
 ---

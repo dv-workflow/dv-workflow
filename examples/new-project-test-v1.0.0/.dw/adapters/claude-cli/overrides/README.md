@@ -1,4 +1,4 @@
-﻿# .dw/adapters/claude-cli/overrides/
+# .dw/adapters/claude-cli/overrides/
 
 > **TEAM CUSTOMIZATIONS — KHÔNG BAO GIỜ bị overwrite khi upgrade.**
 
@@ -19,7 +19,7 @@ overrides/
     └── reviewer.md       ← override generated/agents/reviewer.md
 ```
 
-Khi upgrade, `scripts/upgrade.sh` sẽ:
+Khi chạy `dw upgrade`, luồng sẽ:
 1. Update `generated/` từ toolkit mới
 2. Apply overrides từ thư mục này (overrides thắng generated)
 3. Copy kết quả vào `.claude/`

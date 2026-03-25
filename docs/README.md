@@ -1,4 +1,4 @@
-﻿# dw-kit Docs (v1)
+# dw-kit Docs (v1)
 
 Tài liệu sử dụng cho `dw-kit` bản `v1.x`.
 
@@ -29,7 +29,6 @@ dw doctor
 - `dw upgrade`: cập nhật toolkit files (override-aware).
 - `dw validate`: validate `.dw/config/dw.config.yml` theo schema.
 - `dw doctor`: health check cài đặt.
-- `dw migrate`: migrate từ `v0.3` sang `v1`.
 
 ## Config chuẩn v1
 
@@ -60,11 +59,6 @@ Các key quan trọng:
 ├── metrics/
 └── reports/
 ```
-
-## Legacy notes
-
-- `setup.sh`, `scripts/upgrade.sh`, `scripts/migrate-v03-to-v1.sh` là đường chạy legacy cho môi trường đặc biệt; luồng chuẩn vẫn là `dw` CLI.
-- Không dùng `level`/`flags` cũ trong config mới.
 
 ## Liên kết
 

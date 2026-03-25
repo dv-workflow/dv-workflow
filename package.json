@@ -14,8 +14,7 @@
     ".dw/adapters/",
     "scripts/",
     ".claude/",
-    "CLAUDE.md",
-    "setup.sh"
+    "CLAUDE.md"
   ],
   "engines": {
     "node": ">=18"

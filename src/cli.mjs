@@ -55,14 +55,5 @@ export function run(argv) {
       await doctorCommand();
     });
 
-  program
-    .command('migrate')
-    .description('Migrate project from dw-kit v0.3 to v1')
-    .option('-n, --dry-run', 'Preview migration without applying')
-    .action(async (opts) => {
-      const { migrateCommand } = await import('./commands/migrate.mjs');
-      await migrateCommand(opts);
-    });
-
   program.parse(argv);
 }

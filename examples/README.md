@@ -1,4 +1,4 @@
-﻿# Examples — dv-workflow-kit
+# Examples — dv-workflow-kit
 
 Thư mục này chứa ví dụ thực tế về cách áp dụng dv-workflow-kit vào dự án Node.js + TypeScript.
 
@@ -10,7 +10,7 @@ Thư mục này chứa ví dụ thực tế về cách áp dụng dv-workflow-ki
 |---|-------|------|----------|-------------|
 | A | [demo-A-bug-fix](./demo-A-bug-fix/) | Bug Fix | `/debug` → `/commit` | 1-2 files |
 | B | [demo-B-new-feature](./demo-B-new-feature/) | New Feature (Full Team) | Full workflow | 6 files |
-| — | [integration-guide](./integration-guide/) | Setup | Git submodule setup | — |
+| — | [integration-guide](./integration-guide/) | Setup | npm + dw init setup | — |
 
 ---
 
@@ -73,25 +73,24 @@ Dev:   /handoff                     → handoff notes (nếu cần)
 
 ## Integration Guide — Cách Tích Hợp Vào Dự Án Thực
 
-Hướng dẫn từng bước để add dv-workflow-kit vào dự án của bạn qua **Git Submodule**:
+Integration guide (v1) — set up dw-kit in a project via npm + `dw init`:
 
 ```bash
-# 1. Add submodule
-git submodule add https://github.com/YOUR_ORG/dv-workflow-kit .dv-workflow
+# 1. Install the CLI
+npm install -g dw-kit
 
-# 2. Chạy setup
-bash .dw-module/integration-guide/setup.sh new-product
+# 2. Initialize your project
+dw init --preset small-team --adapter claude-cli
 
-# 3. Cấu hình
-# Sửa .dw/config/dw.config.yml: project.name, level, roles, flags
+# 3. Review config
+dw validate
 
-# 4. Bắt đầu
-claude  # → /config-init hoặc /task-init [task-name]
+# 4. Start working in Claude Code
+/dw-flow my-feature
 ```
 
 **Xem thêm**:
-- [setup.sh](./integration-guide/setup.sh) — Script tự động hóa
-- [README chi tiết](./integration-guide/README.md) — Hướng dẫn đầy đủ với FAQ
+- [README chi tiết](./integration-guide/README.md)
 
 ---
 
@@ -141,6 +140,5 @@ examples/
 │   └── README.md
 │
 └── integration-guide/
-    ├── setup.sh                    # Bash setup script
     └── README.md                   # Step-by-step guide
 ```

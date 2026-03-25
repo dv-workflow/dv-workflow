@@ -1,4 +1,4 @@
-﻿# .dw/adapters/claude-cli/extensions/
+# .dw/adapters/claude-cli/extensions/
 
 > **NET-NEW TEAM SKILLS — Không conflict với generated, không bị overwrite.**
 
@@ -15,7 +15,7 @@ extensions/
     └── README.md       ← optional: mô tả skill
 ```
 
-`setup.sh` copy tất cả skills trong thư mục này vào `.claude/skills/`.
+`dw upgrade` copy tất cả skills trong thư mục này vào `.claude/skills/` (và không ghi đè skills đã customize).
 
 ## Ví dụ Skills Phù Hợp
 

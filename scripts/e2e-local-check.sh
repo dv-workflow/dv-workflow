@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 # scripts/e2e-local-check.sh
 # End-to-end local publish check (pack -> install -> run CLI)
 
@@ -60,7 +60,6 @@ npx dw init --preset small-team
 npx dw validate
 npx dw doctor
 npx dw upgrade --check
-npx dw migrate --dry-run
 
 info "Step 6: Verify task-depth override guidance artifacts"
 grep -q "Task-Level Depth Override" ".dw/core/WORKFLOW.md"

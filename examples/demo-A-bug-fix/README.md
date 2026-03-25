@@ -1,4 +1,4 @@
-﻿# Demo A: Bug Fix — Old-Maintenance Workflow
+# Demo A: Bug Fix — Old-Maintenance Workflow
 
 **Scenario**: Dự án web e-commerce đang chạy (maintenance phase). QC báo bug: "Giỏ hàng bị mất sau khi đăng nhập."
 
@@ -28,15 +28,14 @@ demo-A-bug-fix/
 ## Luồng Workflow Thực Tế
 
 ### Bước 0: Setup toolkit trong project
-
 ```bash
-# Trong dự án thực của bạn:
-git submodule add https://github.com/dv-workflow/dv-workflow.git .dv-workflow
-bash .dw-module/integration-guide/setup.sh
+npm install -g dw-kit
 
-# Chọn template old-maintenance
-cp .dw-module/project-templates/old-maintenance/.dw/config/dw.config.yml .
-# Sửa project.name trong config
+# Initialize dw-kit (creates .dw/, .claude/, CLAUDE.md, config)
+dw init --preset solo-quick --adapter claude-cli
+
+# Review config
+dw validate
 ```
 
 ### Bước 1: Nhận bug → `/task-init bug-cart-lost-after-login`
