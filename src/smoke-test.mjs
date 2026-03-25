@@ -72,7 +72,7 @@ test('--version returns semver', () => {
 
 test('--help lists all commands', () => {
   const out = dw('--help', TEMP_BASE);
-  for (const cmd of ['init', 'upgrade', 'validate', 'doctor', 'migrate']) {
+  for (const cmd of ['init', 'upgrade', 'validate', 'doctor']) {
     assert(out.includes(cmd), `Missing command: ${cmd}`);
   }
 });
@@ -286,16 +286,6 @@ test('upgrade fails on project without config', () => {
   } catch (e) {
     assert(e.status === 1, 'Should exit with code 1');
   }
-});
-
-// ── Test: dw migrate ─────────────────────────────────────────────────────────
-console.log();
-console.log('▶ dw migrate');
-
-test('migrate on v1 project reports no v0.3 config', () => {
-  const dir = join(TEMP_BASE, 'init-solo');
-  const out = dw('migrate', dir);
-  assert(out.includes('Already on v1') || out.includes('No v0.3'), 'Should report no migration needed');
 });
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────

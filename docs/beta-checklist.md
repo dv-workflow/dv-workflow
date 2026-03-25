@@ -1,4 +1,4 @@
-﻿# dw-kit v1.0 — Open Beta Test Checklist
+# dw-kit v1.0 — Open Beta Test Checklist
 
 > **Version**: 1.0.0
 > **Date**: 2026-03-24
@@ -23,7 +23,7 @@ npm install -g dw-kit
 ```
 - [ ] Installs without errors
 - [ ] `dw --version` returns `1.0.0`
-- [ ] `dw --help` lists all 5 commands (init, upgrade, validate, doctor, migrate)
+- [ ] `dw --help` lists all 4 commands (init, upgrade, validate, doctor)
 
 ### 1.2 npx (Zero-install)
 ```bash
@@ -231,35 +231,7 @@ dw upgrade
 
 ---
 
-## 6. `dw migrate` — v0.3 Migration
-
-### 6.1 No v0.3 Config
-```bash
-dw migrate
-```
-- [ ] "No v0.3 config found" — exits cleanly
-
-### 6.2 Dry Run
-Create a `dv-workflow.config.yml` with v0.3 format:
-```bash
-dw migrate --dry-run
-```
-- [ ] Shows level → depth mapping
-- [ ] Shows roles extracted
-- [ ] "DRY RUN complete — no changes made"
-
-### 6.3 Full Migration
-```bash
-dw migrate
-```
-- [ ] Creates `.dw/config/dw.config.yml` with mapped values
-- [ ] Backs up old config
-- [ ] Detects customized skills → moves to overrides/
-- [ ] Checks CI/CD references
-
----
-
-## 7. Cross-Platform Testing
+## 6. Cross-Platform Testing
 
 ### 7.1 Windows
 - [ ] `npm install -g dw-kit` works
@@ -297,7 +269,7 @@ dw migrate
 ```bash
 npm test
 ```
-- [ ] All 19 tests pass
+- [ ] All tests pass
 - [ ] Temp files cleaned up after tests
 - [ ] No leftover processes
 
@@ -319,8 +291,7 @@ npm test
 
 1. `dw upgrade` rewrites `.dw/config/dw.config.yml` using js-yaml — YAML comments are not preserved
 2. Cursor adapter generates a basic rules file — full skill conversion is planned for v1.1
-3. `dw migrate` requires git for customized skill detection
-4. MCP server config in dw.config.yml is not yet auto-generated into .claude/settings.json by the CLI (use `setup.sh` for MCP)
+3. MCP server config in `dw.config.yml` is not yet auto-generated into `.claude/settings.json` by the CLI (manual update may be required)
 5. Interactive mode may not render correctly in some Windows terminals (use --preset or --silent as fallback)
 
 ---

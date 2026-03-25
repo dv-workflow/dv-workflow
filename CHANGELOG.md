@@ -1,4 +1,4 @@
-﻿# Changelog — dw-kit
+# Changelog — dw-kit
 
 > **Maintainer**: [huygdv](mailto:huygdv19@gmail.com) · **Repo**: [https://github.com/dv-workflow/dv-workflow](https://github.com/dv-workflow/dv-workflow)
 
@@ -8,7 +8,7 @@
 
 ### Architecture: 4-Layer System
 
-**Breaking Changes** (migration: `dw migrate` or `bash scripts/migrate-v03-to-v1.sh`):
+**Breaking Changes** (v0.3 legacy migration removed; v1 uses the new config + workflow):
 
 - `dv-workflow.config.yml` → `.dw/config/dw.config.yml` (symlink backward-compat provided)
 - `level: 1/2/3` → `workflow.default_depth: quick/standard/thorough`
@@ -17,11 +17,10 @@
 ### Added — npm Package Distribution
 
 - **npm install**: `npm install -g dw-kit` for global CLI, `npx dw-kit init` for zero-install
-- `**dw init`**: Node.js interactive wizard replacing `setup.sh` — 4 questions, presets, platform auto-detect
+- `**dw init`**: Node.js interactive wizard — 4 questions, presets, platform auto-detect
 - `**dw upgrade**`: Smart update with override-awareness, `--dry-run`, `--check`, `--layer` flags
 - `**dw validate**`: Config schema validation using `ajv` — reports unknown keys, invalid values, semantic warnings
 - `**dw doctor**`: Installation health check — core files, config, platform detection, version tracking
-- `**dw migrate**`: v0.3→v1 migration reimplemented in Node.js (cross-platform, no python3 dependency)
 
 ### Added — Portable Core (`core/`)
 
@@ -36,8 +35,6 @@
 - `.dw/adapters/claude-cli/generated/`: auto-generated skill shells (DO NOT edit)
 - `.dw/adapters/claude-cli/overrides/`: team customizations (NEVER overwritten by upgrade)
 - `.dw/adapters/claude-cli/extensions/`: net-new team skills
-- `scripts/upgrade.sh`: override-aware upgrade với `--dry-run` + merge settings.json
-- `scripts/migrate-v03-to-v1.sh`: v0.3→v1 migration, config mapping, symlink compat
 
 ### Added — Generic Adapter (`adapters/generic/`)
 
@@ -64,12 +61,10 @@
 - `.dw/config/dw.config.yml`: config với `claude:` section (models, structured_output, worktree_execution, mcp)
 - `config/config.schema.json`: JSON Schema validation, strict additionalProperties
 - `config/presets/`: solo-quick, small-team, enterprise presets
-- `setup.sh`: generate `mcpServers` trong settings.json từ `claude.mcp` config
 
 ### Changed
 
-- `setup.sh` deprecated — kept as fallback for environments without Node.js
-- `scripts/upgrade.sh` and `scripts/migrate-v03-to-v1.sh` superseded by CLI commands (bash versions kept for manual use)
+- Bash legacy scripts removed from distribution; CLI commands are the only supported workflow
 - README.md updated with npm install instructions as primary setup method
 
 ### Technical
@@ -117,14 +112,14 @@
 - `templates/` và `skills/` **đã xóa khỏi root** — nội dung chuyển vào `.claude/`
 - Templates: `templates/*.md` → `.claude/templates/*.md`
 - THINKING.md: `skills/THINKING.md` → `.claude/skills/thinking/THINKING.md`
-- `setup.sh`: không còn copy `templates/` và `skills/` ra root; copy `.claude/templates/` thay thế
+- legacy bootstrap no longer copies `templates/` and `skills/` to root; they live under `.claude/`
 - `thinking` SKILL: `user-invocable: true` (trước là `false`); `@THINKING.md` (same dir)
 - `task-init` SKILL: language-aware template selection (`project.language` trong config)
 
 ### Added
 
 - `config-validate` skill — kiểm tra config: unknown keys, invalid values, level 3 beta warning
-- `upgrade` skill — update submodule + selective file sync + config backup
+- `upgrade` skill — provides selective toolkit sync and config backup
 - `sprint-review` skill — retrospective, lessons learned, sprint metrics
 - `.claude/templates/en/` — English templates (task-context, task-plan, task-progress)
 - `docs/custom-skills.md` — hướng dẫn tạo custom skills + examples
@@ -210,7 +205,7 @@ Phiên bản đầu tiên. Kiến trúc cốt lõi và bộ skills hoàn chỉnh
 
 - `examples/demo-A-bug-fix/` — Bug fix workflow với Express+TS (Level 1)
 - `examples/demo-B-new-feature/` — Full-team feature workflow (Level 2)
-- `examples/integration-guide/` — Git submodule setup guide
+- `examples/integration-guide/` — v1 setup guide
 
 ### Notes
 

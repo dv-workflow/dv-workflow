@@ -1,10 +1,10 @@
 {
   "name": "dw-kit",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "AI development workflow toolkit — structured, quality-assured, team-ready. From requirements to dashboard.",
   "type": "module",
   "bin": {
-    "dw": "./bin/dw.mjs"
+    "dw": "bin/dw.mjs"
   },
   "files": [
     "bin/",
@@ -14,8 +14,7 @@
     ".dw/adapters/",
     "scripts/",
     ".claude/",
-    "CLAUDE.md",
-    "setup.sh"
+    "CLAUDE.md"
   ],
   "engines": {
     "node": ">=18"
@@ -40,7 +39,7 @@
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/dv-workflow/dv-workflow.git"
+    "url": "git+https://github.com/dv-workflow/dv-workflow.git"
   },
   "homepage": "https://github.com/dv-workflow/dv-workflow#readme",
   "dependencies": {

@@ -22,9 +22,7 @@ except:
 [ -z "$FILE_PATH" ] && exit 0
 
 # ── Đọc lint command từ config ────────────────────────────────────────────────
-CONFIG_FILE="${CLAUDE_PROJECT_DIR:-$PWD}/config/dw.config.yml"
-# Fallback sang old config nếu chưa migrate
-[ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="${CLAUDE_PROJECT_DIR:-$PWD}/config/dw.config.yml"
+CONFIG_FILE="${CLAUDE_PROJECT_DIR:-$PWD}/.dw/config/dw.config.yml"
 [ ! -f "$CONFIG_FILE" ] && exit 0
 
 LINT_CMD=$(grep -m1 "lint_command:" "$CONFIG_FILE" 2>/dev/null \

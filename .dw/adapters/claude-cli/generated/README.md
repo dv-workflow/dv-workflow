@@ -1,7 +1,7 @@
-﻿# .dw/adapters/claude-cli/generated/
+# .dw/adapters/claude-cli/generated/
 
 > **AUTO-GENERATED — Không edit tay.**
-> Thư mục này được overwrite khi chạy `scripts/upgrade.sh` hoặc `setup.sh`.
+> Thư mục này được overwrite khi nâng cấp toolkit trong quá trình build/generation nội bộ.
 
 ## Nội dung
 
@@ -16,7 +16,7 @@ generated/
 
 ## Cách hoạt động
 
-`setup.sh` → copy `generated/` → `.claude/`, với overrides từ `overrides/` thắng.
+`dw init`/`dw upgrade` → populate `.claude/`, áp dụng overrides từ `overrides/` (override thắng).
 
 ## Nếu muốn customize
 
