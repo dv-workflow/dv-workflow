@@ -19,15 +19,15 @@ Initialize → Understand → Plan → Execute (TDD) → Verify → Close
 flowchart LR
   classDef extra fill:#f3f4f6,stroke:#9ca3af,stroke-width:1px,color:#111;
 
-  D[Init + Understand] --> P[Plan (approve)]
-  P -->|approved| E[Execute (TDD)]
+  D["Init + Understand"] --> P["Plan (approve)"]
+  P -->|approved| E["Execute (TDD)"]
   P -->|revise| P
 
-  E --> V[Verify (gates)]
-  V -->|sign-off| C[Close (handoff + archive)]
-  V -->|revise (fix)| E
+  E --> V["Verify (gates)"]
+  V -->|sign-off| C["Close (handoff + archive)"]
+  V -->|"revise (fix)"| E
 
-  subgraph Extra[Depth=thorough]
+  subgraph Extra["Depth=thorough"]
     R[Req] --> Est[Est] --> AR[Arch] --> P
     P -.-> TP[Test] -.-> E
     E -.-> DU[Docs] --> LW[Log] -.-> C
@@ -35,6 +35,12 @@ flowchart LR
 
   class R,Est,AR,TP,DU,LW extra
 ```
+
+## Workflow overview
+
+`dw` runs a 6-phase process (all phases for `standard` and `thorough`):
+
+Initialize → Understand → Plan (stops for approval) → Execute (TDD; 1 commit per subtask) → Verify (quality gates + review sign-off) → Close (handoff + archive when done).
 
 ### 6 phases (full workflow)
 - **Initialize**: clarify task scope and set up the workspace + task docs.
@@ -58,24 +64,28 @@ npm install -g dw-kit
 
 ## Quick start
 
-From your project directory:
+Setup dw in project directory:
 
 ```bash
 dw init
 ```
 
-Then in **Claude Code** (Update for Cursor/Antigravity/... in the next version):
+Then in **Claude Code CLI**, run the full workflow:
 
 ```
-/dw-flow new-feature
+/dw-flow your-task-or-anythings
 ```
 
-## Workflow overview
+---
 
-`dw` runs a 6-phase process (all phases for `standard` and `thorough`):
+Discover other skills:
 
-Initialize → Understand → Plan (stops for approval) → Execute (TDD; 1 commit per subtask) → Verify (quality gates + review sign-off) → Close (handoff + archive when done).
+```
+/dw-prompt
+/dw-thinking
+...
 
+```
 
 ---
 
@@ -94,12 +104,6 @@ dw claude-vn-fix        # patch Claude CLI to fix Vietnamese IME (backup/restore
 ```
 
 `dw claude-vn-fix` patches the local Claude CLI bundle to fix Vietnamese IME input (DEL char `\x7f` issue). Includes auto-backup and rollback.
-
-To restore:
-
-```bash
-dw claude-vn-fix --restore
-```
 
 ---
 
