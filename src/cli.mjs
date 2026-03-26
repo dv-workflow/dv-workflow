@@ -2,6 +2,8 @@ import { Command } from 'commander';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import chalk from 'chalk';
+import { getUpdateNotice, scheduleUpdateCheck } from './lib/update-checker.mjs';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -9,6 +11,10 @@ const require = createRequire(import.meta.url);
 const pkg = require(join(__dirname, '..', 'package.json'));
 
 export function run(argv) {
+  // Show cached update notice (non-blocking), then schedule fresh check in background
+  const latestVersion = getUpdateNotice(pkg.version);
+  scheduleUpdateCheck(pkg.version);
+
   const program = new Command();
 
   program
@@ -56,6 +62,16 @@ export function run(argv) {
     });
 
   program
+    .command('prompt')
+    .description('Build a well-structured task prompt with autocomplete + guided wizard')
+    .option('-t, --text <text>', 'Non-interactive: provide description directly')
+    .option('--api', 'Use AI to enhance the prompt (requires ANTHROPIC_API_KEY)')
+    .action(async (opts) => {
+      const { promptCommand } = await import('./commands/prompt.mjs');
+      await promptCommand(opts);
+    });
+
+  program
     .command('claude-vn-fix')
     .description('Patch Claude CLI to fix Vietnamese IME (local, with backup/restore)')
     .option('--path <file>', 'Path to @anthropic-ai/claude-code/cli.js (optional; auto-detect if omitted)')
@@ -67,4 +83,11 @@ export function run(argv) {
     });
 
   program.parse(argv);
+
+  if (latestVersion) {
+    console.log();
+    console.log(chalk.yellow(`  ↑ Update available`) + `  v${pkg.version} → ` + chalk.green.bold(`v${latestVersion}`));
+    console.log(`    Run ` + chalk.cyan(`npm install -g dw-kit`) + ` to update`);
+    console.log();
+  }
 }
