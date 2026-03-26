@@ -42,6 +42,7 @@ Không chắc scope → dùng `standard`. Assess dựa trên facts (file count, 
 
 | Skill | Mô tả | Depth |
 |-------|--------|-------|
+| `/dw-prompt [desc]` | Build structured prompt (autocomplete + wizard) | all |
 | `/dw-task-init [name]` | Khởi tạo task docs | all |
 | `/dw-research [name]` | Khảo sát codebase | all |
 | `/dw-plan [name]` | Lập kế hoạch (DỪNG chờ approve) | standard+ |

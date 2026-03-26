@@ -73,7 +73,7 @@ test('--version returns semver', () => {
 
 test('--help lists all commands', () => {
   const out = dw('--help', TEMP_BASE);
-  for (const cmd of ['init', 'upgrade', 'validate', 'doctor', 'claude-vn-fix']) {
+  for (const cmd of ['init', 'upgrade', 'validate', 'doctor', 'prompt', 'claude-vn-fix']) {
     assert(out.includes(cmd), `Missing command: ${cmd}`);
   }
 });
@@ -261,6 +261,35 @@ test('doctor reports issues on empty project', () => {
   } catch (e) {
     assert(e.status === 1, 'Should exit with code 1');
   }
+});
+
+// ── Test: dw prompt ──────────────────────────────────────────────────────────
+console.log();
+console.log('▶ dw prompt');
+
+test('prompt --text outputs structured result', () => {
+  const out = dw('prompt --text "fix login redirect after OAuth in auth middleware"', TEMP_BASE);
+  assert(out.includes('fix login redirect'), 'Should include description in output');
+  assert(!out.includes('Description seems short'), 'Long description should skip wizard');
+});
+
+test('prompt --text with short input expands without error', () => {
+  const out = dw('prompt --text "fix login"', TEMP_BASE);
+  assert(out.includes('fix login'), 'Should include description in output');
+});
+
+test('prompt --text empty string exits with error', () => {
+  try {
+    dw('prompt --text ""', TEMP_BASE);
+    assert(false, 'Should have thrown');
+  } catch (e) {
+    assert(e.status === 1, 'Should exit with code 1');
+  }
+});
+
+test('prompt --help shows options', () => {
+  const out = dw('prompt --help', TEMP_BASE);
+  assert(out.includes('--text'), 'Missing --text option');
 });
 
 // ── Test: dw claude-vn-fix (fixture patch) ───────────────────────────────────

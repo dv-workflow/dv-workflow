@@ -65,7 +65,6 @@ export function run(argv) {
     .command('prompt')
     .description('Build a well-structured task prompt with autocomplete + guided wizard')
     .option('-t, --text <text>', 'Non-interactive: provide description directly')
-    .option('--api', 'Use AI to enhance the prompt (requires ANTHROPIC_API_KEY)')
     .action(async (opts) => {
       const { promptCommand } = await import('./commands/prompt.mjs');
       await promptCommand(opts);

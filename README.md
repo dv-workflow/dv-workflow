@@ -88,6 +88,8 @@ dw doctor               # installation health check
 dw upgrade              # update toolkit files (override-aware)
 dw upgrade --check      # check for updates only
 dw upgrade --dry-run    # preview changes
+dw prompt               # build a well-structured task prompt (autocomplete + wizard)
+dw prompt --text "..."  # non-interactive: structure a description directly
 dw claude-vn-fix        # patch Claude CLI to fix Vietnamese IME (backup/restore)
 ```
 
