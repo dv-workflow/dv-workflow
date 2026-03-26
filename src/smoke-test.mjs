@@ -11,6 +11,7 @@ import { mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { copyFileSync } from 'node:fs';
 
 const __dirname = resolve(fileURLToPath(import.meta.url), '..');
 const DW_BIN = resolve(__dirname, '..', 'bin', 'dw.mjs');
@@ -72,7 +73,7 @@ test('--version returns semver', () => {
 
 test('--help lists all commands', () => {
   const out = dw('--help', TEMP_BASE);
-  for (const cmd of ['init', 'upgrade', 'validate', 'doctor']) {
+  for (const cmd of ['init', 'upgrade', 'validate', 'doctor', 'claude-vn-fix']) {
     assert(out.includes(cmd), `Missing command: ${cmd}`);
   }
 });
@@ -260,6 +261,22 @@ test('doctor reports issues on empty project', () => {
   } catch (e) {
     assert(e.status === 1, 'Should exit with code 1');
   }
+});
+
+// ── Test: dw claude-vn-fix (fixture patch) ───────────────────────────────────
+console.log();
+console.log('▶ dw claude-vn-fix');
+
+test('claude-vn-fix patches known bug fixture', () => {
+  const dir = freshDir('claude-vn-fix-fixture');
+  const fixtureSrc = resolve(__dirname, '__fixtures__', 'claude-cli-bug-snippet.js');
+  const target = join(dir, 'cli.js');
+  copyFileSync(fixtureSrc, target);
+
+  const out = dw(`claude-vn-fix --path "${target}"`, dir);
+  assert(out.includes('Patch applied') || out.includes('Already patched'), 'Should apply patch');
+  const patched = readFileSync(target, 'utf-8');
+  assert(patched.includes('dw-kit Vietnamese IME fix'), 'Patch marker missing in output file');
 });
 
 // ── Test: dw upgrade ─────────────────────────────────────────────────────────

@@ -88,6 +88,15 @@ dw doctor               # installation health check
 dw upgrade              # update toolkit files (override-aware)
 dw upgrade --check      # check for updates only
 dw upgrade --dry-run    # preview changes
+dw claude-vn-fix        # patch Claude CLI to fix Vietnamese IME (backup/restore)
+```
+
+`dw claude-vn-fix` patches the local Claude CLI bundle to fix Vietnamese IME input (DEL char `\x7f` issue). Includes auto-backup and rollback.
+
+To restore:
+
+```bash
+dw claude-vn-fix --restore
 ```
 
 ---

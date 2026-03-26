@@ -55,5 +55,16 @@ export function run(argv) {
       await doctorCommand();
     });
 
+  program
+    .command('claude-vn-fix')
+    .description('Patch Claude CLI to fix Vietnamese IME (local, with backup/restore)')
+    .option('--path <file>', 'Path to @anthropic-ai/claude-code/cli.js (optional; auto-detect if omitted)')
+    .option('--restore', 'Restore from latest backup')
+    .option('--dry-run', 'Show what would change without writing')
+    .action(async (opts) => {
+      const { claudeVnFixCommand } = await import('./commands/claude-vn-fix.mjs');
+      await claudeVnFixCommand(opts);
+    });
+
   program.parse(argv);
 }
