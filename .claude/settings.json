@@ -52,7 +52,7 @@
         "hooks": [
           {
             "type": "prompt",
-            "prompt": "Trước khi kết thúc, kiểm tra: (1) Có uncommitted changes quan trọng không? (2) Task đang làm dở chưa cập nhật progress? (3) Có blocker nào chưa ghi lại? Nếu có vấn đề, trả về {\"decision\": \"block\", \"reason\": \"[mô tả]\"}. Nếu OK, trả về {\"decision\": \"allow\"}."
+            "prompt": "Session context: $ARGUMENTS\n\nIf stop_hook_active is true in the context above, reply ONLY: {\"decision\":\"allow\"} to prevent infinite loops.\n\nOtherwise check: any uncommitted important changes? any in-progress task with outdated progress file? any unrecorded blockers?\n\nReply with ONLY valid JSON, no other text:\n- {\"decision\":\"block\",\"reason\":\"<describe what needs attention>\"} if action needed\n- {\"decision\":\"allow\"} if all clear"
           }
         ]
       }

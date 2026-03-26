@@ -113,7 +113,7 @@ export function patchCliJs(filePath, { dryRun }) {
   const content = readFileSync(filePath, 'utf-8');
 
   // Guard: ensure this is actually a Claude CLI bundle before patching.
-  if (!content.includes('@anthropic-ai') && !content.includes('claude-code')) {
+  if (!content.includes('@anthropic-ai') || !content.includes('claude-code')) {
     return { ok: false, message: 'File does not appear to be a Claude CLI bundle. Use --path to specify the correct file.' };
   }
 
@@ -147,7 +147,11 @@ export function patchCliJs(filePath, { dryRun }) {
   } catch (e) {
     warn(`Patch failed: ${e.message}`);
     warn('Rolling back from backup.');
-    copyFileSync(backupPath, filePath);
+    try {
+      copyFileSync(backupPath, filePath);
+    } catch (rollbackErr) {
+      return { ok: false, message: `Patch failed AND rollback failed: ${rollbackErr.message}. Manual restore from: ${backupPath}` };
+    }
     return { ok: false, message: `Patch failed and rolled back: ${e.message}` };
   }
 }
@@ -198,7 +202,7 @@ function findIfBlock(content, idx) {
   const windowStart = Math.max(0, idx - 500);
   const searchSlice = content.slice(windowStart, idx);
   const localOffset = searchSlice.lastIndexOf('if(');
-  if (localOffset === -1) throw new Error('Could not find containing if(...) block');
+  if (localOffset === -1) throw new Error(`Could not find containing if(...) block near index ${idx}`);
   const start = windowStart + localOffset;
 
   let depth = 0;
