@@ -14,27 +14,7 @@ dw-kit helps your team run AI-assisted development with a **repeatable workflow*
 Initialize → Understand → Plan → Execute (TDD) → Verify → Close
 ```
 
-```mermaid
-%%{init: {'flowchart': {'nodeSpacing': 10, 'rankSpacing': 18}}}%%
-flowchart LR
-  classDef extra fill:#f3f4f6,stroke:#9ca3af,stroke-width:1px,color:#111;
-
-  D["Init + Understand"] --> P["Plan (approve)"]
-  P -->|approved| E["Execute (TDD)"]
-  P -->|revise| P
-
-  E --> V["Verify (gates)"]
-  V -->|sign-off| C["Close (handoff + archive)"]
-  V -->|"revise (fix)"| E
-
-  subgraph Extra["Depth=thorough"]
-    R[Req] --> Est[Est] --> AR[Arch] --> P
-    P -.-> TP[Test] -.-> E
-    E -.-> DU[Docs] --> LW[Log] -.-> C
-  end
-
-  class R,Est,AR,TP,DU,LW extra
-```
+<img src="docs/workflow-diagram.svg" alt="dw-kit workflow diagram" />
 
 ## Workflow overview
 
