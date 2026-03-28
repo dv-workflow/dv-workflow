@@ -6,7 +6,7 @@ import { detectPlatform } from '../lib/platform.mjs';
 export async function promptCommand(opts) {
   header('dw-kit Prompt Builder');
 
-  const adapter = readAdapter();
+  const adapter = detectPlatform(process.cwd());
 
   // Non-interactive mode: --text <text>
   if (opts.text !== undefined) {
@@ -109,8 +109,4 @@ function outputResult(text, adapter) {
     // generic adapter: just output to stdout
     info('(generic adapter — copy the text above manually)');
   }
-}
-
-function readAdapter() {
-  return detectPlatform(process.cwd());
 }
