@@ -12,6 +12,8 @@ Trước khi thực hiện bất kỳ skill nào, PHẢI đọc `.dw/config/dw.c
 
 | Skill | Level 1 | Level 2 | Level 3 |
 |-------|---------|---------|---------|
+| onboard | yes | yes | yes |
+| retroactive | yes | yes | yes |
 | task-init | yes | yes | yes |
 | research | yes | yes | yes |
 | plan | skip | yes | yes |
@@ -42,6 +44,19 @@ Trước khi thực hiện bất kỳ skill nào, PHẢI đọc `.dw/config/dw.c
 - Luôn cập nhật progress file trước khi kết thúc
 - Ghi rõ: đang ở subtask nào, blockers, context quan trọng
 - Commit work-in-progress nếu có thay đổi đáng kể
+
+## Adoption Workflow (Existing Project)
+
+```
+Lần đầu dùng dw trên project đang chạy:
+/dw-onboard → .dw/context/project-map.md + module docs (breadth-first)
+     ↓
+Khi cần AI hiểu sâu module cụ thể:
+/dw-retroactive [module] → .dw/tasks/[module]/ as-built docs (depth-first)
+     ↓
+Task mới liên quan module đã documented:
+/dw-research [task] → AI đọc context có sẵn làm foundation
+```
 
 ## Multi-Role Workflow
 

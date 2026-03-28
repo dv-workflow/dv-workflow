@@ -60,6 +60,8 @@ Không chắc scope → dùng `standard`. Assess dựa trên facts (file count, 
 | `/dw-dashboard` | PM: metrics report | if pm role |
 | `/dw-sprint-review` | Team retrospective | all |
 | `/dw-docs-update` | Cập nhật living docs | thorough |
+| `/dw-onboard` | Onboard dw vào existing project (breadth-first scan) | always |
+| `/dw-retroactive [name]` | Retroactive doc 1 feature đã có (depth-first) | always |
 | `/dw-config-init` | Khởi tạo config mới | always |
 | `/dw-config-validate` | Validate config file | always |
 | `/dw-upgrade` | Upgrade toolkit | always |
