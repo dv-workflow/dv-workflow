@@ -1,9 +1,7 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { load as yamlLoad } from 'js-yaml';
 import { header, info, ok, warn, err, log } from '../lib/ui.mjs';
 import { copyToClipboard } from '../lib/clipboard.mjs';
 import { getSuggestions, isVague, expandTemplate } from '../lib/prompt-suggest.mjs';
+import { detectPlatform } from '../lib/platform.mjs';
 
 export async function promptCommand(opts) {
   header('dw-kit Prompt Builder');
@@ -114,12 +112,5 @@ function outputResult(text, adapter) {
 }
 
 function readAdapter() {
-  const configPath = join(process.cwd(), '.dw', 'config', 'dw.config.yml');
-  if (!existsSync(configPath)) return 'claude-cli';
-  try {
-    const config = yamlLoad(readFileSync(configPath, 'utf-8'));
-    return config?.adapter || 'claude-cli';
-  } catch {
-    return 'claude-cli';
-  }
+  return detectPlatform(process.cwd());
 }
