@@ -4,6 +4,32 @@
 
 ---
 
+## [v1.1.0] — 2026-03-30
+
+### Added — Retroactive Adoption Skills
+
+- **`/dw-onboard`**: One-time breadth-first codebase scan when adopting dw-kit into an existing running project. Generates `.dw/context/project-map.md` and per-module context docs. Recommends `/dw-retroactive` for complex modules.
+- **`/dw-retroactive [name]`**: Depth-first retroactive documentation for a single existing feature/task. Reverse-engineers from code + git history, produces full as-built task docs (context + plan + progress) in `.dw/tasks/[name]/`.
+
+### Added — `--no-dw` Override Flag
+
+- **`--no-dw` in prompt**: Per-request escape hatch. Adding `--no-dw` to any prompt disables all dw workflow instructions (routing, config read, thinking framework) for that request only. Next prompt resumes dw normally. No CLI command or file manipulation needed.
+
+### Changed — Commit Philosophy
+
+- **All `.dw/` content is now committed** — tasks, context, docs, metrics, reports. Teams and open-source contributors share the same context without needing to regenerate it.
+- **`dw init` gitignore** now only adds `CLAUDE.local.md` and `.claude/settings.local.json` — no `.dw/` entries.
+
+### Fixed
+
+- **`dw prompt`**: `readAdapter()` was reading `config.adapter` which does not exist in the config schema — always fell back to `'claude-cli'` regardless of actual platform. Now correctly uses `detectPlatform()` to detect Cursor and generic adapters.
+
+### Refactored
+
+- **`dw prompt`**: Removed redundant `readAdapter()` wrapper function; inlined `detectPlatform(process.cwd())` directly at call site.
+
+---
+
 ## [v1.0.0] — 2026-03-24
 
 ### Architecture: 4-Layer System

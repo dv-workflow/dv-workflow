@@ -1,10 +1,17 @@
-﻿# dw-kit — Cheatsheet (v1)
+﻿# dw-kit — Cheatsheet (v1.1)
 
 > Bảng tham chiếu nhanh. In ra hoặc ghim lên màn hình.
 
 ---
 
 ## Skills Theo Workflow
+
+### 0) Adopt dw vào Project Hiện Có
+
+| Skill | Khi nào | Gợi ý depth |
+|-------|---------|-------------|
+| `/dw-onboard` | Lần đầu adopt dw vào project đang chạy — scan toàn codebase | always |
+| `/dw-retroactive [name]` | Document sâu một feature/module cụ thể đã có | always |
 
 ### 1) Start
 
