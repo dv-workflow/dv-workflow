@@ -13,7 +13,12 @@
     ".dw/config/",
     ".dw/adapters/",
     "scripts/",
-    ".claude/",
+    ".claude/agents/",
+    ".claude/hooks/",
+    ".claude/rules/",
+    ".claude/skills/",
+    ".claude/templates/",
+    ".claude/settings.json",
     "CLAUDE.md"
   ],
   "engines": {
