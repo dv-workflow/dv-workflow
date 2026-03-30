@@ -6,6 +6,16 @@ Methodology: `core/WORKFLOW.md` (load on demand — không phải always-loaded)
 
 ---
 
+## Override
+
+Nếu prompt của user chứa `--no-dw`:
+- Bỏ qua **toàn bộ** dw workflow instructions (Quy Tắc Vàng, Routing, Session Start)
+- KHÔNG đọc config, KHÔNG check tasks, KHÔNG apply thinking framework
+- Làm việc như Claude thông thường — trả lời trực tiếp, không theo process nào
+- Áp dụng cho request đó; request tiếp theo vẫn dùng dw bình thường
+
+---
+
 ## Quy Tắc Vàng
 
 1. **Config-driven**: Đọc `.dw/config/dw.config.yml` trước mọi action
@@ -60,6 +70,8 @@ Không chắc scope → dùng `standard`. Assess dựa trên facts (file count, 
 | `/dw-dashboard` | PM: metrics report | if pm role |
 | `/dw-sprint-review` | Team retrospective | all |
 | `/dw-docs-update` | Cập nhật living docs | thorough |
+| `/dw-onboard` | Onboard dw vào existing project (breadth-first scan) | always |
+| `/dw-retroactive [name]` | Retroactive doc 1 feature đã có (depth-first) | always |
 | `/dw-config-init` | Khởi tạo config mới | always |
 | `/dw-config-validate` | Validate config file | always |
 | `/dw-upgrade` | Upgrade toolkit | always |

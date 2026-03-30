@@ -1,0 +1,121 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "dw-kit Configuration Schema",
+  "description": "Schema for config/dw.config.yml",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name"],
+      "properties": {
+        "name":     { "type": "string", "minLength": 1 },
+        "language": { "type": "string", "enum": ["vi", "en"], "default": "vi" }
+      }
+    },
+    "workflow": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "default_depth": {
+          "type": "string",
+          "enum": ["quick", "standard", "thorough"],
+          "default": "standard"
+        }
+      }
+    },
+    "team": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "roles": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["dev", "techlead", "ba", "qc", "pm"]
+          },
+          "minItems": 1,
+          "contains": { "const": "dev" },
+          "description": "dev is always required"
+        }
+      }
+    },
+    "quality": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "test_command":  { "type": "string", "default": "" },
+        "lint_command":  { "type": "string", "default": "" },
+        "block_on_fail": { "type": "boolean", "default": false }
+      }
+    },
+    "tracking": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "estimation":      { "type": "boolean", "default": false },
+        "log_work":        { "type": "boolean", "default": false },
+        "estimation_unit": {
+          "type": "string",
+          "enum": ["hours", "story-points", "t-shirt"],
+          "default": "hours"
+        }
+      }
+    },
+    "paths": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "tasks": { "type": "string", "default": ".dw/tasks" },
+        "docs":  { "type": "string", "default": ".dw/docs" }
+      }
+    },
+    "claude": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "models": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "plan":    { "type": "string", "default": "" },
+            "execute": { "type": "string", "default": "" },
+            "review":  { "type": "string", "default": "" }
+          }
+        },
+        "structured_output":  { "type": "boolean", "default": true },
+        "worktree_execution": { "type": "boolean", "default": false },
+        "mcp": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "command"],
+            "additionalProperties": false,
+            "properties": {
+              "name":    { "type": "string" },
+              "command": { "type": "string" },
+              "args":    { "type": "array", "items": { "type": "string" } },
+              "env": {
+                "type": "object",
+                "additionalProperties": { "type": "string" }
+              }
+            }
+          }
+        }
+      }
+    },
+    "_toolkit": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "core_version":     { "type": "string" },
+        "platform_version": { "type": "string" },
+        "capability_version": { "type": "string" },
+        "installed":        { "type": "string" },
+        "last_upgrade":     { "type": "string" },
+        "migrated_from":    { "type": "string" }
+      }
+    }
+  }
+}

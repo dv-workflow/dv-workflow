@@ -129,11 +129,17 @@ Skills là các `/command` bạn gọi trong Claude Code (hoặc Cursor):
 | `/dw-sprint-review` | `[sprint-name]` | Tổng kết sprint cho team retrospective |
 | `/dw-handoff` | `[task-name]` | Tạo handoff doc để bàn giao session |
 
+### 🟣 Adoption (dùng khi adopt dw vào project đang chạy)
+
+| Skill | Argument | Mô tả |
+|-------|----------|-------|
+| `/dw-onboard` | _(không có)_ | Scan toàn bộ codebase hiện có, tạo project map + module context docs — chạy **một lần** khi adopt |
+| `/dw-retroactive` | `[feature-name]` | Retroactive document một feature đã implement trước khi dùng dw — reverse-engineer từ code + git history |
+
 ### ⚙️ Toolkit Management
 
 | Skill | Argument | Mô tả |
 |-------|----------|-------|
-| `/dw-task-init` | `[task-name]` | Khởi tạo task docs |
 | `/dw-config-init` | `[project-name]` | Tạo config mới (khi không dùng `dw init`) |
 | `/dw-config-validate` | _(không có)_ | Kiểm tra config file có hợp lệ |
 | `/dw-upgrade` | _(không có)_ | Cập nhật toolkit files lên version mới |
@@ -325,11 +331,15 @@ Ngoài skills (dùng trong Claude Code), còn có CLI:
 ```bash
 dw init                     # Setup dw-kit trong project (interactive)
 dw init --preset solo-quick # Setup nhanh với preset
+dw init --silent            # CI mode (đọc env vars: DW_NAME, DW_DEPTH, DW_ROLES, DW_LANG)
 dw validate                 # Kiểm tra .dw/config/dw.config.yml
 dw doctor                   # Health check toàn bộ installation
 dw upgrade                  # Cập nhật toolkit files
 dw upgrade --check          # Kiểm tra có update không
 dw upgrade --dry-run        # Preview changes
+dw prompt                   # Build structured task prompt (autocomplete + wizard)
+dw prompt --text "mô tả"    # Non-interactive mode
+dw claude-vn-fix            # Patch Vietnamese IME bug trong Claude CLI
 ```
 
 ---

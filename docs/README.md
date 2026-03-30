@@ -29,6 +29,8 @@ dw doctor
 - `dw upgrade`: cập nhật toolkit files (override-aware).
 - `dw validate`: validate `.dw/config/dw.config.yml` theo schema.
 - `dw doctor`: health check cài đặt.
+- `dw prompt`: build structured task prompt (autocomplete + wizard).
+- `dw claude-vn-fix`: patch Vietnamese IME bug trong Claude CLI.
 
 ## Config chuẩn v1
 

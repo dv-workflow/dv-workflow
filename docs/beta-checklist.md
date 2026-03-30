@@ -1,8 +1,8 @@
-# dw-kit v1.0 — Open Beta Test Checklist
+# dw-kit v1.1 — Open Beta Test Checklist
 
-> **Version**: 1.0.0
-> **Date**: 2026-03-24
-> **Focus**: npm package distribution, CLI commands, cross-platform
+> **Version**: 1.1.0
+> **Date**: 2026-03-29
+> **Focus**: npm package distribution, CLI commands, cross-platform, adoption skills
 
 ---
 
@@ -22,8 +22,8 @@
 npm install -g dw-kit
 ```
 - [ ] Installs without errors
-- [ ] `dw --version` returns `1.0.0`
-- [ ] `dw --help` lists all 4 commands (init, upgrade, validate, doctor)
+- [ ] `dw --version` returns `1.1.0`
+- [ ] `dw --help` lists all 6 commands (init, upgrade, validate, doctor, prompt, claude-vn-fix)
 
 ### 1.2 npx (Zero-install)
 ```bash
@@ -105,7 +105,7 @@ After `dw init --preset small-team`:
 - [ ] `.dw/adapters/claude-cli/overrides/` — override directory
 - [ ] `.dw/adapters/claude-cli/extensions/` — extensions directory
 - [ ] `adapters/generic/AGENT.md` — generic adapter
-- [ ] `.claude/skills/` — 22 skill directories
+- [ ] `.claude/skills/` — 24 skill directories (includes dw-onboard, dw-retroactive)
 - [ ] `.claude/agents/` — 5 agent files
 - [ ] `.claude/hooks/` — 4 hook scripts
 - [ ] `.claude/rules/` — 3 rule files
@@ -290,7 +290,7 @@ npm test
 ## Known Limitations (Document for Beta Users)
 
 1. `dw upgrade` rewrites `.dw/config/dw.config.yml` using js-yaml — YAML comments are not preserved
-2. Cursor adapter generates a basic rules file — full skill conversion is planned for v1.1
+2. Cursor adapter generates a basic rules file — full skill conversion planned for v1.2
 3. MCP server config in `dw.config.yml` is not yet auto-generated into `.claude/settings.json` by the CLI (manual update may be required)
 5. Interactive mode may not render correctly in some Windows terminals (use --preset or --silent as fallback)
 
@@ -315,5 +315,5 @@ dw --version
 dw doctor
 
 # 5. Promote to latest (when ready)
-npm dist-tag add dw-kit@1.0.0 latest
+npm dist-tag add dw-kit@1.1.0 latest
 ```

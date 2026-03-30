@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Hello World · 3D</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #05050d;
+      overflow: hidden;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+
+    canvas { display: block; }
+  
+    /* ── Bottom label ────────────────────────────────────────────────── */
+    #ui {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      translate: -50% 0;
+      text-align: center;
+      pointer-events: none;
+      user-select: none;
+    }
+    #label {
+      font-size: 0.7rem;
+      letter-spacing: 0.3em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.2);
+    }
+    #hint {
+      margin-top: 0.35rem;
+      font-size: 0.6rem;
+      letter-spacing: 0.12em;
+      color: rgba(255,255,255,0.1);
+    }
+
+    /* ── Loader ──────────────────────────────────────────────────────── */
+    #loader {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #05050d;
+      transition: opacity 0.6s ease;
+      z-index: 20;
+    }
+    #loader.hidden { opacity: 0; pointer-events: none; }
+    .spinner {
+      width: 2rem; height: 2rem;
+      border: 2px solid rgba(255,255,255,0.1);
+      border-top-color: rgba(255,255,255,0.5);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+
+    /* ── Toggle button ───────────────────────────────────────────────── */
+    #panel-toggle {
+      position: fixed;
+      top: 1.25rem;
+      right: 1.25rem;
+      z-index: 15;
+      width: 2.2rem;
+      height: 2.2rem;
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 0.5rem;
+      background: rgba(10,10,20,0.7);
+      backdrop-filter: blur(10px);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: border-color 0.2s, background 0.2s;
+    }
+    #panel-toggle:hover {
+      border-color: rgba(255,255,255,0.28);
+      background: rgba(20,20,35,0.85);
+    }
+    #panel-toggle svg { width: 1rem; height: 1rem; }
+
+    /* ── Config panel ────────────────────────────────────────────────── */
+    #panel {
+      position: fixed;
+      top: 1.25rem;
+      right: 4rem;
+      z-index: 15;
+      width: 260px;
+      background: rgba(8,8,18,0.82);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 0.75rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      transform-origin: top right;
+      transition: opacity 0.2s ease, scale 0.2s ease;
+    }
+    #panel.hidden {
+      opacity: 0;
+      scale: 0.95;
+      pointer-events: none;
+    }
+
+    .panel-title {
+      font-size: 0.6rem;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      color: rgba(255,255,255,0.3);
+      padding-bottom: 0.5rem;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+
+    .ctrl {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .ctrl-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .ctrl label {
+      font-size: 0.65rem;
+      letter-spacing: 0.06em;
+      color: rgba(255,255,255,0.45);
+      text-transform: uppercase;
+    }
+
+    .ctrl .val {
+      font-size: 0.62rem;
+      color: rgba(255,255,255,0.25);
+      min-width: 2.5rem;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Sliders */
+    input[type=range] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 100%;
+      height: 3px;
+      border-radius: 2px;
+      background: rgba(255,255,255,0.1);
+      outline: none;
+      cursor: pointer;
+    }
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--thumb, #fff);
+      border: 2px solid rgba(0,0,0,0.4);
+      transition: transform 0.15s;
+    }
+    input[type=range]::-webkit-slider-thumb:hover { transform: scale(1.25); }
+    input[type=range]::-moz-range-thumb {
+      width: 12px; height: 12px;
+      border-radius: 50%;
+      background: var(--thumb, #fff);
+      border: 2px solid rgba(0,0,0,0.4);
+    }
+
+    /* Hue slider — rainbow track */
+    #hue-slider {
+      background: linear-gradient(to right,
+        hsl(0,80%,55%), hsl(45,80%,55%), hsl(90,80%,55%),
+        hsl(135,80%,55%), hsl(180,80%,55%), hsl(225,80%,55%),
+        hsl(270,80%,55%), hsl(315,80%,55%), hsl(360,80%,55%));
+    }
+
+    /* Color swatch */
+    .swatch-row {
+      display: flex;
+      gap: 0.4rem;
+      align-items: center;
+    }
+    .swatch {
+      width: 1rem; height: 1rem;
+      border-radius: 3px;
+      flex-shrink: 0;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    /* Text input */
+    .text-input-row {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .text-input-row input[type=text] {
+      flex: 1;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.35rem;
+      color: rgba(255,255,255,0.75);
+      font-size: 0.7rem;
+      padding: 0.3rem 0.5rem;
+      outline: none;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .text-input-row input[type=text]:focus {
+      border-color: rgba(255,255,255,0.3);
+    }
+    .text-input-row button, .btn {
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 0.35rem;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.65rem;
+      letter-spacing: 0.05em;
+      padding: 0.3rem 0.55rem;
+      cursor: pointer;
+      font-family: inherit;
+      transition: background 0.15s, border-color 0.15s, color 0.15s;
+    }
+    .text-input-row button:hover, .btn:hover {
+      background: rgba(255,255,255,0.13);
+      border-color: rgba(255,255,255,0.22);
+      color: rgba(255,255,255,0.85);
+    }
+
+    .divider {
+      height: 1px;
+      background: rgba(255,255,255,0.05);
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.4rem;
+    }
+    .btn-row .btn { flex: 1; text-align: center; }
+    .btn.accent {
+      border-color: rgba(255,255,255,0.18);
+      color: rgba(255,255,255,0.7);
+    }
+    .btn.accent:hover {
+      background: rgba(255,255,255,0.15);
+      color: #fff;
+    }
+
+    @media (max-width: 400px) {
+      #panel { width: calc(100vw - 5rem); }
+    }
+  </style>
+</head>
+<body>
+  <div id="loader"><div class="spinner"></div></div>
+
+  <div id="ui">
+    <div id="label">three.js · hello world</div>
+    <div id="hint">press <kbd style="font-family:inherit;opacity:.6">C</kbd> to configure</div>
+  </div>
+
+  <!-- Toggle button -->
+  <button id="panel-toggle" title="Toggle config (C)" aria-label="Toggle config panel">
+    <svg viewBox="0 0 16 16" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-linecap="round">
+      <circle cx="8" cy="4.5" r="1.5"/><circle cx="8" cy="11.5" r="1.5"/>
+      <line x1="1" y1="4.5" x2="6.5" y2="4.5"/><line x1="9.5" y1="4.5" x2="15" y2="4.5"/>
+      <line x1="1" y1="11.5" x2="6.5" y2="11.5"/><line x1="9.5" y1="11.5" x2="15" y2="11.5"/>
+    </svg>
+  </button>
+
+  <!-- Config panel -->
+  <div id="panel" class="hidden" role="region" aria-label="Scene configuration">
+    <div class="panel-title">Scene Config</div>
+
+    <!-- Text -->
+    <div class="ctrl">
+      <label>Text</label>
+      <div class="text-input-row">
+        <input type="text" id="cfg-text" value="Hello World" maxlength="40" spellcheck="false" />
+        <button id="apply-text">Apply</button>
+      </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Primary hue -->
+    <div class="ctrl">
+      <div class="ctrl-row">
+        <label>Color</label>
+        <div class="swatch-row">
+          <div class="swatch" id="swatch-main"></div>
+          <div class="swatch" id="swatch-acc"></div>
+          <span class="val" id="val-hue">0°</span>
+        </div>
+      </div>
+      <input type="range" id="hue-slider" min="0" max="360" step="1" value="0" />
+    </div>
+
+    <!-- Rotation X -->
+    <div class="ctrl">
+      <div class="ctrl-row">
+        <label>Spin X</label>
+        <span class="val" id="val-rx">0.00</span>
+      </div>
+      <input type="range" id="rx-slider" min="-0.5" max="0.5" step="0.005" value="0.15" />
+    </div>
+
+    <!-- Rotation Y -->
+    <div class="ctrl">
+      <div class="ctrl-row">
+        <label>Spin Y</label>
+        <span class="val" id="val-ry">0.00</span>
+      </div>
+      <input type="range" id="ry-slider" min="0" max="0.5" step="0.005" value="0.08" />
+    </div>
+
+    <!-- Orbit speed -->
+    <div class="ctrl">
+      <div class="ctrl-row">
+        <label>Orbit</label>
+        <span class="val" id="val-orbit">0.00</span>
+      </div>
+      <input type="range" id="orbit-slider" min="0" max="0.15" step="0.002" value="0.04" />
+    </div>
+
+    <!-- Particle opacity -->
+    <div class="ctrl">
+      <div class="ctrl-row">
+        <label>Stars</label>
+        <span class="val" id="val-stars">0.00</span>
+      </div>
+      <input type="range" id="stars-slider" min="0" max="1" step="0.01" value="0.55" />
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="btn-row">
+      <button class="btn accent" id="btn-random">⟳ Randomize</button>
+      <button class="btn" id="btn-reset">Reset</button>
+    </div>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.1/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.1/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { FontLoader }    from 'three/addons/loaders/FontLoader.js';
+    import { TextGeometry }  from 'three/addons/geometries/TextGeometry.js';
+
+    // ── Accessibility ──────────────────────────────────────────────────────
+    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    // ── Helpers ────────────────────────────────────────────────────────────
+    const rnd    = (min, max) => Math.random() * (max - min) + min;
+    const rndInt = (min, max) => Math.floor(rnd(min, max + 1));
+    const hsl    = (h, s, l)  => `hsl(${h},${s}%,${l}%)`;
+    const col    = (h, s, l)  => new THREE.Color(hsl(h, s, l));
+    const clamp  = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+    // ── Mutable config (read by render loop & controls) ────────────────────
+    const cfg = {
+      text:       'Hello World',
+      hue:        Math.random() * 360,
+      rotX:       rnd(0.06, 0.24) * (Math.random() < 0.5 ? 1 : -1),
+      rotY:       rnd(0.03, 0.15),
+      orbitSpeed: 0.04,
+      starOpacity:0.55,
+    };
+    // Derived — recomputed when hue changes
+    const hue2 = () => (cfg.hue + 150) % 360;
+
+    // Default snapshot for reset
+    const DEFAULTS = { ...cfg };
+
+    // ── DOM refs ───────────────────────────────────────────────────────────
+    const loaderEl     = document.getElementById('loader');
+    const labelEl      = document.getElementById('label');
+    const panelEl      = document.getElementById('panel');
+    const toggleBtn    = document.getElementById('panel-toggle');
+
+    const cfgText      = document.getElementById('cfg-text');
+    const applyTextBtn = document.getElementById('apply-text');
+    const hueSlider    = document.getElementById('hue-slider');
+    const rxSlider     = document.getElementById('rx-slider');
+    const rySlider     = document.getElementById('ry-slider');
+    const orbitSlider  = document.getElementById('orbit-slider');
+    const starsSlider  = document.getElementById('stars-slider');
+    const swatchMain   = document.getElementById('swatch-main');
+    const swatchAcc    = document.getElementById('swatch-acc');
+    const valHue       = document.getElementById('val-hue');
+    const valRx        = document.getElementById('val-rx');
+    const valRy        = document.getElementById('val-ry');
+    const valOrbit     = document.getElementById('val-orbit');
+    const valStars     = document.getElementById('val-stars');
+    const btnRandom    = document.getElementById('btn-random');
+    const btnReset     = document.getElementById('btn-reset');
+
+    // ── Scene ──────────────────────────────────────────────────────────────
+    const CAM_DIST  = rnd(18, 28);
+    const CAM_ANGLE = rnd(0, Math.PI * 2);
+    const PARTICLE_COUNT = rndInt(60, 100);
+
+    const scene = new THREE.Scene();
+    scene.fog   = new THREE.FogExp2(0x05050d, 0.018);
+
+    const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 200);
+    camera.position.set(
+      Math.cos(CAM_ANGLE) * CAM_DIST,
+      rnd(-2, 4),
+      Math.sin(CAM_ANGLE) * CAM_DIST
+    );
+    camera.lookAt(0, 0, 0);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    document.body.prepend(renderer.domElement);
+
+    // ── Lights ─────────────────────────────────────────────────────────────
+    scene.add(new THREE.AmbientLight(0xffffff, 0.15));
+
+    const keyLight = new THREE.DirectionalLight(col(cfg.hue, 80, 70), 2.5);
+    keyLight.position.set(5, 8, 5);
+    scene.add(keyLight);
+
+    const fillLight = new THREE.PointLight(col(hue2(), 90, 60), 3, 40);
+    fillLight.position.set(-8, -3, -6);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.PointLight(0xffffff, 1.2, 30);
+    rimLight.position.set(0, 10, -10);
+    scene.add(rimLight);
+
+    // ── Particles ──────────────────────────────────────────────────────────
+    const pGeo = new THREE.BufferGeometry();
+    const pPos = new Float32Array(PARTICLE_COUNT * 3);
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      const theta = rnd(0, Math.PI * 2);
+      const phi   = Math.acos(rnd(-1, 1));
+      const r     = rnd(15, 55);
+      pPos[i * 3]     = r * Math.sin(phi) * Math.cos(theta);
+      pPos[i * 3 + 1] = r * Math.sin(phi) * Math.sin(theta);
+      pPos[i * 3 + 2] = r * Math.cos(phi);
+    }
+    pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+    const pMat = new THREE.PointsMaterial({
+      color: col(cfg.hue, 60, 75),
+      sizeAttenuation: true, size: 0.12,
+      transparent: true, opacity: cfg.starOpacity,
+    });
+    scene.add(new THREE.Points(pGeo, pMat));
+
+    // ── Text mesh management ────────────────────────────────────────────────
+    let textMesh = null;
+    let wireMesh = null;
+    let matFront = null;
+    let matSide  = null;
+    let wireMatRef = null;
+    let loadedFont  = null;
+
+    function buildText(font, text) {
+      // Dispose old
+      if (textMesh) { scene.remove(textMesh); textMesh.geometry.dispose(); }
+      if (wireMesh)  { scene.remove(wireMesh);  wireMesh.geometry.dispose(); }
+      if (matFront)  matFront.dispose();
+      if (matSide)   matSide.dispose();
+      if (wireMatRef) wireMatRef.dispose();
+
+      // Sanitize: replace literal \n with newline, trim
+      const displayText = text.replace(/\\n/g, '\n').trim() || 'Hello\nWorld';
+
+      const geo = new TextGeometry(displayText, {
+        font,
+        size: 2.8, height: 0.55, curveSegments: 14,
+        bevelEnabled: true, bevelThickness: 0.06,
+        bevelSize: 0.03, bevelOffset: 0, bevelSegments: 6,
+      });
+      geo.computeBoundingBox();
+      geo.center();
+
+      matFront = new THREE.MeshStandardMaterial({
+        color: col(cfg.hue, 85, 68), metalness: 0.6, roughness: 0.2,
+        emissive: col(cfg.hue, 90, 20), emissiveIntensity: 0.4,
+      });
+      matSide = new THREE.MeshStandardMaterial({
+        color: col(hue2(), 75, 40), metalness: 0.8, roughness: 0.3,
+      });
+
+      textMesh = new THREE.Mesh(geo, [matFront, matSide]);
+      scene.add(textMesh);
+
+      const wireGeo = geo.clone();
+      wireMatRef = new THREE.MeshBasicMaterial({
+        color: col(cfg.hue, 100, 80), wireframe: true,
+        transparent: true, opacity: 0.09,
+      });
+      wireMesh = new THREE.Mesh(wireGeo, wireMatRef);
+      // Slightly scaled up so it peeks around the solid text as it rotates
+      wireMesh.scale.setScalar(1.015);
+      scene.add(wireMesh);
+    }
+
+    // Apply color changes to existing materials (no rebuild needed)
+    function applyColorToMaterials() {
+      if (!matFront) return;
+      matFront.color.set(col(cfg.hue, 85, 68));
+      matFront.emissive.set(col(cfg.hue, 90, 20));
+      matSide.color.set(col(hue2(), 75, 40));
+      wireMatRef.color.set(col(cfg.hue, 100, 80));
+      keyLight.color.set(col(cfg.hue, 80, 70));
+      fillLight.color.set(col(hue2(), 90, 60));
+      pMat.color.set(col(cfg.hue, 60, 75));
+    }
+
+    // ── Animation loop ─────────────────────────────────────────────────────
+    const clock  = new THREE.Clock();
+    let animId   = null;
+    let started  = false;
+
+    function startAnimate() {
+      if (started) return;
+      started = true;
+
+      function loop() {
+        animId = requestAnimationFrame(loop);
+        const t = clock.getElapsedTime();
+
+        if (textMesh && !reducedMotion) {
+          textMesh.rotation.x = cfg.rotX * t + Math.sin(t * 0.3) * 0.12;
+          textMesh.rotation.y = cfg.rotY * t + t * Math.abs(cfg.rotX) * 0.2;
+          textMesh.position.y = Math.sin(t * 0.7) * 0.25;
+          // wireMesh stays static — creates a ghost/shadow layer as text rotates away
+        }
+
+        if (!reducedMotion) {
+          camera.position.x = Math.cos(CAM_ANGLE + t * cfg.orbitSpeed) * CAM_DIST;
+          camera.position.z = Math.sin(CAM_ANGLE + t * cfg.orbitSpeed) * CAM_DIST;
+          camera.position.y = Math.sin(t * 0.2) * 2;
+          camera.lookAt(0, 0.5, 0);
+          fillLight.intensity = 2.5 + Math.sin(t * 1.4) * 0.8;
+        }
+
+        renderer.render(scene, camera);
+      }
+      loop();
+    }
+
+    // ── Font load ──────────────────────────────────────────────────────────
+    new FontLoader().load(
+      'https://unpkg.com/three@0.160.1/examples/fonts/helvetiker_bold.typeface.json',
+      (font) => {
+        loadedFont = font;
+        buildText(font, cfg.text);
+        syncPanelToConfig();
+        loaderEl.classList.add('hidden');
+        startAnimate();
+      },
+      undefined,
+      () => {
+        loaderEl.classList.add('hidden');
+        labelEl.textContent = 'hello world · 3d';
+        labelEl.style.color = `hsl(${cfg.hue},80%,65%)`;
+        labelEl.style.fontSize = '2rem';
+        labelEl.style.letterSpacing = '0.1em';
+        startAnimate();
+      }
+    );
+
+    // ── Panel: sync UI → config ────────────────────────────────────────────
+    function syncPanelToConfig() {
+      hueSlider.value   = Math.round(cfg.hue);
+      rxSlider.value    = cfg.rotX.toFixed(3);
+      rySlider.value    = cfg.rotY.toFixed(3);
+      orbitSlider.value = cfg.orbitSpeed.toFixed(3);
+      starsSlider.value = cfg.starOpacity.toFixed(2);
+      cfgText.value     = cfg.text;
+      updateDisplays();
+    }
+
+    function updateDisplays() {
+      const h = cfg.hue;
+      valHue.textContent   = `${Math.round(h)}°`;
+      valRx.textContent    = cfg.rotX.toFixed(2);
+      valRy.textContent    = cfg.rotY.toFixed(2);
+      valOrbit.textContent = cfg.orbitSpeed.toFixed(2);
+      valStars.textContent = cfg.starOpacity.toFixed(2);
+      swatchMain.style.background = hsl(h, 80, 60);
+      swatchAcc.style.background  = hsl(hue2(), 75, 45);
+      // Update slider thumb color to match hue
+      hueSlider.style.setProperty('--thumb', hsl(h, 80, 65));
+      document.title = `Hello World · 3D · ${Math.round(h)}°`;
+    }
+
+    // Hue
+    hueSlider.addEventListener('input', () => {
+      cfg.hue = parseFloat(hueSlider.value);
+      applyColorToMaterials();
+      updateDisplays();
+    });
+
+    // Rotation X
+    rxSlider.addEventListener('input', () => {
+      cfg.rotX = parseFloat(rxSlider.value);
+      updateDisplays();
+    });
+
+    // Rotation Y
+    rySlider.addEventListener('input', () => {
+      cfg.rotY = parseFloat(rySlider.value);
+      updateDisplays();
+    });
+
+    // Orbit
+    orbitSlider.addEventListener('input', () => {
+      cfg.orbitSpeed = parseFloat(orbitSlider.value);
+      updateDisplays();
+    });
+
+    // Stars opacity
+    starsSlider.addEventListener('input', () => {
+      cfg.starOpacity = parseFloat(starsSlider.value);
+      pMat.opacity = cfg.starOpacity;
+      updateDisplays();
+    });
+
+    // Apply text — rebuilds geometry
+    function applyText() {
+      if (!loadedFont) return;
+      cfg.text = cfgText.value.trim() || 'Hello World';
+      cfgText.value = cfg.text;
+      buildText(loadedFont, cfg.text);
+    }
+    applyTextBtn.addEventListener('click', applyText);
+    cfgText.addEventListener('keydown', (e) => { if (e.key === 'Enter') applyText(); });
+
+    // Randomize
+    btnRandom.addEventListener('click', () => {
+      cfg.hue         = Math.random() * 360;
+      cfg.rotX        = rnd(0.06, 0.24) * (Math.random() < 0.5 ? 1 : -1);
+      cfg.rotY        = rnd(0.03, 0.15);
+      cfg.orbitSpeed  = rnd(0.01, 0.12);
+      cfg.starOpacity = rnd(0.3, 0.85);
+      applyColorToMaterials();
+      syncPanelToConfig();
+    });
+
+    // Reset
+    btnReset.addEventListener('click', () => {
+      Object.assign(cfg, DEFAULTS);
+      applyColorToMaterials();
+      syncPanelToConfig();
+    });
+
+    // ── Panel toggle ────────────────────────────────────────────────────────
+    let panelOpen = false;
+    function togglePanel() {
+      panelOpen = !panelOpen;
+      panelEl.classList.toggle('hidden', !panelOpen);
+    }
+    toggleBtn.addEventListener('click', togglePanel);
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'c' || e.key === 'C') {
+        if (document.activeElement === cfgText) return;
+        togglePanel();
+      }
+    });
+
+    // ── Resize ─────────────────────────────────────────────────────────────
+    let resizeTimer = null;
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        camera.aspect = window.innerWidth / window.innerHeight;
+        camera.updateProjectionMatrix();
+        renderer.setSize(window.innerWidth, window.innerHeight);
+      }, 100);
+    });
+
+    // ── Cleanup ────────────────────────────────────────────────────────────
+    window.addEventListener('beforeunload', () => {
+      cancelAnimationFrame(animId);
+      pGeo.dispose(); pMat.dispose();
+      if (textMesh)  { textMesh.geometry.dispose(); }
+      if (wireMesh)  { wireMesh.geometry.dispose(); }
+      if (matFront)  matFront.dispose();
+      if (matSide)   matSide.dispose();
+      if (wireMatRef) wireMatRef.dispose();
+      renderer.dispose();
+    });
+  </script>
+</body>
+</html>

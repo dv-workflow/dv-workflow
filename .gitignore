@@ -1,12 +1,8 @@
 # ============================================================================
-# dv-workflow-kit — .gitignore
+# dw-kit — .gitignore
 # ============================================================================
-# Runtime directories (tạo bởi dw init trong project thực)
-# Uncommit .dw/tasks/ nếu muốn track task docs trong git (recommended cho team)
-.dw/tasks/
-.dw/docs/
-.dw/metrics/
-.dw/reports/
+# All .dw/ content is committed — tasks, context, docs, metrics, reports.
+# Everyone (team / community) shares the same context.
 
 # Local overrides
 CLAUDE.local.md
