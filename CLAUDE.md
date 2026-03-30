@@ -6,6 +6,16 @@ Methodology: `core/WORKFLOW.md` (load on demand — không phải always-loaded)
 
 ---
 
+## Override
+
+Nếu prompt của user chứa `--no-dw`:
+- Bỏ qua **toàn bộ** dw workflow instructions (Quy Tắc Vàng, Routing, Session Start)
+- KHÔNG đọc config, KHÔNG check tasks, KHÔNG apply thinking framework
+- Làm việc như Claude thông thường — trả lời trực tiếp, không theo process nào
+- Áp dụng cho request đó; request tiếp theo vẫn dùng dw bình thường
+
+---
+
 ## Quy Tắc Vàng
 
 1. **Config-driven**: Đọc `.dw/config/dw.config.yml` trước mọi action
