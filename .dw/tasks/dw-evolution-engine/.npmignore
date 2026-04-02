@@ -1,0 +1,10 @@
+# Maintainer-only skills — không ship theo npm
+# Chỉ dùng trong dw-kit repo bởi TechLead khi xử lý evolution feedback
+.claude/skills/dw-evolve/
+.claude/skills/dw-audit/
+
+# Task docs — internal only
+.dw/tasks/
+
+# Temp
+.tmp/
