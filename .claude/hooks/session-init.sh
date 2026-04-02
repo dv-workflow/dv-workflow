@@ -9,12 +9,11 @@
 
 INPUT=$(cat)
 
-SESSION_ID=$(echo "$INPUT" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    print(d.get('session_id', ''))
-except: pass
+SESSION_ID=$(echo "$INPUT" | node -e "
+let d='';
+process.stdin.on('data',c=>d+=c).on('end',()=>{
+  try{ process.stdout.write(JSON.parse(d).session_id||''); }catch(e){}
+});
 " 2>/dev/null || true)
 
 [ -z "$SESSION_ID" ] && exit 0
