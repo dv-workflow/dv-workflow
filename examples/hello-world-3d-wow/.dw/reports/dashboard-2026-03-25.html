@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dashboard: dw-e2e-global8 — 2026-03-25</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      color: #1a1a2e;
+      padding: 32px 20px 64px;
+    }
+    .container { max-width: 960px; margin: 0 auto; }
+
+    /* Header */
+    .header { margin-bottom: 32px; }
+    .header h1 {
+      font-size: 1.75rem; font-weight: 700; color: #1a1a2e;
+      border-bottom: 3px solid #4361ee; padding-bottom: 10px; margin-bottom: 6px;
+    }
+    .header .meta { font-size: 0.85rem; color: #666; }
+
+    /* Summary cards */
+    .summary-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+    .card {
+      background: #fff;
+      border-left: 4px solid #4361ee;
+      border-radius: 6px;
+      padding: 18px 16px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.07);
+    }
+    .card.green  { border-color: #2ecc71; }
+    .card.blue   { border-color: #4361ee; }
+    .card.orange { border-color: #f39c12; }
+    .card .value { font-size: 2rem; font-weight: 700; color: #4361ee; line-height: 1; }
+    .card.green  .value { color: #2ecc71; }
+    .card.orange .value { color: #f39c12; }
+    .card .label { font-size: 0.72rem; color: #888; margin-top: 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+    /* Section */
+    section { margin-bottom: 36px; }
+    section h2 {
+      font-size: 1rem; font-weight: 600; color: #16213e;
+      margin-bottom: 14px; padding-bottom: 6px;
+      border-bottom: 1px solid #e0e4ef;
+      display: flex; align-items: center; gap: 8px;
+    }
+
+    /* Tables */
+    table { width: 100%; border-collapse: collapse; background: #fff; border-radius: 8px; overflow: hidden; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    th { background: #4361ee; color: #fff; padding: 11px 14px; text-align: left; font-size: 0.8rem; font-weight: 600; letter-spacing: 0.03em; }
+    td { padding: 10px 14px; border-bottom: 1px solid #f0f2f5; font-size: 0.88rem; }
+    tr:last-child td { border-bottom: none; }
+    tr:hover td { background: #f8f9fc; }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px; border-radius: 12px;
+      font-size: 0.72rem; font-weight: 600; white-space: nowrap;
+    }
+    .badge-elite  { background: #d4f8e8; color: #1a7a4a; }
+    .badge-high   { background: #dbeafe; color: #1e40af; }
+    .badge-medium { background: #fef3c7; color: #92400e; }
+    .badge-low    { background: #fee2e2; color: #991b1b; }
+    .badge-done   { background: #d4f8e8; color: #1a7a4a; }
+    .badge-progress { background: #dbeafe; color: #1e40af; }
+    .badge-blocked  { background: #fee2e2; color: #991b1b; }
+
+    /* Quality row */
+    .qual-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 14px;
+    }
+    .qual-card {
+      background: #fff; border-radius: 8px; padding: 16px 18px;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.06);
+    }
+    .qual-card h3 { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+    .qual-row { display: flex; justify-content: space-between; font-size: 0.85rem; padding: 4px 0; border-bottom: 1px solid #f0f2f5; }
+    .qual-row:last-child { border-bottom: none; }
+    .qual-row .num { font-weight: 600; color: #4361ee; }
+    .qual-row .num.green { color: #2ecc71; }
+    .qual-row .num.red   { color: #e74c3c; }
+
+    /* Highlights */
+    .highlight-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+    .highlight-box { background: #fff; border-radius: 8px; padding: 18px; box-shadow: 0 1px 4px rgba(0,0,0,0.06); }
+    .highlight-box h3 { font-size: 0.82rem; font-weight: 600; margin-bottom: 10px; display: flex; align-items: center; gap: 6px; }
+    .highlight-box ul { padding-left: 16px; }
+    .highlight-box li { font-size: 0.84rem; color: #444; margin-bottom: 6px; line-height: 1.5; }
+
+    /* ADR table */
+    .adr-tag {
+      display: inline-block; background: #eef2ff; color: #4361ee;
+      font-size: 0.7rem; padding: 1px 7px; border-radius: 10px; margin-right: 6px;
+      font-weight: 600;
+    }
+
+    /* Note box */
+    .note {
+      font-size: 0.78rem; color: #888; background: #f8f9fc;
+      border-left: 3px solid #cbd5e1; padding: 8px 12px; border-radius: 0 4px 4px 0;
+      margin-top: 10px;
+    }
+
+    footer {
+      margin-top: 48px; font-size: 0.75rem; color: #aaa;
+      border-top: 1px solid #e0e4ef; padding-top: 14px; text-align: center;
+    }
+    footer a { color: #4361ee; text-decoration: none; }
+
+    @media (max-width: 600px) {
+      .qual-grid, .highlight-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <div class="header">
+    <h1>Dashboard: dw-e2e-global8</h1>
+    <div class="meta">Period: <strong>All time</strong> &nbsp;·&nbsp; Generated: <strong>2026-03-25</strong> &nbsp;·&nbsp; Depth: standard</div>
+  </div>
+
+  <!-- Summary cards -->
+  <div class="summary-grid">
+    <div class="card green">
+      <div class="value">1/1</div>
+      <div class="label">Tasks Done</div>
+    </div>
+    <div class="card green">
+      <div class="value">4/4</div>
+      <div class="label">Subtasks Done</div>
+    </div>
+    <div class="card green">
+      <div class="value">0%</div>
+      <div class="label">Change Failure Rate</div>
+    </div>
+    <div class="card green">
+      <div class="value">0</div>
+      <div class="label">Blocked Tasks</div>
+    </div>
+    <div class="card blue">
+      <div class="value">1</div>
+      <div class="label">Commits</div>
+    </div>
+    <div class="card blue">
+      <div class="value">~4h</div>
+      <div class="label">Effort Delivered</div>
+    </div>
+  </div>
+
+  <!-- Tasks -->
+  <section>
+    <h2>📋 Trạng Thái Tasks</h2>
+    <table>
+      <thead><tr><th>Task</th><th>Trạng thái</th><th>Subtasks</th><th>Commit</th><th>Blockers</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>hello-world-3d</strong><br><small style="color:#888">3D Hello World + config panel</small></td>
+          <td><span class="badge badge-done">✅ Done</span></td>
+          <td>4 / 4</td>
+          <td><code style="font-size:0.8rem">17d86dd</code></td>
+          <td style="color:#2ecc71">—</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <br>
+    <table>
+      <thead><tr><th>#</th><th>Subtask</th><th>Status</th><th>Người thực hiện</th></tr></thead>
+      <tbody>
+        <tr><td>ST-1</td><td>Setup HTML + Three.js</td><td><span class="badge badge-done">✅ Done</span></td><td>agent</td></tr>
+        <tr><td>ST-2</td><td>3D Scene + Random Params</td><td><span class="badge badge-done">✅ Done</span></td><td>agent</td></tr>
+        <tr><td>ST-3</td><td>3D Hello World Text</td><td><span class="badge badge-done">✅ Done</span></td><td>agent</td></tr>
+        <tr><td>ST-4</td><td>Lean UI Polish</td><td><span class="badge badge-done">✅ Done</span></td><td>agent</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- DORA -->
+  <section>
+    <h2>📊 DORA Metrics</h2>
+    <table>
+      <thead><tr><th>Metric</th><th>Giá trị</th><th>Level</th><th>Elite Target</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>Deployment Frequency</strong></td>
+          <td>1 commit / ngày</td>
+          <td><span class="badge badge-elite">🟢 Elite</span></td>
+          <td>Daily+</td>
+        </tr>
+        <tr>
+          <td><strong>Lead Time</strong></td>
+          <td>&lt; 1 ngày (same-day)</td>
+          <td><span class="badge badge-elite">🟢 Elite</span></td>
+          <td>&lt; 1 ngày</td>
+        </tr>
+        <tr>
+          <td><strong>Change Failure Rate</strong></td>
+          <td>0% (0 hotfix / 1 commit)</td>
+          <td><span class="badge badge-elite">🟢 Elite</span></td>
+          <td>&lt; 5%</td>
+        </tr>
+        <tr>
+          <td><strong>MTTR</strong></td>
+          <td>&lt; 5 phút (ghost debug)</td>
+          <td><span class="badge badge-elite">🟢 Elite</span></td>
+          <td>&lt; 1h</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">⚠️ Dự án ngày 1 — metrics sẽ có ý nghĩa thống kê hơn sau 2+ sprint. Hiện tại phản ánh quality của task đầu tiên.</div>
+  </section>
+
+  <!-- Effort -->
+  <section>
+    <h2>⏱️ Effort & Velocity</h2>
+    <table>
+      <thead><tr><th>Task</th><th>Estimated</th><th>Actual</th><th>Accuracy</th></tr></thead>
+      <tbody>
+        <tr>
+          <td>hello-world-3d</td>
+          <td>4h</td>
+          <td>~4h*</td>
+          <td>~100%</td>
+        </tr>
+        <tr style="font-weight:600; background:#f8f9fc">
+          <td>Total</td>
+          <td>4h</td>
+          <td>~4h</td>
+          <td>~100%</td>
+        </tr>
+      </tbody>
+    </table>
+    <div class="note">* Actual ước tính từ scope hoàn thành. Bật <code>tracking.log_work: true</code> trong dw.config.yml để track giờ thực tế.</div>
+  </section>
+
+  <!-- Quality -->
+  <section>
+    <h2>🔍 Quality Report</h2>
+    <div class="qual-grid">
+      <div class="qual-card">
+        <h3>Code Review</h3>
+        <div class="qual-row"><span>Critical issues found</span><span class="num red">3</span></div>
+        <div class="qual-row"><span>Critical fixed</span><span class="num green">3 (100%)</span></div>
+        <div class="qual-row"><span>Warnings found</span><span class="num">5</span></div>
+        <div class="qual-row"><span>Warnings fixed</span><span class="num green">4 + 1 accepted</span></div>
+        <div class="qual-row"><span>Regressions</span><span class="num green">0</span></div>
+      </div>
+      <div class="qual-card">
+        <h3>Incidents</h3>
+        <div class="qual-row"><span>Debug sessions</span><span class="num">1</span></div>
+        <div class="qual-row"><span>Root cause</span><span class="num" style="font-size:0.78rem">wireMesh sync bug</span></div>
+        <div class="qual-row"><span>MTTR</span><span class="num green">&lt; 5 min</span></div>
+        <div class="qual-row"><span>ADR created</span><span class="num green">✅ ADR-004</span></div>
+        <div class="qual-row"><span>Prevention</span><span class="num green">Documented</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Highlights -->
+  <section>
+    <h2>✨ Highlights</h2>
+    <div class="highlight-grid">
+      <div class="highlight-box">
+        <h3>✅ Điểm tốt</h3>
+        <ul>
+          <li>Zero blockers — task hoàn thành same-day</li>
+          <li>0% Change Failure Rate — no hotfix</li>
+          <li>Full dw-kit pipeline chạy đầy đủ</li>
+          <li>6 living docs tạo ngay sau feature</li>
+          <li>Ghost shadow bug detected &amp; fixed &lt; 5 min</li>
+        </ul>
+      </div>
+      <div class="highlight-box">
+        <h3>⚠️ Rủi ro cần theo dõi</h3>
+        <ul>
+          <li>CDN không có SRI hash (xem ADR-002)</li>
+          <li>Single HTML file — scale limit nếu feature lớn hơn</li>
+          <li>Không có automated tests</li>
+          <li><code>log_work: false</code> — effort data không chính xác</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <!-- ADRs -->
+  <section>
+    <h2>🏛️ Architecture Decisions (tuần này)</h2>
+    <table>
+      <thead><tr><th>ADR</th><th>Quyết định</th><th>Trạng thái</th></tr></thead>
+      <tbody>
+        <tr><td><span class="adr-tag">ADR-001</span></td><td>Single HTML file, zero build tools</td><td><span class="badge badge-done">Accepted</span></td></tr>
+        <tr><td><span class="adr-tag">ADR-002</span></td><td>Three.js qua CDN, pin version @0.160.1</td><td><span class="badge badge-done">Accepted</span></td></tr>
+        <tr><td><span class="adr-tag">ADR-003</span></td><td><code>cfg</code> object = single source of truth</td><td><span class="badge badge-done">Accepted</span></td></tr>
+        <tr><td><span class="adr-tag">ADR-004</span></td><td><code>wireMesh</code> static = ghost shadow effect (intentional)</td><td><span class="badge badge-done">Accepted</span></td></tr>
+        <tr><td><span class="adr-tag">ADR-005</span></td><td><code>started</code> flag ngăn double RAF loop</td><td><span class="badge badge-done">Accepted</span></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <!-- Next -->
+  <section>
+    <h2>🎯 Focus tiếp theo</h2>
+    <table>
+      <thead><tr><th>Item</th><th>Priority</th><th>Ghi chú</th></tr></thead>
+      <tbody>
+        <tr><td>Self-host Three.js (offline + SRI)</td><td>Medium</td><td>Nếu cần production</td></tr>
+        <tr><td>Bật <code>log_work: true</code></td><td>Low</td><td>Effort tracking chính xác hơn</td></tr>
+        <tr><td>Mobile touch cho config panel</td><td>Low</td><td>UX improvement</td></tr>
+        <tr><td>Keyboard shortcuts (arrow, +/-)</td><td>Low</td><td>Power user feature</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <footer>
+    Generated by <strong>dw-workflow-kit</strong> &nbsp;·&nbsp;
+    <a href="../tasks/hello-world-3d/hello-world-3d-progress.md">Task Docs</a> &nbsp;·&nbsp;
+    <a href="../docs/DECISIONS.md">ADR Log</a> &nbsp;·&nbsp;
+    2026-03-25
+  </footer>
+
+</div>
+</body>
+</html>

@@ -61,8 +61,34 @@
 
 ## Handoff Notes
 
-### Session 2026-04-02 — Final
-- **Trạng thái**: Done — tất cả Phase 1 + 2 + 4 subtasks đã complete
-- **Files thay đổi chính**: 3 new hooks, settings.json, config.mjs, CLAUDE.md
-- **Bước tiếp theo nếu cần**: Verify hooks trên Windows (bash path), test session-init với real In Progress task, deferred ST-3.2/3.3 nếu team thấy cần parallel execution
-- **Cẩn thận**: `session-init.sh` dùng `/tmp/` cho session tracking — cần test trên Windows; có thể cần `$TEMP` fallback
+### Session 2026-04-02 — Handoff Final ✅
+
+**Trạng thái nhanh**: Task Done — v1.2 đã commit `03effd6` trên branch `dev`.
+
+**Đã hoàn thành**:
+- ✅ ST-1.1 scout-block.sh — block heavy dirs trên Read/Glob
+- ✅ ST-1.2 privacy-block.sh — block .env/credentials/keys
+- ✅ ST-1.3 session-init.sh — inject In Progress task context
+- ✅ ST-2.1 agent-report template + .dw/core/AGENTS.md
+- ✅ ST-2.2 dw-research emit report (optional, standard+ depth)
+- ✅ ST-4.2 loadConfigWithLocal() + dw.config.local.yml gitignored
+- ✅ ST-4.3 CLAUDE.md updated với v1.2 docs
+
+**Dropped (adversarial justified)**:
+- ST-3.1 dw-parallel → duplicate Agent tool native
+- ST-4.1 socratic kickoff → Claude adaptive > fixed script
+- ST-2.3 plan emit reports → overhead không có thêm value
+
+**Uncommitted (pre-existing, chưa liên quan v1.2)**:
+- `.gitignore`, `.npmignore` — minor tweaks
+- `README.md`, `src/cli.mjs`, `src/smoke-test.mjs` — từ trước session này
+
+**Bước tiếp theo**:
+1. Test `session-init.sh` trên Windows — `/tmp/` cần verify, có thể cần `$TEMP` fallback
+2. Commit `.gitignore`/`.npmignore` nếu ready
+3. PR `dev` → `main` để release v1.2
+4. Deferred v1.3: ST-3.2/3.3 parallel execution nếu team cần
+
+**Feedback commit format** (ghi nhớ cho session sau):
+- Không dùng Co-Authored-By Claude
+- Subject line tinh gọn, không cần body dài
