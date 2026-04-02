@@ -1,6 +1,10 @@
 # Files excluded from npm package (local-only)
 .claude/settings.local.json
 
+# Maintainer-only skills — chỉ dùng trong dw-kit repo, không ship cho users
+.claude/skills/dw-kit-evolve/
+.claude/skills/dw-kit-audit/
+
 # Dev & CI
 examples/
 docs/
@@ -13,3 +17,5 @@ CHANGELOG.md
 .dw/tasks/
 .dw/metrics/
 .dw/reports/
+
+projects-refer/*

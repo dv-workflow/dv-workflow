@@ -1,0 +1,79 @@
+name: dw-kit Report
+description: Report a bug, gap, friction, or suggestion about dw-kit tool
+title: "[type][component] "
+labels: ["needs-evolve-review"]
+body:
+  - type: dropdown
+    id: type
+    attributes:
+      label: Type
+      options:
+        - bug
+        - gap
+        - friction
+        - suggestion
+    validations:
+      required: true
+
+  - type: dropdown
+    id: component
+    attributes:
+      label: Component
+      options:
+        - hooks
+        - skills
+        - config
+        - workflow
+        - docs
+        - core
+        - other
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      placeholder: Mô tả rõ vấn đề hoặc suggestion...
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce (cho bug)
+      placeholder: |
+        1. Chạy skill /dw-...
+        2. Gặp lỗi...
+      render: markdown
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected vs Actual (cho bug)
+      placeholder: |
+        Expected: ...
+        Actual: ...
+
+  - type: dropdown
+    id: impact
+    attributes:
+      label: Impact
+      options:
+        - blocking
+        - degraded
+        - minor
+    validations:
+      required: true
+
+  - type: input
+    id: env
+    attributes:
+      label: Environment
+      placeholder: "OS: Ubuntu 22.04 | dw version: 1.1.0"
+
+  - type: input
+    id: project
+    attributes:
+      label: Project context
+      placeholder: "task: dw-user-auth | skill: /dw-execute"

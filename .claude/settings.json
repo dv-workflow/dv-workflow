@@ -16,7 +16,35 @@
   },
   "mcpServers": {},
   "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/session-init.sh\""
+          }
+        ]
+      }
+    ],
     "PreToolUse": [
+      {
+        "matcher": "Read|Glob",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/scout-block.sh\""
+          }
+        ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/privacy-block.sh\""
+          }
+        ]
+      },
       {
         "matcher": "Bash",
         "hooks": [
@@ -51,8 +79,8 @@
       {
         "hooks": [
           {
-            "type": "prompt",
-            "prompt": "Session context: $ARGUMENTS\n\nIf stop_hook_active is true in the context above, reply ONLY: {\"decision\":\"allow\"} to prevent infinite loops.\n\nOtherwise check: any uncommitted important changes? any in-progress task with outdated progress file? any unrecorded blockers?\n\nReply with ONLY valid JSON, no other text:\n- {\"decision\":\"block\",\"reason\":\"<describe what needs attention>\"} if action needed\n- {\"decision\":\"allow\"} if all clear"
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/stop-check.sh\""
           }
         ]
       }

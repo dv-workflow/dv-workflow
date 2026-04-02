@@ -24,3 +24,6 @@ package-lock.json
 
 # Logs
 *.log
+
+# Projects refer
+projects-refer/*

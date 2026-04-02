@@ -89,7 +89,23 @@ Ghi vào `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-context.md` theo cấu trúc:
 [Bất kỳ thông tin bổ sung]
 ```
 
-## Bước 5: Tóm tắt
+## Bước 5: Tạo Report (optional — standard/thorough depth)
+
+Nếu task có `.dw/tasks/$ARGUMENTS/reports/` directory (hoặc depth ≥ standard), tạo report:
+
+```
+.dw/tasks/$ARGUMENTS/reports/[YYMMDD-HHMM]-from-researcher-to-planner-findings.md
+```
+
+Dùng template `.claude/templates/agent-report.md` với:
+- `status: DONE` (hoặc `DONE_WITH_CONCERNS` nếu có risks lớn)
+- Summary: top 3 findings
+- Details: key files, patterns, dependencies
+- Next Steps: những gì planner cần biết
+
+> Quick depth tasks: bỏ qua bước này — progress.md đã đủ.
+
+## Bước 6: Tóm tắt
 
 Khi hoàn thành, trả về tóm tắt:
 - Số files khảo sát
