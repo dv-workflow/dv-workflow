@@ -9,32 +9,27 @@
 INPUT=$(cat)
 
 # Extract tool name và file path từ JSON input
-TOOL_NAME=$(echo "$INPUT" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    print(d.get('tool_name', ''))
-except: pass
+TOOL_NAME=$(echo "$INPUT" | node -e "
+let d='';
+process.stdin.on('data',c=>d+=c).on('end',()=>{
+  try{ process.stdout.write(JSON.parse(d).tool_name||''); }catch(e){}
+});
 " 2>/dev/null || true)
 
 # Extract path tùy theo tool
 if [ "$TOOL_NAME" = "Read" ]; then
-  TARGET=$(echo "$INPUT" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    print(d.get('tool_input', {}).get('file_path', ''))
-except: pass
+  TARGET=$(echo "$INPUT" | node -e "
+let d='';
+process.stdin.on('data',c=>d+=c).on('end',()=>{
+  try{ const p=JSON.parse(d); process.stdout.write((p.tool_input&&p.tool_input.file_path)||''); }catch(e){}
+});
 " 2>/dev/null || true)
 elif [ "$TOOL_NAME" = "Glob" ]; then
-  TARGET=$(echo "$INPUT" | python3 -c "
-import sys, json
-try:
-    d = json.load(sys.stdin)
-    ti = d.get('tool_input', {})
-    # Dùng path nếu có, fallback sang pattern
-    print(ti.get('path', ti.get('pattern', '')))
-except: pass
+  TARGET=$(echo "$INPUT" | node -e "
+let d='';
+process.stdin.on('data',c=>d+=c).on('end',()=>{
+  try{ const p=JSON.parse(d); const ti=p.tool_input||{}; process.stdout.write(ti.path||ti.pattern||''); }catch(e){}
+});
 " 2>/dev/null || true)
 else
   exit 0
