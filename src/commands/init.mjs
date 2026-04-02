@@ -276,7 +276,7 @@ function createRuntimeDirs(projectDir) {
 
 function updateGitignore(projectDir) {
   const gitignorePath = join(projectDir, '.gitignore');
-  const entriesToAdd = ['CLAUDE.local.md', '.claude/settings.local.json'];
+  const entriesToAdd = ['CLAUDE.local.md', '.claude/settings.local.json', '.dw/config/dw.config.local.yml'];
 
   if (existsSync(gitignorePath)) {
     const content = readFileSync(gitignorePath, 'utf-8');

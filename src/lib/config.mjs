@@ -7,6 +7,35 @@ export function loadConfig(configPath) {
   return yaml.load(content);
 }
 
+/**
+ * Load config với local override (v1.2+).
+ * dw.config.yml  — shared, committed
+ * dw.config.local.yml — machine-specific, gitignored
+ * Local values win over base values (shallow merge per top-level key).
+ */
+export function loadConfigWithLocal(configDir) {
+  const basePath = `${configDir}/dw.config.yml`;
+  const localPath = `${configDir}/dw.config.local.yml`;
+
+  const base = loadConfig(basePath);
+  if (!base) return null;
+
+  if (!existsSync(localPath)) return base;
+
+  const local = loadConfig(localPath);
+  if (!local) return base;
+
+  const merged = { ...base };
+  for (const key of Object.keys(local)) {
+    if (typeof local[key] === 'object' && !Array.isArray(local[key]) && local[key] !== null) {
+      merged[key] = { ...(merged[key] || {}), ...local[key] };
+    } else {
+      merged[key] = local[key];
+    }
+  }
+  return merged;
+}
+
 export function writeConfig(configPath, data) {
   const content = yaml.dump(data, {
     indent: 2,
@@ -57,9 +86,9 @@ export function buildConfig({ projectName, language, depth, roles }) {
       mcp: [],
     },
     _toolkit: {
-      core_version: '1.0',
+      core_version: '1.2',
       platform_version: '1.0',
-      capability_version: '1.0',
+      capability_version: '1.2',
       installed: today,
       last_upgrade: today,
     },
