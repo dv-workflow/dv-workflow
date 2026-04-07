@@ -6,17 +6,15 @@
 INPUT=$(cat)
 
 # Extract file path từ tool result
-FILE_PATH=$(echo "$INPUT" | python3 -c "
-import sys, json
-try:
-    data = json.load(sys.stdin)
-    # PostToolUse result có thể chứa file path theo nhiều cách
-    for key in ['file_path', 'path', 'filePath']:
-        if key in data:
-            print(data[key])
-            break
-except:
-    pass
+FILE_PATH=$(echo "$INPUT" | node -e "
+let d='';
+process.stdin.on('data',c=>d+=c).on('end',()=>{
+  try{
+    const data=JSON.parse(d);
+    const p=data.file_path||data.path||data.filePath||(data.tool_input&&(data.tool_input.file_path||data.tool_input.path))||'';
+    process.stdout.write(p);
+  }catch(e){}
+});
 " 2>/dev/null || true)
 
 [ -z "$FILE_PATH" ] && exit 0

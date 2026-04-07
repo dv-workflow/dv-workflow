@@ -135,7 +135,7 @@ async function setupProject(projectDir, { projectName, depth, roles, language, a
 
   if (adapter === 'claude-cli') {
     copyClaudeFiles(projectDir);
-    copyCLAUDEmd(projectDir);
+    createMinimalCLAUDEmd(projectDir, projectName);
   } else if (adapter === 'cursor') {
     copyCursorFiles(projectDir);
     copyGenericAdapter(projectDir);
@@ -191,34 +191,34 @@ function copyClaudeFiles(projectDir) {
   if (skipCount > 0) log(`  ${skipCount} existing files preserved`);
 }
 
-function copyCLAUDEmd(projectDir) {
-  const src = join(TOOLKIT_ROOT, 'CLAUDE.md');
+function createMinimalCLAUDEmd(projectDir, projectName) {
   const dst = join(projectDir, 'CLAUDE.md');
 
   if (existsSync(dst)) {
-    warn('CLAUDE.md already exists — skipping (review manually if needed)');
+    // User already has their own CLAUDE.md — leave it completely alone
     return;
   }
 
-  copyFile(src, dst);
+  const content = `# ${projectName}
 
-  const techStackSection = `
+> Add your project description here.
+
 ---
 
 ## Tech Stack
 
 <!-- Update with your project's actual stack -->
-- Framework: [e.g. NestJS / Django / Laravel / Next.js]
-- Database: [e.g. PostgreSQL / MySQL / MongoDB]
-- Testing: [e.g. Jest / Pytest / PHPUnit]
+- Framework:
+- Database:
+- Testing:
 
 ## Project-Specific Rules
 
-<!-- Add project-specific rules -->
-- [Rule 1]
+<!-- Add project-specific rules here -->
+<!-- dw workflow rules are auto-loaded from .claude/rules/ -->
 `;
-  appendFileSync(dst, techStackSection, 'utf-8');
-  ok('CLAUDE.md (with Tech Stack template section)');
+  writeFileSync(dst, content, 'utf-8');
+  ok('CLAUDE.md (minimal project template — dw rules are in .claude/rules/)');
 }
 
 function copyCursorFiles(projectDir) {
@@ -276,7 +276,7 @@ function createRuntimeDirs(projectDir) {
 
 function updateGitignore(projectDir) {
   const gitignorePath = join(projectDir, '.gitignore');
-  const entriesToAdd = ['CLAUDE.local.md', '.claude/settings.local.json'];
+  const entriesToAdd = ['CLAUDE.local.md', '.claude/settings.local.json', '.dw/config/dw.config.local.yml'];
 
   if (existsSync(gitignorePath)) {
     const content = readFileSync(gitignorePath, 'utf-8');
@@ -304,8 +304,8 @@ function printSummary({ projectName, depth, roles, language, adapter }) {
   console.log(`  Files created:`);
   console.log(`    .dw/               — core/, config/, adapters/, tasks, docs`);
   if (adapter === 'claude-cli') {
-    console.log(`    .claude/           — skills, agents, hooks, rules`);
-    console.log(`    CLAUDE.md`);
+    console.log(`    .claude/           — skills, agents, hooks, rules/`);
+    console.log(`    CLAUDE.md          — minimal project template (dw rules in .claude/rules/)`);
   } else if (adapter === 'cursor') {
     console.log(`    .cursor/rules/     — workflow rules for Cursor`);
     console.log(`    AGENT.md           — methodology reference`);
@@ -317,7 +317,7 @@ function printSummary({ projectName, depth, roles, language, adapter }) {
     console.log(`  Next steps:`);
     console.log(`    Run: claude (to open Claude Code in this directory in terminal)`);
     console.log(`    Run: /dw-flow [task-name]`);
-    console.log(`    Suggested: Update Tech Stack in CLAUDE.md (optional, recommended)`);
+    console.log(`    Suggested: Update Tech Stack + rules in CLAUDE.md`);
   } else if (adapter === 'cursor') {
     console.log(`  Next steps:`);
     console.log(`    1. Open Cursor in this directory`);

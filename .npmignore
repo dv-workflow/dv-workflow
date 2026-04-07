@@ -1,10 +1,16 @@
 # Files excluded from npm package (local-only)
 .claude/settings.local.json
 
+# Maintainer-only skills — không ship cho users
+.claude/skills/dw-kit-evolve
+.claude/skills/dw-kit-evolve/**
+.claude/skills/dw-kit-audit
+.claude/skills/dw-kit-audit/**
+
 # Dev & CI
 examples/
 docs/
-scripts/e2e-local-check.sh
+scripts/
 src/smoke-test.mjs
 *.test.mjs
 *.spec.mjs
@@ -13,3 +19,6 @@ CHANGELOG.md
 .dw/tasks/
 .dw/metrics/
 .dw/reports/
+.dw/docs/
+
+projects-refer/
