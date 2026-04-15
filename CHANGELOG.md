@@ -4,6 +4,59 @@
 
 ---
 
+## [v1.2.1] — 2026-04-15
+
+### Fixed — Cross-Platform Hook Reliability
+
+- **CRLF hooks on Linux/Ubuntu (blocking)**: Added `.gitattributes` enforcing `eol=lf` for all `.sh`, `.mjs`, `.json`, `.md`, `.yml` files. Prevents shebang corruption (`#!/usr/bin/env bash\r`) that caused hard failures on Linux when hooks were edited on Windows. Closes [#6](https://github.com/dv-workflow/dv-workflow/issues/6).
+
+- **`session-init.sh` re-injection on node failure**: Added 3-tier fallback for `SESSION_ID` parsing — `node` (primary) → `grep/cut` pure-bash (tier 2) → `cksum`-based project-scoped ID (tier 3). Marker file is now always created, eliminating repeated context injection on every prompt when node fails. Fallback ID is project-scoped (not machine-global) to avoid multi-project collision.
+
+- **Hook LF normalization on `dw upgrade`**: `copy.mjs` now writes `.sh` files with LF endings regardless of the user's `core.autocrlf` setting — provides a defensive layer since dw-kit cannot control the user repo's git config.
+
+- **`dw upgrade` auto-patches user `.gitattributes`**: Upgrade now adds `.claude/hooks/*.sh text eol=lf` and `.claude/skills/**/*.sh text eol=lf` entries to the user project's `.gitattributes` (idempotent, only adds missing entries). Prevents CRLF contamination on next git checkout in Windows repos.
+
+- **Update notice timing**: Replaced `program.parse` + post-parse notice with `process.on('exit')` registration. Update notice now consistently appears _after_ command output, even when commands call `process.exit()` internally. Avoids Node.js 22+ "unsettled top-level await" warning.
+
+- **Toolkit version tracking**: Corrected `_toolkit.core_version` in the dw-kit repo's own config (`1.0` → `1.2`) to match the version installed into projects by `dw init`. Fixes `dw upgrade --check` incorrectly reporting an "update available" on a fresh init.
+
+---
+
+## [v1.2.0] — 2026-04-09
+
+### Added — Core Split + Runtime Guard Hooks
+
+- `CLAUDE.md` split into `.claude/rules/dw-core.md` and `.claude/rules/dw-skills.md` for cleaner loading and maintenance
+- `scout-block.sh` hook to block expensive scans in heavy/irrelevant paths (`node_modules`, `dist`, `.git`, etc.)
+- `privacy-block.sh` hook to prevent accidental reads of sensitive files (`.env*`, credentials, keys)
+- `session-init.sh` hook to inject active task context at session start
+
+### Added — Agent Reports + Conventions
+
+- `.claude/templates/agent-report.md` template for consistent agent outputs
+- `.dw/core/AGENTS.md` convention doc for report structure and usage
+- `dw-research` skill support to emit report artifacts in standard+ depth
+
+### Enhanced — Config Local Override
+
+- `loadConfigWithLocal()` support for `.dw/config/dw.config.local.yml` as environment-specific override
+- `dw init` update to gitignore local override file by default
+- Toolkit version tracking advanced to core `1.2` for this release line
+
+### Changed
+
+- CLI update notice now includes direct release notes URL for the detected latest version
+- README release references now point to changelog/release notes for upgrade transparency
+
+### Not Shipped in v1.2.0 (Documented Decisions)
+
+- Dropped: `dw-parallel` standalone skill (duplicate with native Agent tool capability)
+- Dropped: fixed Socratic kickoff script (less adaptive than native assistant behavior)
+- Dropped: mandatory planner report-emission automation (added overhead with low value)
+- Deferred to later release: parallel research and parallel execute subtasks (`v1.3` candidate)
+
+---
+
 ## [v1.1.0] — 2026-03-30
 
 ### Added — Retroactive Adoption Skills

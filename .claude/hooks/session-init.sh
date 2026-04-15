@@ -16,7 +16,18 @@ process.stdin.on('data',c=>d+=c).on('end',()=>{
 });
 " 2>/dev/null || true)
 
-[ -z "$SESSION_ID" ] && exit 0
+# Tier 2: pure-bash grep fallback — works without node (e.g. node absent or CRLF-corrupt shebang)
+if [ -z "$SESSION_ID" ]; then
+  SESSION_ID=$(echo "$INPUT" | grep -o '"session_id":"[^"]*"' | cut -d'"' -f4 2>/dev/null || true)
+fi
+
+# Tier 3: project-scoped + hour-scoped stable ID
+# cksum is POSIX — available on Linux, macOS, and Git Bash on Windows.
+# Ensures marker is always created so re-injection is suppressed even when tiers 1+2 fail.
+if [ -z "$SESSION_ID" ]; then
+  _dir_hash=$(pwd | cksum | cut -d' ' -f1)
+  SESSION_ID="fallback-${_dir_hash}-$(date +%Y%m%d-%H)"
+fi
 
 # ── Track session: chỉ chạy một lần mỗi session ───────────────────────────────
 SESSION_MARKER="/tmp/dw-session-${SESSION_ID}"

@@ -1,5 +1,5 @@
 import {
-  existsSync, mkdirSync, copyFileSync, readdirSync, readFileSync,
+  existsSync, mkdirSync, copyFileSync, readdirSync, readFileSync, writeFileSync,
 } from 'node:fs';
 import { join, dirname } from 'node:path';
 
@@ -10,7 +10,15 @@ export function ensureDir(dir) {
 export function copyFile(src, dst, { dryRun = false } = {}) {
   if (dryRun) return { action: 'copy', src, dst, applied: false };
   ensureDir(dirname(dst));
-  copyFileSync(src, dst);
+  if (src.endsWith('.sh')) {
+    // Always write shell scripts with LF endings.
+    // Prevents CRLF contamination when git later checks out these files on Windows
+    // (core.autocrlf=true overrides .gitattributes in the *user's* repo, which dw-kit cannot control).
+    const content = readFileSync(src, 'utf-8').replace(/\r\n/g, '\n');
+    writeFileSync(dst, content, 'utf-8');
+  } else {
+    copyFileSync(src, dst);
+  }
   return { action: 'copy', src, dst, applied: true };
 }
 

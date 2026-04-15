@@ -2,7 +2,7 @@
 
 > An AI development workflow toolkit for teams using agentic IDEs (Claude Code, Cursor) — from idea to review-ready commits.
 
-**v1.2** · `npm install -g dw-kit` · [Docs](docs/README.md) · [Get started](docs/get-started.md) · [Cheatsheet](docs/cheatsheet.md)
+**v1.2** · `npm install -g dw-kit` · [Docs](docs/README.md) · [Get started](docs/get-started.md) · [Cheatsheet](docs/cheatsheet.md) · [Changelog](CHANGELOG.md#v120--2026-04-09)
 
 ---
 
@@ -31,6 +31,14 @@ Initialize → Understand → Plan (stops for approval) → Execute (TDD; 1 comm
 - **Close**: handoff notes, finalize progress, and archive when done.
 
 It’s designed for collaboration (Dev / Tech Lead / QA / PM) and keeps work auditable via lightweight task docs.
+
+---
+
+## Release notes
+
+- v1.2.0 notes: [`CHANGELOG.md#v120--2026-04-09`](CHANGELOG.md#v120--2026-04-09)
+- Full changelog: `CHANGELOG.md`
+- Latest release notes: [GitHub Releases](https://github.com/dv-workflow/dv-workflow/releases)
 
 ---
 
