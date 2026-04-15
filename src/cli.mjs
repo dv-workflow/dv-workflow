@@ -9,11 +9,14 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const require = createRequire(import.meta.url);
 const pkg = require(join(__dirname, '..', 'package.json'));
+const RELEASES_URL = 'https://github.com/dv-workflow/dv-workflow/releases';
 
 export function run(argv) {
-  // Show cached update notice (non-blocking), then schedule fresh check in background
-  const latestVersion = getUpdateNotice(pkg.version);
+  // Schedule fresh check in background (non-blocking).
+  // Notice is shown via process.on('exit') so it always appears AFTER command output,
+  // even when commands call process.exit() internally.
   scheduleUpdateCheck(pkg.version);
+  const latestVersion = getUpdateNotice(pkg.version);
 
   const program = new Command();
 
@@ -81,12 +84,17 @@ export function run(argv) {
       await claudeVnFixCommand(opts);
     });
 
-  program.parse(argv);
-
   if (latestVersion) {
-    console.log();
-    console.log(chalk.yellow(`  ↑ Update available`) + `  v${pkg.version} → ` + chalk.green.bold(`v${latestVersion}`));
-    console.log(`    Run ` + chalk.cyan(`npm install -g dw-kit`) + ` to update`);
-    console.log();
+    // Register notice to print AFTER the command completes (on clean exit only)
+    process.on('exit', (code) => {
+      if (code !== 0) return;
+      console.log();
+      console.log(chalk.yellow(`  ↑ Update available`) + `  v${pkg.version} → ` + chalk.green.bold(`v${latestVersion}`));
+      console.log(`    Run ` + chalk.cyan(`npm install -g dw-kit`) + ` to update`);
+      console.log(`    Changelog: ` + chalk.cyan(`${RELEASES_URL}/tag/v${latestVersion}`));
+      console.log();
+    });
   }
+
+  program.parse(argv);
 }

@@ -1,0 +1,22 @@
+# dw-kit: enforce LF line endings for all text/script files.
+# Prevents CRLF contamination when editing on Windows (core.autocrlf=true).
+# This file must itself be committed with LF endings.
+
+*.sh         text eol=lf
+*.mjs        text eol=lf
+*.js         text eol=lf
+*.json       text eol=lf
+*.md         text eol=lf
+*.yml        text eol=lf
+*.yaml       text eol=lf
+*.txt        text eol=lf
+.gitattributes text eol=lf
+
+# Binary files — no line ending conversion
+*.png        binary
+*.jpg        binary
+*.jpeg       binary
+*.gif        binary
+*.ico        binary
+*.zip        binary
+*.tar.gz     binary

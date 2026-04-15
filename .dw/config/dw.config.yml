@@ -75,8 +75,8 @@ claude:
 
 # --- Toolkit Version (do not edit manually) ---------------------------------
 _toolkit:
-  core_version: "1.0"
-  platform_version: "1.0"
+  core_version: "1.2"
+  platform_version: "1.2"
   capability_version: "1.0"
   installed: "2026-03-23"
-  last_upgrade: "2026-03-23"
+  last_upgrade: "2026-04-15"

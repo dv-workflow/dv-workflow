@@ -48,6 +48,7 @@ export async function upgradeCommand(opts) {
 
   if (layer === 'all' || layer === 'platform') {
     totalChanges += upgradePlatform(projectDir, opts);
+    upgradeGitattributes(projectDir, opts);
   }
 
   if (layer === 'all' || layer === 'capability') {
@@ -192,6 +193,40 @@ function deepMerge(base, override) {
     }
   }
   return result;
+}
+
+function upgradeGitattributes(projectDir, opts) {
+  info('Gitattributes');
+  const dst = join(projectDir, '.gitattributes');
+
+  // Entries dw-kit needs in the user's repo to survive git checkout on Windows
+  const requiredEntries = [
+    '.claude/hooks/*.sh text eol=lf',
+    '.claude/skills/**/*.sh text eol=lf',
+  ];
+
+  const existing = existsSync(dst)
+    ? readFileSync(dst, 'utf-8').replace(/\r\n/g, '\n')
+    : '';
+
+  const missing = requiredEntries.filter(e => !existing.includes(e));
+
+  if (missing.length === 0) {
+    ok('.gitattributes: dw-kit entries already present');
+    return;
+  }
+
+  if (opts.dryRun) {
+    missing.forEach(e => dry(`add to .gitattributes: ${e}`));
+    return;
+  }
+
+  // Append block (idempotent: only adds what's missing)
+  const separator = existing.length > 0 && !existing.endsWith('\n') ? '\n' : '';
+  const block = `${separator}\n# dw-kit: enforce LF for shell scripts (cross-platform safety)\n${missing.join('\n')}\n`;
+  writeFileSync(dst, existing + block, 'utf-8');
+  ok(`.gitattributes: added ${missing.length} dw-kit hook entr${missing.length > 1 ? 'ies' : 'y'}`);
+  log('  → Tip: run `git add --renormalize .claude/hooks/` to normalize any existing checked-out files');
 }
 
 function upgradeCapability(projectDir, opts) {
