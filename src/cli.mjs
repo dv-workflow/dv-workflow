@@ -28,7 +28,8 @@ export function run(argv) {
   program
     .command('init')
     .description('Setup dw-kit in current project (interactive wizard)')
-    .option('-p, --preset <name>', 'Use preset: solo-quick | small-team | enterprise')
+    .option('-p, --preset <name>', 'Use preset: solo | solo-quick | small-team | team | enterprise')
+    .option('--solo', 'Shortcut for --preset solo (zero-config setup)')
     .option('-a, --adapter <platform>', 'Target platform: claude-cli | cursor | generic', 'claude-cli')
     .option('-s, --silent', 'Non-interactive mode (reads DW_NAME, DW_DEPTH, DW_ROLES, DW_LANG env vars)')
     .action(async (opts) => {
@@ -71,6 +72,33 @@ export function run(argv) {
     .action(async (opts) => {
       const { promptCommand } = await import('./commands/prompt.mjs');
       await promptCommand(opts);
+    });
+
+  program
+    .command('metrics [sub]')
+    .description('Inspect local telemetry (show | cut-analysis | clear). Default: show')
+    .option('--since <date>', 'Filter events since ISO date (YYYY-MM-DD)')
+    .option('--skill <name>', 'Filter by skill name')
+    .action(async (sub, opts) => {
+      const { metricsCommand } = await import('./commands/metrics.mjs');
+      await metricsCommand({ sub, ...opts });
+    });
+
+  program
+    .command('active')
+    .description('Regenerate .dw/tasks/ACTIVE.md index')
+    .action(async () => {
+      const { writeActiveIndex } = await import('./lib/active-index.mjs');
+      const target = writeActiveIndex();
+      console.log(chalk.green('✓') + ` Wrote ${target}`);
+    });
+
+  program
+    .command('dashboard')
+    .description('Show team dashboard — active tasks, ADRs, telemetry summary, health')
+    .action(async (opts) => {
+      const { dashboardCommand } = await import('./commands/dashboard.mjs');
+      await dashboardCommand(opts);
     });
 
   program

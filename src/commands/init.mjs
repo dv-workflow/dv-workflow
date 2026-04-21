@@ -9,9 +9,11 @@ import { detectPlatform, platformLabel } from '../lib/platform.mjs';
 const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
 const PRESETS = {
+  'solo': { depth: 'quick', roles: ['dev'], tracking: false, hooksProfile: 'safety-only' },
   'solo-quick': { depth: 'quick', roles: ['dev'], tracking: false },
   'small-team': { depth: 'standard', roles: ['dev', 'techlead'], tracking: true },
-  'enterprise': { depth: 'thorough', roles: ['dev', 'techlead', 'ba', 'qc', 'pm'], tracking: true },
+  'team': { depth: 'standard', roles: ['dev', 'techlead'], tracking: true, hooksProfile: 'full' },
+  'enterprise': { depth: 'thorough', roles: ['dev', 'techlead', 'ba', 'qc', 'pm'], tracking: true, hooksProfile: 'full' },
 };
 const VALID_DEPTHS = ['quick', 'standard', 'thorough'];
 const VALID_LANGUAGES = ['vi', 'en'];
@@ -29,6 +31,11 @@ export async function initCommand(opts) {
   }
 
   let projectName, depth, roles, language;
+
+  // --solo shortcut maps to --preset solo
+  if (opts.solo && !opts.preset) {
+    opts.preset = 'solo';
+  }
 
   if (opts.preset) {
     const preset = PRESETS[opts.preset];
@@ -316,7 +323,7 @@ function printSummary({ projectName, depth, roles, language, adapter }) {
   if (adapter === 'claude-cli') {
     console.log(`  Next steps:`);
     console.log(`    Run: claude (to open Claude Code in this directory in terminal)`);
-    console.log(`    Run: /dw-flow [task-name]`);
+    console.log(`    Run: /dw:flow [task-name]`);
     console.log(`    Suggested: Update Tech Stack + rules in CLAUDE.md`);
   } else if (adapter === 'cursor') {
     console.log(`  Next steps:`);

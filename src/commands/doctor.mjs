@@ -14,6 +14,13 @@ const CORE_FILES = [
   '.dw/core/ROLES.md',
 ];
 
+const V2_OPTIONAL = [
+  '.dw/core/PILLARS.md',
+  '.dw/decisions',
+  '.dw/tasks/ACTIVE.md',
+  '.dw/metrics',
+];
+
 const CONFIG_FILES = [
   '.dw/config/dw.config.yml',
   '.dw/config/config.schema.json',
@@ -131,6 +138,15 @@ export async function doctorCommand() {
     } else {
       warn(`${dir} — missing (will be created on first use)`);
       warnings++;
+    }
+  }
+
+  info('v2 Artifacts (optional)');
+  for (const path of V2_OPTIONAL) {
+    if (existsSync(join(projectDir, path))) {
+      ok(path);
+    } else {
+      log(`  ${path} — not yet created (opt-in)`);
     }
   }
 
