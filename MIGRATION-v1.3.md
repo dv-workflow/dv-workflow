@@ -1,8 +1,8 @@
 # Migration Guide — dw-kit v1.2.x → v1.3
 
-**Target version:** 1.3.0
-**Ship date:** 2026-05-12 (target)
-**Status:** In Progress
+**Current version:** 1.3.4
+**Patch chain:** 1.3.0 → 1.3.1 (task-init + retroactive emit v2) → 1.3.2 (task-doc health metric) → 1.3.3 (writer skills v1/v2 compat + docs cleanup) → 1.3.4 (/dw:plan Quick Debate)
+**Status:** Shipped
 
 This guide documents all user-visible changes in v1.3. v1.3 is **fully backward compatible** with v1.2.x — existing projects continue to work. New features are opt-in.
 
@@ -17,7 +17,8 @@ This guide documents all user-visible changes in v1.3. v1.3 is **fully backward 
 | ACTIVE index | `.dw/tasks/ACTIVE.md` auto-generated | New feature |
 | Telemetry | Local-only metrics in `.dw/metrics/events.jsonl` | Opt-out via `DW_NO_TELEMETRY=1` |
 | Solo preset | `dw init --preset solo` available | New option |
-| Skill naming | `/dw-*` may be renamed to `/dw:*` (pending harness verification) | **Potentially breaking** |
+| Skill naming | `/dw-*` renamed to `/dw:*` (verified working in Claude CLI) | **Breaking** — update custom prompts |
+| `/dw:plan` debate | Quick Debate (red/blue self-critique) integrated — depth-driven | v1.3.4 opt-in for standard, default for thorough |
 | Archive | 8 Done tasks moved to `.dw/tasks/archive/` in dw-kit repo itself | No user impact |
 
 ---

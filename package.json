@@ -1,6 +1,6 @@
 {
   "name": "dw-kit",
-  "version": "1.3.3",
+  "version": "1.3.4",
   "description": "AI development workflow toolkit — structured, quality-assured, team-ready. From requirements to dashboard.",
   "type": "module",
   "bin": {
