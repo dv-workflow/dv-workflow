@@ -1,5 +1,5 @@
 ---
-name: dw-handoff
+name: dw:handoff
 description: "Tạo tài liệu bàn giao session để người hoặc agent tiếp theo có thể tiếp tục không cần hỏi lại. Dùng cuối session hoặc khi chuyển task."
 argument-hint: "[task-name]"
 ---
@@ -77,5 +77,5 @@ Sau khi ghi xong, hiển thị:
 - Lệnh để người/agent tiếp theo bắt đầu:
   ```
   Đọc: {paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md
-  Tiếp tục: /dw-execute $ARGUMENTS
+  Tiếp tục: /dw:execute $ARGUMENTS
   ```

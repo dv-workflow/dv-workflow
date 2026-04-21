@@ -1,5 +1,5 @@
 ---
-name: dw-test-plan
+name: dw:test-plan
 description: "QC skill: Tạo test plan cho feature/task. Bao gồm test cases, edge cases, regression checklist. Dùng sau khi plan được approve."
 argument-hint: "[task-name | feature-name]"
 allowed-tools:

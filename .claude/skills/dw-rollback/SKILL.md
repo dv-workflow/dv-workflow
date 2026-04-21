@@ -1,5 +1,5 @@
 ---
-name: dw-rollback
+name: dw:rollback
 description: "Revert task docs về trạng thái trước. Dùng khi plan sai, execute sai hướng, hoặc cần bắt đầu lại từ sau research."
 argument-hint: "[task-name] [checkpoint: after-research | after-plan | clean]"
 ---
@@ -84,7 +84,7 @@ Checkpoint: [checkpoint]
 Thời gian: [timestamp]
 
 Bước tiếp theo:
-- after-research → Chạy /dw-plan [task-name] để lập kế hoạch lại
-- after-plan     → Chạy /dw-execute [task-name] để implement lại
-- clean          → Chạy /dw-research [task-name] để bắt đầu từ đầu
+- after-research → Chạy /dw:plan [task-name] để lập kế hoạch lại
+- after-plan     → Chạy /dw:execute [task-name] để implement lại
+- clean          → Chạy /dw:research [task-name] để bắt đầu từ đầu
 ```

@@ -1,5 +1,5 @@
 ---
-name: dw-arch-review
+name: dw:arch-review
 description: "TL skill: Review kiến trúc và technical feasibility của plan. Approve hoặc request changes trước khi dev execute."
 argument-hint: "[task-name]"
 context: fork
@@ -108,7 +108,7 @@ Bạn đang thực hiện với vai trò **Tech Lead**. Đây là checkpoint qua
 
 ## Next Steps
 
-[Sau khi dev fix concerns] → có thể bắt đầu `/dw-execute $ARGUMENTS`
+[Sau khi dev fix concerns] → có thể bắt đầu `/dw:execute $ARGUMENTS`
 ```
 
 ## Cập Nhật Plan

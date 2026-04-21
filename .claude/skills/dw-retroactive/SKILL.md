@@ -1,5 +1,5 @@
 ---
-name: dw-retroactive
+name: dw:retroactive
 description: "Retroactively document một feature/task đã được implement trước khi dùng dw. Reverse-engineer từ code + git history, tạo đầy đủ context + as-built plan + progress docs. Dùng khi cần AI hiểu sâu một module cũ."
 argument-hint: "[feature-name]"
 allowed-tools:
@@ -297,7 +297,7 @@ Khi làm task liên quan feature này:
 ║  • [Warning nếu có]
 ╠══════════════════════════════════════════════════════╣
 ║  Tiếp theo:
-║  → Khi cần task liên quan: /dw-research $ARGUMENTS
+║  → Khi cần task liên quan: /dw:research $ARGUMENTS
 ║     (AI sẽ đọc context docs vừa tạo làm foundation)
 ╚══════════════════════════════════════════════════════╝
 ```

@@ -1,5 +1,5 @@
 ---
-name: dw-kit-evolve
+name: dw:kit-evolve
 description: "Maintainer skill: xử lý GitHub Issue về dw-kit bằng adversarial subagents (white-bot propose + black-bot critique). Chỉ dùng trong dw-kit repo bởi TechLead."
 argument-hint: "[Issue number]"
 ---

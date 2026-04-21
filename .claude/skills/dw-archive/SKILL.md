@@ -1,5 +1,5 @@
 ---
-name: dw-archive
+name: dw:archive
 description: "Move task docs đã hoàn thành vào archive. Giữ .dw/tasks/ gọn gàng. Dùng sau khi task Done và đã merge PR."
 argument-hint: "[task-name | --all-done | --older-than-days N]"
 ---

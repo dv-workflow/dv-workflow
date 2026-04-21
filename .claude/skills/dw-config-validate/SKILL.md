@@ -1,5 +1,5 @@
 ﻿---
-name: dw-config-validate
+name: dw:config-validate
 description: "Kiểm tra .dw/config/dw.config.yml có hợp lệ không. Phát hiện unknown keys, typos, invalid values. Chạy sau khi sửa config thủ công."
 argument-hint: ""
 ---
@@ -48,7 +48,7 @@ Nếu giá trị khác → **ERROR**: "Flag `[key]` có giá trị không hợp 
 ## Bước 6: Kiểm tra `project.language`
 
 - Phải là `"vi"` hoặc `"en"`.
-- Nếu `"en"` → kiểm tra `.claude/templates/en/` có tồn tại không. Nếu không → **WARN**: "English templates chưa có. Chạy `/dw-upgrade` để lấy templates mới nhất."
+- Nếu `"en"` → kiểm tra `.claude/templates/en/` có tồn tại không. Nếu không → **WARN**: "English templates chưa có. Chạy `/dw:upgrade` để lấy templates mới nhất."
 
 ## Bước 7: Báo cáo kết quả
 

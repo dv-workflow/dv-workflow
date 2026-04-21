@@ -1,5 +1,5 @@
 ---
-name: dw-onboard
+name: dw:onboard
 description: "Onboard dw-kit vào project đang chạy. Scan codebase, tạo project map và context docs cho các modules hiện có. Chạy một lần khi adopt dw vào existing project."
 argument-hint: ""
 allowed-tools:
@@ -50,7 +50,7 @@ Với mỗi major directory/module, xác định:
 | [dir] | feature/service/util/infra | [mô tả 1 dòng] | [số files] | Cao/TB/Thấp |
 
 **Phức tạp = Cao** nếu: nhiều files (>10), có DB/API, business logic phức tạp.
-→ Modules phức tạp Cao: recommend `/dw-retroactive [module]` sau.
+→ Modules phức tạp Cao: recommend `/dw:retroactive [module]` sau.
 
 ## Bước 3: Phân tích nhanh từng module
 
@@ -106,7 +106,7 @@ Tạo `.dw/context/project-map.md`:
 
 | Module | Type | Vai trò | Phức tạp | Active? | Deep-dive? |
 |--------|------|---------|----------|---------|------------|
-| [name] | [type] | [mô tả ngắn] | Cao/TB/Thấp | Có/Không | `/dw-retroactive [name]` |
+| [name] | [type] | [mô tả ngắn] | Cao/TB/Thấp | Có/Không | `/dw:retroactive [name]` |
 
 ## Dependencies giữa Modules
 
@@ -133,9 +133,9 @@ Tạo `.dw/context/project-map.md`:
 
 ## Gợi ý Deep-dive
 
-Các modules phức tạp nên chạy `/dw-retroactive` để AI có context đầy đủ:
-- [ ] `/dw-retroactive [module-a]` — [lý do: nhiều files, core business logic]
-- [ ] `/dw-retroactive [module-b]`
+Các modules phức tạp nên chạy `/dw:retroactive` để AI có context đầy đủ:
+- [ ] `/dw:retroactive [module-a]` — [lý do: nhiều files, core business logic]
+- [ ] `/dw:retroactive [module-b]`
 ```
 
 ### 5b. Module context docs
@@ -183,8 +183,8 @@ Với modules **phức tạp TB/Thấp**: chỉ ghi entry trong project-map.md, 
 ╠══════════════════════════════════════════════════════╣
 ║  Gợi ý tiếp theo:
 ║  Modules phức tạp cần deep-dive:
-║  → /dw-retroactive [module-a]
-║  → /dw-retroactive [module-b]
+║  → /dw:retroactive [module-a]
+║  → /dw:retroactive [module-b]
 ║
 ║  Khi bắt đầu task mới liên quan module đã có:
 ║  → AI sẽ tự đọc .dw/context/ để có context
@@ -197,5 +197,5 @@ Với modules **phức tạp TB/Thấp**: chỉ ghi entry trong project-map.md, 
 
 - **Không tạo `.dw/tasks/`** — onboard output vào `.dw/context/`, tách khỏi task docs
 - **Không đọc toàn bộ code** — chỉ cần đủ để hiểu vai trò và interface của module
-- **Không analyze chi tiết logic** — đó là việc của `/dw-retroactive` khi cần deep-dive
+- **Không analyze chi tiết logic** — đó là việc của `/dw:retroactive` khi cần deep-dive
 - Nếu project đã có `.dw/context/project-map.md` → hỏi user: "Đã có project map. Update hay skip?"

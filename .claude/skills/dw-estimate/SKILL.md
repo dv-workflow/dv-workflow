@@ -1,5 +1,5 @@
 ---
-name: dw-estimate
+name: dw:estimate
 description: "Ước lượng effort cho task. Phân tích subtasks từ plan và đưa ra estimate theo đơn vị cấu hình (hours/story-points/t-shirt). Dùng sau /plan."
 argument-hint: "[task-name]"
 allowed-tools:
@@ -21,7 +21,7 @@ Task: **$ARGUMENTS**
 
 ## Điều Kiện
 
-Nếu chưa có plan (`{paths.tasks}/$ARGUMENTS/$ARGUMENTS-plan.md`) → thông báo cần chạy `/dw-plan` trước.
+Nếu chưa có plan (`{paths.tasks}/$ARGUMENTS/$ARGUMENTS-plan.md`) → thông báo cần chạy `/dw:plan` trước.
 
 ## Quy Trình Estimation
 

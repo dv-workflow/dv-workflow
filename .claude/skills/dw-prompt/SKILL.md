@@ -1,5 +1,5 @@
 ---
-name: dw-prompt
+name: dw:prompt
 description: "Improve a vague task description into a clear, actionable prompt. Uses git log + recent dw tasks for project context. Output is concise — human dev will refine further."
 argument-hint: "[task description] [--vi]"
 ---
