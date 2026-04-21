@@ -1,7 +1,7 @@
 ﻿# Hướng Dẫn Tạo Custom Skills
 
 > Dùng khi team muốn thêm skill riêng chưa có trong bộ mặc định.
-> Ví dụ: `/dw-deploy`, `/dw-migration`, `/dw-seed-data`.
+> Ví dụ: `/dw:deploy`, `/dw:migration`, `/dw:seed-data`.
 
 ---
 
@@ -50,7 +50,7 @@ user-invocable: true
 
 ---
 
-## Ví Dụ: `/dw-deploy`
+## Ví Dụ: `/dw:deploy`
 
 Tạo `.claude/skills/deploy/SKILL.md`:
 
@@ -92,7 +92,7 @@ Cập nhật progress file nếu deploy là bước cuối của task.
 
 ---
 
-## Ví Dụ: `/dw-db-migrate`
+## Ví Dụ: `/dw:db-migrate`
 
 ```markdown
 ---

@@ -18,8 +18,20 @@ Task: **$ARGUMENTS**
 - `tracking.log_work` → ghi effort tracking không
 - `workflow.default_depth` → `thorough` = cần docs-update, review bắt buộc
 
+## Detect Task Format (v1 vs v2)
+
+Kiểm tra `{paths.tasks}/$ARGUMENTS/`:
+- **v2**: có `spec.md` + `tracking.md` → đọc/ghi 2 files này.
+- **v1** (legacy): có `-context.md`/`-plan.md`/`-progress.md` → đọc/ghi bộ 3 files.
+
 ## Trước Khi Bắt Đầu
 
+**v2:**
+1. Đọc `{paths.tasks}/$ARGUMENTS/spec.md` — Intent, Scope, Subtasks, Success Criteria, Research Findings.
+2. Đọc `{paths.tasks}/$ARGUMENTS/tracking.md` — Subtask Progress table, Changelog, Handoff Notes.
+3. Xác nhận `spec.md` frontmatter có `status: Approved`.
+
+**v1:**
 1. Đọc `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-plan.md`
 2. Đọc `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-context.md`
 3. Đọc `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md`
@@ -52,16 +64,27 @@ Nếu có progress → tiếp tục từ subtask cuối cùng chưa done.
 - Nếu `quality.block_on_fail = false` → cảnh báo, cho phép tiếp tục
 
 ### Step 5: Cập nhật Progress
-Cập nhật `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md`:
+**v2**: Cập nhật `{paths.tasks}/$ARGUMENTS/tracking.md`:
+- Update row trong section `## Subtask Progress` table với status `✅ Done`, Date, Notes (commit SHA).
+- Append entry vào `## Changelog` theo format:
+  ```markdown
+  ### {date} — ST-N complete
+  **Actions taken:** ...
+  ```
+- Update frontmatter `last_updated`.
+
+**v1**: Cập nhật `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md`:
 ```markdown
 | ST-N | [Subtask name] | Done | abc1234 | [ghi chú] |
 ```
 
-Nếu `tracking.log_work = true`, ghi effort thực tế vào:
-```markdown
-### Effort Log
-| Subtask | Estimate | Actual | Ghi chú |
-```
+Nếu `tracking.log_work = true`, ghi effort thực tế:
+- **v2**: thêm cột "Actual" vào Subtask Progress table hoặc ghi trong Changelog entry.
+- **v1**:
+  ```markdown
+  ### Effort Log
+  | Subtask | Estimate | Actual | Ghi chú |
+  ```
 
 ### Step 6: Commit
 ```
@@ -91,7 +114,7 @@ Subtask ST-N of $ARGUMENTS
 
 ## Khi Hoàn Thành Tất Cả Subtasks
 
-1. Cập nhật progress: Trạng thái → `Done`
+1. Cập nhật status: **v2** `tracking.md` frontmatter `status: Done` · **v1** progress.md `Trạng thái: Done`.
 2. Tóm tắt: subtasks completed, commits, issues encountered
 3. Luôn gợi ý: "Tiếp theo: `/dw:review $ARGUMENTS`"
 4. Nếu `workflow.default_depth = thorough`: "Cần chạy `/dw:docs-update $ARGUMENTS`"

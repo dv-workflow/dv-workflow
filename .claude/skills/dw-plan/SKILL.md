@@ -27,10 +27,18 @@ Task: **$ARGUMENTS**
 - CHỈ đọc, phân tích, và viết plan
 - DỪNG LẠI cuối cùng để chờ user/TL approve
 
+## Detect Task Format (v1 vs v2)
+
+Kiểm tra `{paths.tasks}/$ARGUMENTS/`:
+- **v2**: có `spec.md` + `tracking.md` → plan output update trực tiếp vào `spec.md` (sections Scope/Subtasks/Risks/Success Criteria).
+- **v1** (legacy): có `-context.md`/`-plan.md`/`-progress.md` → plan output ghi vào `$ARGUMENTS-plan.md`.
+- Chưa có gì → gợi ý `/dw:task-init $ARGUMENTS` trước.
+
 ## Bước 1: Đọc Context
 
-Đọc `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-context.md` — file research đã tạo.
-Nếu chưa có → thông báo: "Cần chạy `/dw:research $ARGUMENTS` trước."
+- **v2**: Đọc `{paths.tasks}/$ARGUMENTS/spec.md` (bao gồm section `## Research Findings` nếu đã chạy `/dw:research`).
+- **v1**: Đọc `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-context.md` — file research đã tạo.
+- Nếu chưa có research findings → thông báo: "Cần chạy `/dw:research $ARGUMENTS` trước."
 
 ## Bước 2: Thiết kế giải pháp
 
@@ -62,7 +70,15 @@ Thứ tự subtasks theo dependency graph:
 
 ## Bước 4: Viết plan
 
-Ghi vào `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-plan.md`:
+**v2**: Update `spec.md` trực tiếp — điền vào các section có sẵn:
+- `## Scope → In Scope`: thêm ST-1, ST-2, ... với mô tả + acceptance + effort
+- `## Scope → Out of Scope`: các điểm loại trừ rõ ràng
+- `## Risks & Mitigations`: bảng risks
+- `## Success Criteria`: tiêu chí measurable
+- `## Dependencies`: blockers upstream / external
+Frontmatter: đổi `status: Draft` → `status: Approved` chỉ SAU khi user approve.
+
+**v1**: Ghi vào `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-plan.md` theo template:
 
 ```markdown
 # Plan: [Task Name]

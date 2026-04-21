@@ -221,25 +221,25 @@ PM không cần đọc code — PM đọc:
 Full team workflow (tất cả roles):
 
 ```
-BA: /dw-requirements     → requirements doc + user stories
+BA: /dw:requirements     → requirements doc + user stories
      ↓
-TL: /dw-arch-review      → architecture decision + approve
+TL: /dw:arch-review      → architecture decision + approve
      ↓
-Dev: /dw-task-init       → task docs
-Dev: /dw-research        → codebase analysis
-Dev+QC: /dw-plan         → dev plan + test plan (parallel)
+Dev: /dw:task-init       → task docs
+Dev: /dw:research        → codebase analysis
+Dev+QC: /dw:plan         → dev plan + test plan (parallel)
      ↓
 TL approve plan
      ↓
-Dev: /dw-execute         → TDD implementation, commits
+Dev: /dw:execute         → TDD implementation, commits
      ↓
-TL: /dw-review           → architecture + code review
+TL: /dw:review           → architecture + code review
      ↓
 QC: manual/auto testing  → Layer 4 verification
      ↓
-Dev: /dw-commit          → pre-commit gates
+Dev: /dw:commit          → pre-commit gates
      ↓
-PM: /dw-dashboard        → visibility, metrics
+PM: /dw:dashboard        → visibility, metrics
 ```
 
 Không phải mọi task cần full chain. `default_depth` + available roles quyết định.
