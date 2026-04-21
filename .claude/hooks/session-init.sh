@@ -36,6 +36,12 @@ if [ -f "$SESSION_MARKER" ]; then
 fi
 touch "$SESSION_MARKER" 2>/dev/null || true
 
+# Telemetry (once per session, fire-and-forget)
+TELEMETRY_SCRIPT="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/hooks/telemetry-log.sh"
+if [ -x "$TELEMETRY_SCRIPT" ] && [ "${DW_NO_TELEMETRY:-}" != "1" ]; then
+  "$TELEMETRY_SCRIPT" hook session-init >/dev/null 2>&1 || true
+fi
+
 # ── Scan .dw/tasks/ tìm tasks In Progress ─────────────────────────────────────
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$(pwd)}"
 TASKS_DIR="$PROJECT_DIR/.dw/tasks"

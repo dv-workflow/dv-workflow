@@ -3,6 +3,12 @@
 # Chạy lint trên file vừa được Write/Edit — non-blocking.
 # Được gọi bởi PostToolUse hook sau Write và Edit.
 
+# Telemetry (local, fire-and-forget)
+TELEMETRY_SCRIPT="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/hooks/telemetry-log.sh"
+if [ -x "$TELEMETRY_SCRIPT" ] && [ "${DW_NO_TELEMETRY:-}" != "1" ]; then
+  "$TELEMETRY_SCRIPT" hook post-write >/dev/null 2>&1 || true
+fi
+
 INPUT=$(cat)
 
 # Extract file path từ tool result

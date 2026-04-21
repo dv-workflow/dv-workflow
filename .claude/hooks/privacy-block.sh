@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
-# .claude/hooks/privacy-block.sh — dw-kit v1.2
+# .claude/hooks/privacy-block.sh — dw-kit v1.3 (Guards pillar)
 # Block agent reads vào sensitive files (credentials, secrets, private keys).
-# Học từ claudekit privacy-block pattern.
 #
 # PreToolUse hook cho: Read
 # exit 0 = allow, exit 2 = block
+
+# Telemetry (local, fire-and-forget) — log every check
+TELEMETRY_SCRIPT="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/hooks/telemetry-log.sh"
+if [ -x "$TELEMETRY_SCRIPT" ] && [ "${DW_NO_TELEMETRY:-}" != "1" ]; then
+  "$TELEMETRY_SCRIPT" hook privacy-block >/dev/null 2>&1 || true
+fi
 
 INPUT=$(cat)
 

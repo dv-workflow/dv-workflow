@@ -6,6 +6,12 @@
 # PreToolUse hook cho: Read, Glob
 # exit 0 = allow, exit 2 = block
 
+# Telemetry (local, fire-and-forget)
+TELEMETRY_SCRIPT="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/hooks/telemetry-log.sh"
+if [ -x "$TELEMETRY_SCRIPT" ] && [ "${DW_NO_TELEMETRY:-}" != "1" ]; then
+  "$TELEMETRY_SCRIPT" hook scout-block >/dev/null 2>&1 || true
+fi
+
 INPUT=$(cat)
 
 # Extract tool name và file path từ JSON input

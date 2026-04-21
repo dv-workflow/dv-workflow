@@ -6,6 +6,12 @@
 
 PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 
+# Telemetry (local, fire-and-forget)
+TELEMETRY_SCRIPT="$PROJECT_DIR/.claude/hooks/telemetry-log.sh"
+if [ -x "$TELEMETRY_SCRIPT" ] && [ "${DW_NO_TELEMETRY:-}" != "1" ]; then
+  "$TELEMETRY_SCRIPT" hook progress-ping >/dev/null 2>&1 || true
+fi
+
 # ── Tìm active tasks ──────────────────────────────────────────────────────────
 CONFIG_FILE="$PROJECT_DIR/config/dw.config.yml"
 [ ! -f "$CONFIG_FILE" ] && CONFIG_FILE="$PROJECT_DIR/config/dw.config.yml"

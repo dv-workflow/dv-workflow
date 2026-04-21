@@ -1,4 +1,5 @@
 {
+  "includeCoAuthoredBy": false,
   "permissions": {
     "allow": [
       "Read(*)",
@@ -11,10 +12,29 @@
       "Bash(git blame *)",
       "Bash(git stash list)",
       "Bash(ls *)",
-      "Bash(wc *)"
+      "Bash(wc *)",
+      "Bash(node src/smoke-test.mjs)",
+      "Bash(xargs echo *)",
+      "Edit(/.claude/skills/dw-decision/**)",
+      "Bash(node bin/dw.mjs active)",
+      "Bash(node bin/dw.mjs metrics show)",
+      "Bash(node bin/dw.mjs dashboard)",
+      "Bash(node bin/dw.mjs init --help)",
+      "Bash(mkdir -p /tmp/test-solo)",
+      "Read(//tmp/**)",
+      "Bash(DW_NAME=test node /d/huygdv_projects/dw-kit/bin/dw.mjs init --solo)",
+      "Bash(npm test *)",
+      "Bash(node bin/dw.mjs metrics cut-analysis)",
+      "Bash(bash -n .claude/hooks/pre-commit-gate.sh)",
+      "Bash(bash -n /dev/stdin)",
+      "Bash(dos2unix .claude/hooks/pre-commit-gate.sh)",
+      "Bash(sed -i 's/\\\\r$//' .claude/hooks/pre-commit-gate.sh)",
+      "Bash(git add *)"
+    ],
+    "additionalDirectories": [
+      "D:\\huygdv_projects\\dw-kit\\.claude\\rules"
     ]
   },
-  "mcpServers": {},
   "hooks": {
     "UserPromptSubmit": [
       {
@@ -95,5 +115,6 @@
         ]
       }
     ]
-  }
+  },
+  "mcpServers": {}
 }
