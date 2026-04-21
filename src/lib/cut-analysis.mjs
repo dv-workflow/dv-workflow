@@ -1,7 +1,16 @@
 // Cut Criteria Matrix — implements ADR-0001 v1.4 decision gate.
 // Consumes telemetry events, emits cut candidates with evidence.
 
+import { existsSync, readFileSync, readdirSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+
 const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+// Task doc thresholds — invalidation triggers for 3→2 file consolidation (ADR-0001)
+export const TASK_DOC_THRESHOLDS = {
+  trackingLinesWarn: 400,   // avg tracking.md lines → reopen 3→2 decision
+  extraFilesPctWarn: 30,    // % tasks with ≥3 md files → tasks re-growing structure
+};
 
 // Never-cut: skills that are the workflow's load-bearing verbs.
 export const CRITICAL_SKILLS = new Set([
@@ -131,6 +140,76 @@ function evaluateHook(name, events, totalSessions) {
   }
 
   return { name, type: 'hook', qualify, stats: s, reasons };
+}
+
+export function analyzeTaskDocs(rootDir = process.cwd()) {
+  const tasksDir = join(rootDir, '.dw', 'tasks');
+  if (!existsSync(tasksDir)) return null;
+
+  const entries = readdirSync(tasksDir).filter((name) => {
+    if (name === 'archive' || name === 'ACTIVE.md') return false;
+    try {
+      return statSync(join(tasksDir, name)).isDirectory();
+    } catch {
+      return false;
+    }
+  });
+
+  const tasks = [];
+  for (const name of entries) {
+    const dir = join(tasksDir, name);
+    let mdFiles;
+    try {
+      mdFiles = readdirSync(dir).filter((f) => f.endsWith('.md'));
+    } catch {
+      continue;
+    }
+    const hasSpec = mdFiles.includes('spec.md');
+    const hasTracking = mdFiles.includes('tracking.md');
+    const format = hasSpec && hasTracking ? 'v2' : mdFiles.some((f) => f.endsWith('-progress.md')) ? 'v1' : 'unknown';
+
+    let trackingLines = 0;
+    if (hasTracking) {
+      try {
+        trackingLines = readFileSync(join(dir, 'tracking.md'), 'utf8').split('\n').length;
+      } catch {
+        /* skip */
+      }
+    }
+
+    tasks.push({ name, format, mdFileCount: mdFiles.length, trackingLines });
+  }
+
+  const v2 = tasks.filter((t) => t.format === 'v2');
+  const avgTrackingLines =
+    v2.length > 0 ? Math.round(v2.reduce((s, t) => s + t.trackingLines, 0) / v2.length) : 0;
+  const maxTrackingLines = v2.length > 0 ? Math.max(...v2.map((t) => t.trackingLines)) : 0;
+  const extraFiles = tasks.filter((t) => t.mdFileCount >= 3);
+  const extraFilesPct = tasks.length > 0 ? Math.round((extraFiles.length / tasks.length) * 100) : 0;
+
+  const triggers = [];
+  if (avgTrackingLines > TASK_DOC_THRESHOLDS.trackingLinesWarn) {
+    triggers.push(
+      `avg_tracking_lines=${avgTrackingLines} > ${TASK_DOC_THRESHOLDS.trackingLinesWarn} — tracking.md phình → reopen 3→2 decision (ADR-0001)`
+    );
+  }
+  if (extraFilesPct > TASK_DOC_THRESHOLDS.extraFilesPctWarn) {
+    triggers.push(
+      `${extraFilesPct}% tasks have ≥3 md files > ${TASK_DOC_THRESHOLDS.extraFilesPctWarn}% — structure re-growing → reopen 3→2 decision (ADR-0001)`
+    );
+  }
+
+  return {
+    totalTasks: tasks.length,
+    v2Count: v2.length,
+    v1Count: tasks.filter((t) => t.format === 'v1').length,
+    avgTrackingLines,
+    maxTrackingLines,
+    extraFilesCount: extraFiles.length,
+    extraFilesPct,
+    triggers,
+    tasks,
+  };
 }
 
 export function analyze(events) {

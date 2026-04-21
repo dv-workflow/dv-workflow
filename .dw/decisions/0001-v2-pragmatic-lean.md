@@ -121,6 +121,7 @@ Cut ~50% với data backing qua 3 releases. 5-pillar architecture.
 | 2 internal teams chấp nhận dogfood v1.3 | Nếu >2 devs opt-out trong tuần 1 → pause, office hours |
 | AGENTS.md standard không emerge | Nếu widely adopted → pivot CONTEXT pillar to integration |
 | Claude Code không ship native task-tracking | Nếu ship → pivot BRIDGES pillar |
+| 3→2 file consolidation là net positive (intuition-based, NOT evidence-backed) | Nếu sau 4 tuần v1.3: (a) avg `tracking.md` >400 dòng, OR (b) >50% dev báo không có chỗ ghi research findings, OR (c) >30% task có ≥3 files (tự add back) → reopen, cân nhắc Option C (+ optional `research.md`) hoặc Option D (depth-driven structure) |
 
 **Success Criteria (operationalized):**
 
