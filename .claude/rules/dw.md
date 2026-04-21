@@ -65,6 +65,8 @@ All dw skills invoke via `/dw:{name}` (colon namespace separator).
 
 Core workflow: `/dw:flow` · `/dw:task-init` · `/dw:research` · `/dw:plan` · `/dw:execute` · `/dw:commit` · `/dw:handoff`
 
+`/dw:plan` includes **Quick Debate** (red/blue self-critique): default ON for `thorough`, auto-trigger on high-stakes signals for `standard`, off for `quick`. Override via `--debate` / `--no-debate` / `--debate-deep`.
+
 Decisions: `/dw:decision [title]` — create ADR
 
 Dev: `/dw:debug` · `/dw:review` · `/dw:thinking` · `/dw:prompt` · `/dw:docs-update`

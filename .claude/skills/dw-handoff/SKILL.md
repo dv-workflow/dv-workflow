@@ -22,7 +22,13 @@ git stash list               # stashed work
 ```
 
 ### 2. Task progress
-Đọc `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md`:
+
+**Detect format**: Nếu có `tracking.md` → v2. Nếu có `-progress.md` → v1.
+
+- **v2**: Đọc `{paths.tasks}/$ARGUMENTS/tracking.md` — Subtask Progress table, Changelog, Handoff Notes (nếu đã có).
+- **v1**: Đọc `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md`.
+
+Tìm:
 - Subtask nào đã done?
 - Subtask nào đang làm dở?
 - Blockers nào đang tồn tại?
@@ -34,7 +40,11 @@ git stash list               # stashed work
 
 ## Viết Handoff Notes
 
-Ghi vào mục "Handoff Notes" trong `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md`:
+**v2**: Replace (hoặc append nếu muốn giữ lịch sử) section `## Handoff Notes` trong `{paths.tasks}/$ARGUMENTS/tracking.md`. Cũng update frontmatter `last_updated`.
+
+**v1**: Ghi vào mục "Handoff Notes" trong `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md`.
+
+Format (chung cho cả 2):
 
 ```markdown
 ## Handoff Notes
@@ -76,6 +86,7 @@ Sau khi ghi xong, hiển thị:
 - Tóm tắt handoff notes
 - Lệnh để người/agent tiếp theo bắt đầu:
   ```
-  Đọc: {paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md
+  Đọc: {paths.tasks}/$ARGUMENTS/tracking.md     (v2)
+    hoặc {paths.tasks}/$ARGUMENTS/$ARGUMENTS-progress.md  (v1 legacy)
   Tiếp tục: /dw:execute $ARGUMENTS
   ```

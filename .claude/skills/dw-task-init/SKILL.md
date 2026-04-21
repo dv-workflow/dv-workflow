@@ -1,6 +1,6 @@
 ---
 name: dw:task-init
-description: "Khởi tạo bộ documentation cho task mới. Tạo thư mục và 3 template files (context, plan, progress)."
+description: "Khởi tạo bộ documentation cho task mới. Tạo thư mục và 2 files v2 (spec.md + tracking.md)."
 argument-hint: "[task-name]"
 ---
 
@@ -8,52 +8,64 @@ argument-hint: "[task-name]"
 
 ## Đọc Config
 
-Đọc `.dw/config/dw.config.yml` để lấy:
+Đọc `.dw/config/dw.config.yml`:
 - `paths.tasks` → thư mục chứa task docs (mặc định: `.dw/tasks`)
 - `workflow.default_depth` → `quick | standard | thorough`
-- `tracking.estimation` → có tạo section estimation không
-- `tracking.log_work` → có tạo section effort log không
-- `team.roles` → hiển thị workflow phù hợp
-- `project.language` → chọn template ngôn ngữ
+- `project.language` → ngôn ngữ note thêm (templates hiện tại là vi/en-agnostic)
 
-## Tạo Thư Mục & Files
+## Tạo Thư Mục & Files (v2 format)
 
 ```
 {paths.tasks}/$ARGUMENTS/
-├── $ARGUMENTS-context.md    # Research findings & codebase analysis
-├── $ARGUMENTS-plan.md       # Implementation plan & design
-└── $ARGUMENTS-progress.md   # Progress tracking, effort log, changelog
+├── spec.md      # Intent + subtasks + success criteria (stable after approve)
+└── tracking.md  # Progress + changelog + handoff (mutable)
 ```
 
-### File context.md
-Đọc `project.language` từ config để chọn template:
-- `language: "vi"` → dùng `.claude/templates/task-context.md`
-- `language: "en"` → dùng `.claude/templates/en/task-context.md`
+### 1. Tạo spec.md
 
-Điền vào template:
-- `[Task Name]` = `$ARGUMENTS`
-- `[date]` = ngày hiện tại
+Đọc template từ `.dw/core/templates/v2/spec.md`, điền vào:
+- `{task-name}` → `$ARGUMENTS`
+- `{YYYY-MM-DD}` (created) → ngày hiện tại
+- `status` → `Draft`
+- `depth` → giá trị `workflow.default_depth` từ config
+- `owner` → để trống (user tự điền)
+- `related_adr` → `none`
+- `target_ship` → `none`
 
-### File plan.md
-Chọn template theo `project.language` (`.claude/templates/[lang]/task-plan.md`).
-- Nếu `tracking.estimation = true`: giữ nguyên section Estimation
-- Nếu `tracking.estimation = false`: xóa section Estimation
+Ghi vào `{paths.tasks}/$ARGUMENTS/spec.md`.
 
-### File progress.md
-Chọn template theo `project.language` (`.claude/templates/[lang]/task-progress.md`).
-- Điền `[Task Name]` = `$ARGUMENTS`
-- Điền `[date]` = ngày hiện tại
-- Nếu `tracking.log_work = true`: giữ section Effort Log
-- Nếu `tracking.log_work = false`: xóa section Effort Log
+### 2. Tạo tracking.md
+
+Đọc template từ `.dw/core/templates/v2/tracking.md`, điền vào:
+- `{task-name}` → `$ARGUMENTS`
+- `{YYYY-MM-DD}` (started & last_updated) → ngày hiện tại
+- `status` → `Not Started`
+- `current_phase` → `Init`
+- `blockers` → `none`
+
+Ghi vào `{paths.tasks}/$ARGUMENTS/tracking.md`.
+
+### 3. Cập nhật ACTIVE.md
+
+Sau khi tạo xong 2 files, chạy `dw active` (hoặc invoke `writeActiveIndex`) để regenerate `{paths.tasks}/ACTIVE.md` — team index sẽ thấy task mới.
 
 ## Sau Khi Tạo
 
 Hiển thị cho user:
-1. Danh sách files đã tạo
-2. Workflow tiếp theo dựa trên `workflow.default_depth`:
 
-**quick**: "Tiếp theo: Code ngay hoặc `/dw:research $ARGUMENTS` nếu cần khảo sát"
-**standard**: "Tiếp theo: `/dw:research $ARGUMENTS` → `/dw:plan $ARGUMENTS` → approve → `/dw:execute $ARGUMENTS`"
-**thorough**: "Tiếp theo: `/dw:requirements $ARGUMENTS` → `/dw:research $ARGUMENTS` → `/dw:estimate $ARGUMENTS` → `/dw:plan $ARGUMENTS`"
+1. Danh sách files đã tạo:
+   - `{paths.tasks}/$ARGUMENTS/spec.md`
+   - `{paths.tasks}/$ARGUMENTS/tracking.md`
 
-Nếu team có BA: "Gợi ý: BA có thể chạy `/dw:requirements $ARGUMENTS` trước để chuẩn bị yêu cầu"
+2. Workflow tiếp theo theo `workflow.default_depth`:
+   - **quick**: "Code ngay hoặc `/dw:research $ARGUMENTS` nếu cần khảo sát."
+   - **standard**: "`/dw:research $ARGUMENTS` → `/dw:plan $ARGUMENTS` → approve → `/dw:execute $ARGUMENTS`"
+   - **thorough**: "`/dw:requirements $ARGUMENTS` → `/dw:research $ARGUMENTS` → `/dw:estimate $ARGUMENTS` → `/dw:plan $ARGUMENTS`"
+
+3. Nếu team có BA role: "BA có thể chạy `/dw:requirements $ARGUMENTS` trước để chuẩn bị yêu cầu."
+
+## Lưu ý v2 format
+
+- `spec.md` ổn định sau khi approve — subtasks + success criteria không thay đổi mà không có lý do.
+- `tracking.md` mutable — cập nhật mỗi session (Subtask Progress table, Changelog, Friction Journal).
+- Legacy 3-file format (`context + plan + progress`) vẫn được đọc bởi các skill khác để backward compat, nhưng **không tạo mới** cho task mới.

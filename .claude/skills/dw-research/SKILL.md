@@ -24,10 +24,20 @@ Task: **$ARGUMENTS**
 
 Đọc `.dw/config/dw.config.yml` → lấy `paths.tasks` để biết output location.
 
+## Detect Task Format (v1 vs v2)
+
+Kiểm tra `{paths.tasks}/$ARGUMENTS/`:
+- Nếu có `spec.md` + `tracking.md` → **v2 format**. Output ghi vào spec.md section "## Research Findings".
+- Nếu có `-context.md`/`-plan.md`/`-progress.md` → **v1 format** (legacy). Output ghi vào `$ARGUMENTS-context.md` như cũ.
+- Nếu chưa có gì → gợi ý user chạy `/dw:task-init $ARGUMENTS` trước.
+
+Trong các bước dưới, "context file" = `spec.md` (v2) hoặc `$ARGUMENTS-context.md` (v1).
+
 ## Bước 1: Đọc yêu cầu
 
-- Đọc file `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-plan.md` nếu đã có mô tả yêu cầu
-- Hoặc lấy yêu cầu từ conversation context
+- **v2**: Đọc `{paths.tasks}/$ARGUMENTS/spec.md` lấy Intent + Scope.
+- **v1**: Đọc `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-plan.md` nếu đã có mô tả yêu cầu.
+- Hoặc lấy yêu cầu từ conversation context.
 
 ## Bước 2: Khảo sát
 
@@ -53,7 +63,11 @@ Từ framework `.claude/skills/dw-thinking/THINKING.md`:
 
 ## Bước 4: Ghi kết quả
 
-Ghi vào `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-context.md` theo cấu trúc:
+**v2 format**: Append (hoặc replace nếu đã có) section `## Research Findings` vào `spec.md`, đặt ngay sau section `## Intent`. Giữ frontmatter và các section khác không đổi.
+
+**v1 format** (legacy): Ghi vào `{paths.tasks}/$ARGUMENTS/$ARGUMENTS-context.md`.
+
+Cấu trúc nội dung (dùng chung cho cả 2 format):
 
 ```markdown
 # Context: [Task Name]
@@ -103,7 +117,7 @@ Dùng template `.claude/templates/agent-report.md` với:
 - Details: key files, patterns, dependencies
 - Next Steps: những gì planner cần biết
 
-> Quick depth tasks: bỏ qua bước này — progress.md đã đủ.
+> Quick depth tasks: bỏ qua bước này — tracking.md (v2) / progress.md (v1) đã đủ.
 
 ## Bước 6: Tóm tắt
 

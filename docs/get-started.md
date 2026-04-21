@@ -8,7 +8,7 @@
 
 **dw-kit** là AI workflow toolkit — bộ công cụ giúp AI (Claude Code, Cursor) làm việc có cấu trúc, đảm bảo chất lượng, và không bị "lạc" khi thực hiện task phức tạp.
 
-Thay vì chat trực tiếp với AI, bạn dùng `/dw-skill-name` để AI thực hiện từng phase theo quy trình chuẩn.
+Thay vì chat trực tiếp với AI, bạn dùng `/dw:skill-name` để AI thực hiện từng phase theo quy trình chuẩn.
 
 ---
 
@@ -76,15 +76,15 @@ tracking:
 Skills là các `/command` bạn gọi trong Claude Code (hoặc Cursor):
 
 ```
-/dw-skill-name [argument]
+/dw:skill-name [argument]
 ```
 
 **Ví dụ:**
 ```
-/dw-task-init user-auth
-/dw-research user-auth
-/dw-plan user-auth
-/dw-execute user-auth
+/dw:task-init user-auth
+/dw:research user-auth
+/dw:plan user-auth
+/dw:execute user-auth
 ```
 
 ---
@@ -95,65 +95,65 @@ Skills là các `/command` bạn gọi trong Claude Code (hoặc Cursor):
 
 | Skill | Argument | Mô tả |
 |-------|----------|-------|
-| `/dw-flow` | `[task-name]` | **Chạy toàn bộ workflow một mạch** — AI tự drive từ research → plan → execute → review → commit, dừng tại human checkpoints để bạn approve/feedback |
+| `/dw:flow` | `[task-name]` | **Chạy toàn bộ workflow một mạch** — AI tự drive từ research → plan → execute → review → commit, dừng tại human checkpoints để bạn approve/feedback |
 
 ### 🔵 Core Workflow (dùng từng bước)
 
 | Skill | Argument | Mô tả |
 |-------|----------|-------|
-| `/dw-task-init` | `[task-name]` | Tạo thư mục và 3 doc files (context, plan, progress) |
-| `/dw-research` | `[task-name]` | Khảo sát codebase, tìm patterns và dependencies |
-| `/dw-plan` | `[task-name]` | Lập kế hoạch implementation, phân chia subtasks. **DỪNG để approve** |
-| `/dw-execute` | `[task-name]` | Implement theo plan đã approve (TDD, commit từng subtask) |
-| `/dw-review` | `[task-name\|branch\|file]` | Review code: correctness, security, test coverage |
-| `/dw-commit` | `[message]` | Smart commit với quality checks (test/lint tự động) |
+| `/dw:task-init` | `[task-name]` | Tạo thư mục và 3 doc files (context, plan, progress) |
+| `/dw:research` | `[task-name]` | Khảo sát codebase, tìm patterns và dependencies |
+| `/dw:plan` | `[task-name]` | Lập kế hoạch implementation, phân chia subtasks. **DỪNG để approve** |
+| `/dw:execute` | `[task-name]` | Implement theo plan đã approve (TDD, commit từng subtask) |
+| `/dw:review` | `[task-name\|branch\|file]` | Review code: correctness, security, test coverage |
+| `/dw:commit` | `[message]` | Smart commit với quality checks (test/lint tự động) |
 
 ### 🟡 Quality & Planning
 
 | Skill | Argument | Mô tả |
 |-------|----------|-------|
-| `/dw-requirements` | `[feature-name]` | BA skill: viết requirements + user stories |
-| `/dw-estimate` | `[task-name]` | Ước lượng effort từ plan (cần `tracking.estimation: true`) |
-| `/dw-arch-review` | `[task-name]` | TL skill: review architecture + feasibility |
-| `/dw-test-plan` | `[task-name]` | QC skill: tạo test cases + regression checklist |
-| `/dw-debug` | `[mô tả vấn đề]` | Debug có hệ thống: Investigate → Diagnose → Fix |
-| `/dw-thinking` | `[vấn đề]` | Áp dụng critical/systems/first-principles thinking |
+| `/dw:requirements` | `[feature-name]` | BA skill: viết requirements + user stories |
+| `/dw:estimate` | `[task-name]` | Ước lượng effort từ plan (cần `tracking.estimation: true`) |
+| `/dw:arch-review` | `[task-name]` | TL skill: review architecture + feasibility |
+| `/dw:test-plan` | `[task-name]` | QC skill: tạo test cases + regression checklist |
+| `/dw:debug` | `[mô tả vấn đề]` | Debug có hệ thống: Investigate → Diagnose → Fix |
+| `/dw:thinking` | `[vấn đề]` | Áp dụng critical/systems/first-principles thinking |
 
 ### 🟢 Tracking & Reporting
 
 | Skill | Argument | Mô tả |
 |-------|----------|-------|
-| `/dw-log-work` | `[task-name]` | Ghi effort thực tế, so sánh với estimate (cần `tracking.log_work: true`) |
-| `/dw-docs-update` | `[all\|api\|architecture\|task-name]` | Cập nhật living docs theo code changes |
-| `/dw-dashboard` | `[sprint\|last-week\|all]` | PM report: tasks, metrics, velocity |
-| `/dw-sprint-review` | `[sprint-name]` | Tổng kết sprint cho team retrospective |
-| `/dw-handoff` | `[task-name]` | Tạo handoff doc để bàn giao session |
+| `/dw:log-work` | `[task-name]` | Ghi effort thực tế, so sánh với estimate (cần `tracking.log_work: true`) |
+| `/dw:docs-update` | `[all\|api\|architecture\|task-name]` | Cập nhật living docs theo code changes |
+| `/dw:dashboard` | `[sprint\|last-week\|all]` | PM report: tasks, metrics, velocity |
+| `/dw:sprint-review` | `[sprint-name]` | Tổng kết sprint cho team retrospective |
+| `/dw:handoff` | `[task-name]` | Tạo handoff doc để bàn giao session |
 
 ### 🟣 Adoption (dùng khi adopt dw vào project đang chạy)
 
 | Skill | Argument | Mô tả |
 |-------|----------|-------|
-| `/dw-onboard` | _(không có)_ | Scan toàn bộ codebase hiện có, tạo project map + module context docs — chạy **một lần** khi adopt |
-| `/dw-retroactive` | `[feature-name]` | Retroactive document một feature đã implement trước khi dùng dw — reverse-engineer từ code + git history |
+| `/dw:onboard` | _(không có)_ | Scan toàn bộ codebase hiện có, tạo project map + module context docs — chạy **một lần** khi adopt |
+| `/dw:retroactive` | `[feature-name]` | Retroactive document một feature đã implement trước khi dùng dw — reverse-engineer từ code + git history |
 
 ### ⚙️ Toolkit Management
 
 | Skill | Argument | Mô tả |
 |-------|----------|-------|
-| `/dw-config-init` | `[project-name]` | Tạo config mới (khi không dùng `dw init`) |
-| `/dw-config-validate` | _(không có)_ | Kiểm tra config file có hợp lệ |
-| `/dw-upgrade` | _(không có)_ | Cập nhật toolkit files lên version mới |
-| `/dw-archive` | `[task-name\|--all-done]` | Move task docs đã xong vào archive |
-| `/dw-rollback` | `[task-name] [checkpoint]` | Revert task docs về checkpoint trước |
+| `/dw:config-init` | `[project-name]` | Tạo config mới (khi không dùng `dw init`) |
+| `/dw:config-validate` | _(không có)_ | Kiểm tra config file có hợp lệ |
+| `/dw:upgrade` | _(không có)_ | Cập nhật toolkit files lên version mới |
+| `/dw:archive` | `[task-name\|--all-done]` | Move task docs đã xong vào archive |
+| `/dw:rollback` | `[task-name] [checkpoint]` | Revert task docs về checkpoint trước |
 
 ---
 
 ## 6. dw-flow — Workflow Một Mạch (Khuyến Nghị)
 
-Thay vì gọi từng skill một, dùng `/dw-flow` để AI tự drive toàn bộ:
+Thay vì gọi từng skill một, dùng `/dw:flow` để AI tự drive toàn bộ:
 
 ```
-/dw-flow user-auth
+/dw:flow user-auth
 ```
 
 AI sẽ tự động:
@@ -174,7 +174,7 @@ AI sẽ tự động:
 
 **Ví dụ interaction:**
 ```
-/dw-flow payment-refund
+/dw:flow payment-refund
 
 ▶ Phase 1: Task Init... ✓
 ▶ Phase 2: Research... ✓
@@ -232,44 +232,44 @@ AI sẽ tự động:
 ### Quick — Solo dev / Hotfix
 
 ```
-/dw-task-init fix-null-crash
+/dw:task-init fix-null-crash
 # → Code trực tiếp
-/dw-commit "fix: handle null user in session"
+/dw:commit "fix: handle null user in session"
 ```
 
 ### Standard — Team / Feature (khuyến nghị mặc định)
 
 ```
-/dw-task-init user-auth
-/dw-research user-auth          # AI khảo sát codebase
-/dw-plan user-auth              # AI lập kế hoạch → BẠN APPROVE
-/dw-execute user-auth           # AI implement từng subtask
-/dw-review user-auth            # AI review code
-/dw-commit "feat(auth): add JWT login flow"
+/dw:task-init user-auth
+/dw:research user-auth          # AI khảo sát codebase
+/dw:plan user-auth              # AI lập kế hoạch → BẠN APPROVE
+/dw:execute user-auth           # AI implement từng subtask
+/dw:review user-auth            # AI review code
+/dw:commit "feat(auth): add JWT login flow"
 ```
 
 ### Thorough — Enterprise / High-Risk
 
 ```
-/dw-task-init payment-gateway
-/dw-requirements payment-gateway    # BA viết requirements
-/dw-estimate payment-gateway        # Estimate effort
-/dw-research payment-gateway        # Khảo sát codebase
-/dw-arch-review payment-gateway     # TL review architecture
-/dw-plan payment-gateway            # Lập kế hoạch → BẠN APPROVE
-/dw-test-plan payment-gateway       # QC tạo test plan
-/dw-execute payment-gateway         # Implement
-/dw-review payment-gateway          # Code review
-/dw-docs-update payment-gateway     # Cập nhật docs
-/dw-log-work payment-gateway        # Ghi effort thực tế
-/dw-commit "feat(payment): integrate Stripe checkout"
+/dw:task-init payment-gateway
+/dw:requirements payment-gateway    # BA viết requirements
+/dw:estimate payment-gateway        # Estimate effort
+/dw:research payment-gateway        # Khảo sát codebase
+/dw:arch-review payment-gateway     # TL review architecture
+/dw:plan payment-gateway            # Lập kế hoạch → BẠN APPROVE
+/dw:test-plan payment-gateway       # QC tạo test plan
+/dw:execute payment-gateway         # Implement
+/dw:review payment-gateway          # Code review
+/dw:docs-update payment-gateway     # Cập nhật docs
+/dw:log-work payment-gateway        # Ghi effort thực tế
+/dw:commit "feat(payment): integrate Stripe checkout"
 ```
 
 ---
 
 ## 7. Files được tạo cho mỗi Task
 
-Khi chạy `/dw-task-init feature-name`, AI tạo:
+Khi chạy `/dw:task-init feature-name`, AI tạo:
 
 ```
 .dw/tasks/feature-name/
@@ -280,15 +280,15 @@ Khi chạy `/dw-task-init feature-name`, AI tạo:
 
 Với `thorough`, còn có thêm:
 ```
-  feature-name-requirements.md   # (từ /dw-requirements)
-  feature-name-test-plan.md      # (từ /dw-test-plan)
+  feature-name-requirements.md   # (từ /dw:requirements)
+  feature-name-test-plan.md      # (từ /dw:test-plan)
 ```
 
 ---
 
 ## 8. Quy trình Approve Plan
 
-**QUAN TRỌNG**: `/dw-plan` sẽ DỪNG và chờ bạn approve trước khi execute.
+**QUAN TRỌNG**: `/dw:plan` sẽ DỪNG và chờ bạn approve trước khi execute.
 
 Khi xem plan, kiểm tra:
 - [ ] Approach có đúng hướng không?
@@ -302,7 +302,7 @@ Khi xem plan, kiểm tra:
 approved
 
 # Sau đó:
-/dw-execute feature-name
+/dw:execute feature-name
 ```
 
 Nếu cần chỉnh sửa plan trước khi approve → chỉnh trực tiếp trong file `.dw/tasks/feature-name/feature-name-plan.md`.
@@ -368,7 +368,7 @@ dw validate   # Kiểm tra config syntax và schema
 
 **AI không biết dùng skill nào:**
 - Hỏi thẳng: "Tôi muốn bắt đầu task mới, dùng skill nào?"
-- Hoặc dùng `/dw-thinking [mô tả task]` để phân tích
+- Hoặc dùng `/dw:thinking [mô tả task]` để phân tích
 
 **Plan approve rồi nhưng execute bị báo lỗi:**
 - Kiểm tra file plan có dòng `Trạng thái: Approved` chưa

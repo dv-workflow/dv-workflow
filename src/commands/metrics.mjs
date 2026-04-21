@@ -1,5 +1,5 @@
 import { readEvents, summarize } from '../lib/telemetry.mjs';
-import { analyze, THRESHOLDS } from '../lib/cut-analysis.mjs';
+import { analyze, analyzeTaskDocs, THRESHOLDS, TASK_DOC_THRESHOLDS } from '../lib/cut-analysis.mjs';
 import { banner, log, info, warn, ok, err } from '../lib/ui.mjs';
 import chalk from 'chalk';
 
@@ -162,4 +162,24 @@ function cutAnalysisReport(opts) {
   log(`  Hook:  avg_latency > ${THRESHOLDS.hook.maxAvgLatencyMs}ms OR fires/session > ${THRESHOLDS.hook.maxFiresPerSession}`);
   log('');
   info('Caveat: "devs" proxied by unique session hashes — undercounts real headcount.');
+
+  // Task doc health — invalidation trigger for 3→2 file consolidation (ADR-0001)
+  const td = analyzeTaskDocs(process.cwd());
+  if (td && td.totalTasks > 0) {
+    log('');
+    log(chalk.bold('Task Doc Health (ADR-0001 invalidation signal for 3→2 consolidation)'));
+    log(`  Tasks total: ${td.totalTasks}  (v2=${td.v2Count}, v1=${td.v1Count})`);
+    log(`  tracking.md lines: avg=${td.avgTrackingLines}  max=${td.maxTrackingLines}`);
+    log(`  Tasks with ≥3 md files: ${td.extraFilesCount} (${td.extraFilesPct}%)`);
+    if (td.triggers.length === 0) {
+      ok('No task-doc invalidation triggers fired — 3→2 consolidation holding.');
+    } else {
+      for (const t of td.triggers) {
+        err(t);
+      }
+    }
+    log('');
+    info('Task doc thresholds:');
+    log(`  avg_tracking_lines > ${TASK_DOC_THRESHOLDS.trackingLinesWarn}  OR  pct_tasks_with_3plus_files > ${TASK_DOC_THRESHOLDS.extraFilesPctWarn}%`);
+  }
 }
