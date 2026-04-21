@@ -14,6 +14,12 @@ if ! echo "$COMMAND" | grep -qE '^\s*git\s+commit'; then
   exit 0
 fi
 
+# Telemetry (local, fire-and-forget)
+TELEMETRY_SCRIPT="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/hooks/telemetry-log.sh"
+if [ -x "$TELEMETRY_SCRIPT" ] && [ "${DW_NO_TELEMETRY:-}" != "1" ]; then
+  "$TELEMETRY_SCRIPT" hook pre-commit-gate >/dev/null 2>&1 || true
+fi
+
 # Đọc config
 CONFIG_FILE="$CLAUDE_PROJECT_DIR/.dw/config/dw.config.yml"
 if [ ! -f "$CONFIG_FILE" ]; then
@@ -26,7 +32,7 @@ get_value() {
   grep -m1 "^[[:space:]]*${key}:" "$CONFIG_FILE" 2>/dev/null \
     | sed 's/.*:[[:space:]]*//' \
     | sed 's/[[:space:]]*#.*//' \
-    | tr -d '"'"'"' \
+    | sed 's/["'\'']//g' \
     | tr '[:upper:]' '[:lower:]' \
     | tr -d '[:space:]' \
     || echo ""
@@ -62,7 +68,7 @@ if [ -n "$STAGED_FILES" ]; then
 fi
 
 # Check: sensitive patterns?
-SENSITIVE=$(git diff --cached 2>/dev/null | grep "^+" | grep -iE "(password|secret|api_key|private_key)\s*=\s*['\"][^'\"]{8,}" | grep -v "^+++" | head -3)
+SENSITIVE=$(git diff --cached 2>/dev/null | grep "^+" | grep -iE '(password|secret|api_key|private_key)[[:space:]]*=[[:space:]]*.{8,}' | grep -v "^+++" | head -3)
 if [ -n "$SENSITIVE" ]; then
   echo "🚨 CẢNH BÁO: Có thể có sensitive data trong commit!" >&2
   echo "$SENSITIVE" >&2

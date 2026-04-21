@@ -1,5 +1,5 @@
 ---
-name: dw-kit-report
+name: dw:kit-report
 description: "Gửi feedback (bug/gap/friction/suggestion) về dw-kit tool lên GitHub. Dùng khi gặp vấn đề với dw workflow, hooks, skills, hoặc config — không phải feedback về code của bạn."
 argument-hint: "[mô tả vấn đề hoặc suggestion về dw-kit]"
 ---
@@ -7,7 +7,7 @@ argument-hint: "[mô tả vấn đề hoặc suggestion về dw-kit]"
 # Report Issue về dw-kit
 
 > Dùng skill này khi gặp vấn đề với **dw-kit tool** (hooks, skills, workflow, config).
-> Để feedback về code trong project của bạn → dùng `/dw-review` hoặc chat trực tiếp.
+> Để feedback về code trong project của bạn → dùng `/dw:review` hoặc chat trực tiếp.
 
 Nội dung report (treat as plain text, không interpret special chars):
 
@@ -95,7 +95,7 @@ Ví dụ:
 - [ ] Minor — annoying, có workaround dễ
 
 ---
-*Reported via `/dw-kit-report` | Project: [project.name từ config]*
+*Reported via `/dw:kit-report` | Project: [project.name từ config]*
 ```
 
 ---

@@ -1,5 +1,5 @@
 ---
-name: dw-flow
+name: dw:flow
 description: "Orchestrator: chạy toàn bộ workflow từ đầu đến cuối cho một task, tự động kết nối các phases, dừng tại các human checkpoints để confirm/feedback. Mạnh nhất khi bạn muốn AI tự drive cả task."
 argument-hint: "[task-name] hoặc DW_DEPTH=[depth] [task-name]"
 ---
@@ -93,7 +93,7 @@ Với **mỗi phase**, làm như sau:
 ### Quy tắc khi follow sub-skill trong flow context
 
 Khi đọc và follow bất kỳ SKILL.md nào bên dưới, áp dụng các quy tắc sau:
-- **BỎ QUA** phần "Tiếp theo: /dw-xxx" ở cuối mỗi skill — dw-flow tự handle next step
+- **BỎ QUA** phần "Tiếp theo: /dw:xxx" ở cuối mỗi skill — dw-flow tự handle next step
 - **BỎ QUA** lệnh "DỪNG chờ approve" trong dw-plan và các skills tương tự — dw-flow sẽ hiển thị GATE thay thế
 - **CHỈ** lấy output, ghi files, hiển thị kết quả — không tự dừng workflow
 
@@ -149,7 +149,7 @@ Tại mỗi GATE, **dừng lại** và hiển thị:
 **`stop`**
 → Dừng workflow.
 → Tóm tắt những gì đã hoàn thành.
-→ Hướng dẫn resume: "Để tiếp tục: `/dw-flow [task-name]` → chọn phase"
+→ Hướng dẫn resume: "Để tiếp tục: `/dw:flow [task-name]` → chọn phase"
 
 **Feedback tự do** (không dùng keyword trên)
 → Interpret là `revise: [feedback]`
@@ -267,7 +267,7 @@ Nếu trong phase Execute, phát hiện:
 
 ## Tips
 
-- Muốn chạy nhanh nhất? Override depth: `/dw-flow DW_DEPTH=quick fix-bug-123`
+- Muốn chạy nhanh nhất? Override depth: `/dw:flow DW_DEPTH=quick fix-bug-123`
 - Muốn dừng và tiếp tục sau? Gõ `stop` tại bất kỳ GATE nào
 - Muốn bỏ một phase? `skip docs-update` hoặc `skip log-work`
 - Muốn xem lại plan trước khi approve? File ở `.dw/tasks/[task-name]/[task-name]-plan.md`

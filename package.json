@@ -1,6 +1,6 @@
 {
   "name": "dw-kit",
-  "version": "1.2.1",
+  "version": "1.3.0",
   "description": "AI development workflow toolkit — structured, quality-assured, team-ready. From requirements to dashboard.",
   "type": "module",
   "bin": {
@@ -24,6 +24,7 @@
     ".claude/skills/dw-config-validate/",
     ".claude/skills/dw-dashboard/",
     ".claude/skills/dw-debug/",
+    ".claude/skills/dw-decision/",
     ".claude/skills/dw-docs-update/",
     ".claude/skills/dw-estimate/",
     ".claude/skills/dw-execute/",
@@ -46,7 +47,8 @@
     ".claude/skills/dw-upgrade/",
     ".claude/templates/",
     ".claude/settings.json",
-    "CLAUDE.md"
+    "CLAUDE.md",
+    "MIGRATION-v1.3.md"
   ],
   "engines": {
     "node": ">=18"

@@ -5,6 +5,12 @@
 #
 # Được gọi bởi PreToolUse hook cho tất cả Bash commands.
 
+# Telemetry (local, fire-and-forget)
+TELEMETRY_SCRIPT="${CLAUDE_PROJECT_DIR:-$(pwd)}/.claude/hooks/telemetry-log.sh"
+if [ -x "$TELEMETRY_SCRIPT" ] && [ "${DW_NO_TELEMETRY:-}" != "1" ]; then
+  "$TELEMETRY_SCRIPT" hook safety-guard >/dev/null 2>&1 || true
+fi
+
 INPUT=$(cat)
 
 COMMAND=$(echo "$INPUT" | grep -o '"command"[[:space:]]*:[[:space:]]*"[^"]*"' \

@@ -1,5 +1,5 @@
 ﻿---
-name: dw-sprint-review
+name: dw:sprint-review
 description: "Tổng kết sprint: tasks hoàn thành, metrics, lessons learned, items cho sprint tiếp theo. Dành cho team retrospective cuối sprint."
 argument-hint: "[sprint-name hoặc period: e.g. sprint-3, 2026-03]"
 ---
@@ -96,4 +96,4 @@ Ghi vào `{paths.reports}/sprint-review-$ARGUMENTS.md`:
 ## Bước 3: Thông báo
 
 Hiển thị summary và path đến file báo cáo.
-Gợi ý: "PM có thể chạy `/dw-dashboard` để xem báo cáo đầy đủ hơn."
+Gợi ý: "PM có thể chạy `/dw:dashboard` để xem báo cáo đầy đủ hơn."

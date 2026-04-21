@@ -1,5 +1,5 @@
 ---
-name: dw-execute
+name: dw:execute
 description: "Thực hiện implementation theo plan đã được approve. Tuân thủ TDD, commit sau mỗi subtask. Chỉ dùng khi plan đã được duyệt."
 argument-hint: "[task-name]"
 ---
@@ -26,7 +26,7 @@ Task: **$ARGUMENTS**
 4. Xác nhận plan có `Trạng thái: Approved`
 
 Nếu plan chưa approved → **DỪNG**, yêu cầu approve trước.
-Nếu chưa có plan → **DỪNG**, yêu cầu chạy `/dw-plan $ARGUMENTS`.
+Nếu chưa có plan → **DỪNG**, yêu cầu chạy `/dw:plan $ARGUMENTS`.
 Nếu có progress → tiếp tục từ subtask cuối cùng chưa done.
 
 ## Quy Trình Cho MỖI Subtask
@@ -81,7 +81,7 @@ Subtask ST-N of $ARGUMENTS
 
 ### Test fail không rõ nguyên nhân
 1. KHÔNG sửa test để pass (trừ khi test sai)
-2. Chạy `/dw-debug` nếu cần
+2. Chạy `/dw:debug` nếu cần
 3. Ghi vào progress nếu mất thời gian
 
 ### Conflict với code khác
@@ -93,6 +93,6 @@ Subtask ST-N of $ARGUMENTS
 
 1. Cập nhật progress: Trạng thái → `Done`
 2. Tóm tắt: subtasks completed, commits, issues encountered
-3. Luôn gợi ý: "Tiếp theo: `/dw-review $ARGUMENTS`"
-4. Nếu `workflow.default_depth = thorough`: "Cần chạy `/dw-docs-update $ARGUMENTS`"
-5. Nếu `tracking.log_work = true`: Hiển thị estimate vs actual, gợi ý `/dw-log-work $ARGUMENTS`
+3. Luôn gợi ý: "Tiếp theo: `/dw:review $ARGUMENTS`"
+4. Nếu `workflow.default_depth = thorough`: "Cần chạy `/dw:docs-update $ARGUMENTS`"
+5. Nếu `tracking.log_work = true`: Hiển thị estimate vs actual, gợi ý `/dw:log-work $ARGUMENTS`

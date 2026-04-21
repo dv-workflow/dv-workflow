@@ -1,5 +1,5 @@
 ---
-name: dw-upgrade
+name: dw:upgrade
 description: "Upgrade dv-workflow-kit lên version mới. So sánh toolkit files, báo cáo thay đổi, cho phép selective update mà không overwrite customizations."
 argument-hint: ""
 ---
@@ -63,7 +63,7 @@ Files của bạn (giữ nguyên):
 Lưu ý:
   - Review các files "đã thay đổi" và merge thủ công nếu cần
   - Xem CHANGELOG của release (nếu cần) để biết breaking changes
-  - Chạy /dw-config-validate sau khi upgrade để kiểm tra config
+  - Chạy /dw:config-validate sau khi upgrade để kiểm tra config
 ```
 
 ## Cleanup backup (tùy chọn)

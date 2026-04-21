@@ -1,8 +1,9 @@
 # dw-kit (repo)
 
-Workflow toolkit codebase. dw rules live in `.claude/rules/` — auto-loaded by Claude Code.
+Workflow toolkit codebase. Rules live in `.claude/rules/` (auto-loaded).
 
-Config: `.dw/config/dw.config.yml`
+**v2.0 direction:** Context-First SDLC Governance Layer (5 pillars — see `.dw/core/PILLARS.md`)
+**Current:** v1.4.0-dev · v1.3.0 ready to ship · ADR-0001 active
 
 ---
 
@@ -17,23 +18,25 @@ Config: `.dw/config/dw.config.yml`
 ```
 bin/          CLI entrypoint
 src/
-  commands/   CLI subcommands (init, upgrade, validate, ...)
-  lib/        Shared utilities (config, copy, ui, ...)
+  commands/   CLI subcommands (init, upgrade, dashboard, metrics, ...)
+  lib/        Shared utilities (config, telemetry, active-index, ...)
 .claude/
-  hooks/      Bash hooks — python3-free, node only (Windows compat)
-  rules/      dw-core.md + dw-skills.md (auto-loaded by Claude Code)
-  skills/     Slash command definitions
-  templates/  Agent report template
+  hooks/      Bash hooks (Guards pillar)
+  rules/      dw.md (consolidated) + code-style + commit-standards
+  skills/     Slash commands with dw:* namespace
 .dw/
-  core/       WORKFLOW.md, THINKING.md, QUALITY.md, ROLES.md
-  config/     dw.config.yml for this repo
-  tasks/      Active task docs
+  core/       WORKFLOW · THINKING · QUALITY · ROLES · PILLARS · templates/
+  decisions/  ADRs (Records pillar)
+  tasks/      Active + archive/ (Bridges pillar — via tracking.md)
+  metrics/    Local telemetry (events.jsonl)
+  config/     dw.config.yml
 ```
 
 ## Dev Notes
 
-- All source ESM (`import`/`export`) — no CommonJS
+- All source ESM — no CommonJS
 - `TOOLKIT_ROOT` resolved from `import.meta.url` in each command
-- Hooks use `node` for JSON parsing (not python3 — Windows compat)
-- Skills `dw-kit-evolve` and `dw-kit-audit` are maintainer-only — excluded from npm package
+- Hooks python3-free (node only — Windows compat)
+- `dw-kit-evolve` + `dw-kit-audit` are maintainer-only — excluded from npm package
 - Published package files declared explicitly in `package.json#files`
+- Telemetry local-only, `DW_NO_TELEMETRY=1` to disable

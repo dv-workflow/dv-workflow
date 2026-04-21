@@ -1,5 +1,5 @@
 ---
-name: dw-task-init
+name: dw:task-init
 description: "Khởi tạo bộ documentation cho task mới. Tạo thư mục và 3 template files (context, plan, progress)."
 argument-hint: "[task-name]"
 ---
@@ -52,8 +52,8 @@ Hiển thị cho user:
 1. Danh sách files đã tạo
 2. Workflow tiếp theo dựa trên `workflow.default_depth`:
 
-**quick**: "Tiếp theo: Code ngay hoặc `/dw-research $ARGUMENTS` nếu cần khảo sát"
-**standard**: "Tiếp theo: `/dw-research $ARGUMENTS` → `/dw-plan $ARGUMENTS` → approve → `/dw-execute $ARGUMENTS`"
-**thorough**: "Tiếp theo: `/dw-requirements $ARGUMENTS` → `/dw-research $ARGUMENTS` → `/dw-estimate $ARGUMENTS` → `/dw-plan $ARGUMENTS`"
+**quick**: "Tiếp theo: Code ngay hoặc `/dw:research $ARGUMENTS` nếu cần khảo sát"
+**standard**: "Tiếp theo: `/dw:research $ARGUMENTS` → `/dw:plan $ARGUMENTS` → approve → `/dw:execute $ARGUMENTS`"
+**thorough**: "Tiếp theo: `/dw:requirements $ARGUMENTS` → `/dw:research $ARGUMENTS` → `/dw:estimate $ARGUMENTS` → `/dw:plan $ARGUMENTS`"
 
-Nếu team có BA: "Gợi ý: BA có thể chạy `/dw-requirements $ARGUMENTS` trước để chuẩn bị yêu cầu"
+Nếu team có BA: "Gợi ý: BA có thể chạy `/dw:requirements $ARGUMENTS` trước để chuẩn bị yêu cầu"

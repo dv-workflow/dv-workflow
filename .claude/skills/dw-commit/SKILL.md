@@ -1,5 +1,5 @@
 ---
-name: dw-commit
+name: dw:commit
 description: "Tạo commit thông minh với quality checks tùy theo config. Chạy tests/lint trước commit nếu flags bật."
 argument-hint: "[commit message]"
 ---
@@ -14,7 +14,7 @@ Message: **$ARGUMENTS**
 - `quality.test_command` → lệnh chạy tests (bỏ qua nếu rỗng)
 - `quality.lint_command` → lệnh chạy linter (bỏ qua nếu rỗng)
 - `quality.block_on_fail` → block commit nếu fail
-- `workflow.default_depth` → `thorough` = gợi ý `/dw-docs-update` sau commit
+- `workflow.default_depth` → `thorough` = gợi ý `/dw:docs-update` sau commit
 - `tracking.log_work` → ghi metrics effort
 
 ## Quy Trình
@@ -69,7 +69,7 @@ git commit -m "<message>"
 ### 7. Post-commit
 
 **Nếu `workflow.default_depth = thorough`:**
-- Thông báo: "Living docs cần cập nhật. Chạy `/dw-docs-update`?"
+- Thông báo: "Living docs cần cập nhật. Chạy `/dw:docs-update`?"
 
 **Nếu `tracking.log_work = true`:**
 - Ghi commit vào `.dw/metrics/`: timestamp, type, scope, files changed

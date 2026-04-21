@@ -27,3 +27,9 @@ package-lock.json
 
 # Projects refer
 projects-refer/*
+
+# Local test / scratch
+.tmp/
+
+# Local telemetry (per-dev, auto-created by hooks)
+.dw/metrics/events.jsonl
