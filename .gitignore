@@ -27,3 +27,6 @@ package-lock.json
 
 # Projects refer
 projects-refer/*
+
+# Local test / scratch
+.tmp/
