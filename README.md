@@ -2,7 +2,7 @@
 
 > An AI development workflow toolkit for teams using agentic IDEs (Claude Code, Cursor) — from idea to review-ready commits.
 
-**v1.3** · `npm install -g dw-kit` · [Docs](docs/README.md) · [Get started](docs/get-started.md) · [Cheatsheet](docs/cheatsheet.md) · [Migration v1.3](MIGRATION-v1.3.md) · [Changelog](CHANGELOG.md)
+**v1.3.5** · `npm install -g dw-kit` · [Docs](docs/README.md) · [Get started](docs/get-started.md) · [Cheatsheet](docs/cheatsheet.md) · [Migration v1.3](MIGRATION-v1.3.md) · [Changelog](CHANGELOG.md)
 
 ---
 
@@ -36,9 +36,21 @@ It’s designed for collaboration (Dev / Tech Lead / QA / PM) and keeps work aud
 
 ## Release notes
 
-- v1.2.0 notes: [`CHANGELOG.md#v120--2026-04-09`](CHANGELOG.md#v120--2026-04-09)
+- **v1.3.5** (2026-05-12) — AI-Native Supply-Chain Guard: `dw security-scan` CLI + OSV.dev auto-sync + Edit-lockfile hook + scoped `.gitignore` for end-user projects. See [`CHANGELOG.md#v135--2026-05-12`](CHANGELOG.md#v135--2026-05-12) and [ADR-0005](.dw/decisions/0005-supply-chain-guard.md). Public 90-day sunset review committed for 2026-08-12.
+- v1.3.4 (2026-04-21) — `/dw:plan` Quick Debate (red/blue self-critique), depth-driven activation
+- v1.3.3 (2026-04-21) — Writer skills v1/v2 compatibility fix
+- v1.3.0 (2026-04-21) — 5-pillar governance layer + telemetry foundation + ADRs + v2 task docs ([ADR-0001](.dw/decisions/0001-v2-pragmatic-lean.md))
+- v1.2.0 (2026-04-09) — [`CHANGELOG.md#v120--2026-04-09`](CHANGELOG.md#v120--2026-04-09)
 - Full changelog: `CHANGELOG.md`
 - Latest release notes: [GitHub Releases](https://github.com/dv-workflow/dv-workflow/releases)
+
+### What's in v1.3.5 for your team
+
+- **`dw security-scan`** — scan for known supply-chain advisories against your project's `package-lock.json` (full match) or `package.json` (pre-install approximate). Uses [OSV.dev](https://osv.dev/) as data source (multi-maintainer upstream feed; no solo-curated bundle to go stale).
+- **AI-aware hook** — fires when Claude Code edits a lockfile. Auto-wired by `dw init --preset team` or `--preset enterprise`; opt-in OFF for `--preset solo`.
+- **Scoped `.gitignore`** — `dw init` and `dw upgrade` write `.dw/.gitignore` and `.claude/.gitignore` managed blocks. Framework files stay out of your repo; tasks/decisions/docs/config stay in.
+- **`dw doctor`** has a new security section that fails loud if advisory snapshot is stale (>7 days) or schema-incompatible.
+- **Sunset rule** — feature retires silently in v1.4.x if 90-day telemetry shows zero real catches OR >5% false-positive rate. Disciplined experiment, not panic ship.
 
 ---
 

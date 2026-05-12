@@ -4,6 +4,191 @@
 
 ---
 
+## [v1.3.5] — 2026-05-12
+
+### Added — AI-Native Supply-Chain Guard ([ADR-0005](.dw/decisions/0005-supply-chain-guard.md))
+
+Wired into Claude Code workflow at the Edit-lockfile boundary. Positions dw-kit as the first AI-coding toolkit owning supply-chain awareness for AI-agent-authored dependency edits.
+
+**New CLI command — `dw security-scan`:**
+- `dw security-scan --update-db` — fetch fresh advisory snapshot from [OSV.dev](https://osv.dev/) (multi-source: GHSA, npm, PyPA, Go, RustSec)
+- `dw security-scan` — scan project lockfile (`package-lock.json` / `npm-shrinkwrap.json`) against snapshot; exit 0=clean, 1=low/medium, 2=HIGH+ advisory match
+- `dw security-scan --pre-install` — scan `package.json` without lockfile (namespace fixture offline + OSV.dev name-only query online)
+- `dw security-scan --offline` — fixture-only fast path
+- `dw security-scan --json` — machine-readable output for CI integration
+- `dw security-scan --install-hook` / `--uninstall-hook` — manage hook wiring in `.claude/settings.json`
+
+**New hook — `.claude/hooks/supply-chain-scan.sh`:**
+- Fires on Claude Code Write/Edit of lockfile (PostToolUse matcher)
+- Runs `dw security-scan --quick` (offline path, <1s)
+- Non-blocking advisory output to stderr; exit codes signal severity to wrapping tooling
+- Auto-wired by `dw init --preset team|enterprise`; skipped for `--preset solo` (TW5 opt-in OFF)
+- `dw upgrade` re-wires the hook on existing installations (deep-merge bypass via post-merge install)
+
+**`dw doctor` security section:**
+- New "Supply-Chain Guard" health-check section
+- Fail-loud if advisory snapshot >7 days stale OR schema mismatch (TW3 mitigation against silent feed drift)
+
+**Telemetry events (extend `events.jsonl`):**
+- `sc_guard.scan_run` — every scan invocation with packages count, latency, snapshot age
+- `sc_guard.block` — HIGH+ severity match found
+- `sc_guard.allow` — low/medium match found
+- `sc_guard.sync` — snapshot fetched, advisory count, packages queried
+- Each event includes `feed-version` + `advisory-id` for audit trail (TW2 mitigation against "ai chọn prior?" audit challenge)
+
+**Curated namespace IoC fixture (`.dw/security/ioc-namespaces.json`):**
+- Ships with 4 active-incident namespace patterns (TanStack, UiPath, Mistral, OpenSearch — current 2026-05-11 supply-chain incident)
+- Auto-expires per `active_until` date — TL prunes entries on regular release cycles
+- Fallback layer when OSV.dev unavailable; primary detection is OSV.dev auto-sync
+
+**Scoped `.gitignore` for end-user projects:**
+- `dw init` creates `.dw/.gitignore` + `.claude/.gitignore` with managed blocks (idempotent, preserves user customization outside the block)
+- Framework dirs excluded from end-user git: `.dw/adapters/`, `.dw/core/`, `.dw/security/`, `.dw/metrics/`, `.claude/agents/`, `.claude/hooks/`, `.claude/rules/`, `.claude/skills/`, `.claude/templates/`
+- Committed by end-users: `.dw/tasks/`, `.dw/decisions/`, `.dw/docs/`, `.dw/reports/`, `.dw/config/dw.config.yml`, `.claude/settings.json`, `CLAUDE.md`
+- `dw upgrade` refreshes managed blocks (per-version evolution without losing user lines)
+
+### Public Sunset Commitment (TW6 — non-negotiable)
+
+> dw-kit v1.3.5 ships an experimental AI-native supply-chain guard. We commit to a 90-day review (target **2026-08-12**): if telemetry shows zero real-world catches OR false-positive rate exceeds 5%, the feature is retired silently in v1.4.x. Review results will be published regardless of outcome.
+
+Discipline marker (per Goal/Value Champion voter feedback in [Multi-Agent Decision Pattern run](.dw/research/sc-guard-voter-panel-r3.md)) — converts "panic ship" critique into "disciplined experiment with kill-switch". Telemetry events (TW2) produce machine-readable evidence for the August review.
+
+### Audience Behavior by Preset
+
+- **solo**: feature shipped but opt-in OFF default; enable via `dw security-scan --install-hook` (TW5)
+- **team / enterprise**: hook auto-wired on `dw init`; `dw upgrade` re-installs on existing projects
+
+### Tests
+
+47/47 smoke tests pass (25 existing + 22 new sc_guard/gitignore cases).
+
+### Files Added
+
+- `src/lib/sc-scanner.mjs` — npm lockfile v1/v2/v3 parser + OSV range matching
+- `src/lib/sc-sync.mjs` — OSV.dev fetch + snapshot management
+- `src/lib/sc-install.mjs` — hook wire/unwire helpers
+- `src/lib/gitignore.mjs` — scoped `.gitignore` manager (managed block + idempotent)
+- `src/commands/security-scan.mjs` — `dw security-scan` CLI
+- `.claude/hooks/supply-chain-scan.sh` — PostToolUse hook
+- `.dw/security/ioc-namespaces.json` — namespace IoC fixture
+- `.dw/decisions/0005-supply-chain-guard.md` — ADR with sunset commitment
+- `.dw/research/supply-chain-*.md` — incident report + proposal + voter panel + blog draft (research trail)
+- `.dw/research/multi-agent-decision-pattern.md` — 5 structural bugs documented from dogfood pattern runs
+
+### References
+
+- ADR: [.dw/decisions/0005-supply-chain-guard.md](.dw/decisions/0005-supply-chain-guard.md)
+- Research trail: [.dw/research/supply-chain-guard-proposal.md](.dw/research/supply-chain-guard-proposal.md) (Section 10 canonical)
+- Pattern run: [.dw/research/sc-guard-voter-panel-r3.md](.dw/research/sc-guard-voter-panel-r3.md)
+- External: [OSV.dev API](https://osv.dev/docs/), [GitHub Security Advisories](https://github.com/advisories)
+
+Bump: 1.3.4 → 1.3.5. Backward compatible (new feature, opt-in for solo, auto-wired for team/enterprise).
+
+---
+
+## [v1.3.4] — 2026-04-21
+
+### Added — `/dw:plan` Quick Debate (red/blue team)
+
+Self-critique debate phase added to `dw:plan` skill. Depth-driven activation prevents ceremony overhead:
+
+- **quick**: skip (hotfix, no debate overhead)
+- **standard**: skip by default; auto-trigger on high-stakes signals (API contract changes, DB migrations, auth/security, cross-module refactors ≥3 modules, new integrations, perf-critical paths)
+- **thorough**: default ON (risky changes deserve structured critique)
+
+Two modes:
+- **Mode A — Lightweight (default)**: single-agent 2-pass. Pass 1 red team (top-3 dubious assumptions + failure modes), Pass 2 blue team (mitigations + strengthenings). Token cost ~1.3×, time ≤3 min.
+- **Mode B — Deep (`--debate-deep`)**: spawn 2 parallel subagents via Agent tool, independent perspectives. Token cost 2-3×, time ≤10 min.
+
+**Overrides:** `--debate` forces on for standard/quick; `--no-debate` off for thorough; `--debate-deep` escalates.
+
+**Output:**
+- v2: append to `tracking.md` section `## Agent Debate Log` (reusing existing v2 template section)
+- v1: append `## Debate Log` to `$ARGUMENTS-plan.md`
+
+**Principle:** no ceremony. If debate finds nothing new after 2 passes, log "No new concerns" and continue. Do not fabricate findings.
+
+Rationale: positive user experience with red/blue debate in `dw-kit-v2-strategy` task caught real blind spots. Default-on for every plan would recreate the "cage" anti-pattern. Depth-driven balances value against overhead. v1.4 eval measures actual catch rate via telemetry.
+
+Bump: 1.3.3 → 1.3.4. Pure additive, no breaking changes.
+
+---
+
+## [v1.3.3] — 2026-04-21
+
+### Fixed — Writer Skills v1/v2 Compatibility
+
+Critical bug: 4 writer skills (`dw:research`, `dw:plan`, `dw:execute`, `dw:handoff`) only read/wrote legacy v1 3-file format (`context + plan + progress`). Since v1.3.1 made `task-init` emit v2 (`spec.md + tracking.md`), the happy path was broken: `/dw:task-init` creates v2 files but `/dw:research` tries to read/write non-existent v1 files.
+
+**Fix:** each writer skill now has a "Detect Task Format" block at top and explicit v2/v1 branches for each read/write operation.
+
+- `dw:research`: v2 appends to `spec.md` section `## Research Findings`; v1 writes to `$ARGUMENTS-context.md` as before
+- `dw:plan`: v2 updates `spec.md` sections (Scope, Subtasks, Risks, Success Criteria); v1 writes to `$ARGUMENTS-plan.md`
+- `dw:execute`: v2 reads spec+tracking, updates `tracking.md` Subtask Progress table + Changelog; v1 reads all 3 files as before
+- `dw:handoff`: v2 writes to `tracking.md` `## Handoff Notes` section; v1 writes to `progress.md` as before
+
+### Cleaned — Legacy Slash-Command Refs
+
+Sweep `/dw-*` → `/dw:*` in user-facing docs:
+- `.dw/core/ROLES.md` (9 refs, ships in npm)
+- `docs/get-started.md` (~50 refs, linked from README)
+- `docs/cheatsheet.md` (25 refs)
+- `docs/custom-skills.md` (4 refs)
+
+**Audit summary** (v1.3 gaps confirmed fixed):
+- 30/30 `SKILL.md` `name:` fields are `dw:*` — no missing prefix
+- `.claude/rules/*`, `CLAUDE.md`, `README.md` — clean
+- Remaining `/dw-*` refs are: (a) historical in ADRs explaining the rename, (b) filesystem paths like `.claude/skills/dw-*/` (correct — colon illegal on Windows), (c) maintainer-only `dw-kit-evolve` (not shipped)
+
+Bump: 1.3.2 → 1.3.3. Pure fixes, no breaking changes.
+
+---
+
+## [v1.3.0] — 2026-04-21
+
+### Added — 5-Pillar Governance Layer + Telemetry Foundation ([ADR-0001](.dw/decisions/0001-v2-pragmatic-lean.md))
+
+Strategic repositioning: dw-kit as **Context-First SDLC Governance Layer** (not prescriptive workflow engine). Five verb-based pillars: **Guards · Surfaces · Records · Bridges · Tunes**.
+
+**Core additions:**
+- `.dw/core/PILLARS.md` — 5-pillar spec with obsolescence test
+- `.dw/core/v14-evaluation-protocol.md` — 4-week cut-evaluation playbook for v1.4 data-driven decisions
+- `.dw/core/templates/v2/` — 2-file task docs (`spec.md` + `tracking.md`) replacing 3-file v1 format
+- `.dw/decisions/` — Architecture Decision Records (ADRs) layer with 4 initial entries:
+  - ADR-0001 Pragmatic Lean direction
+  - ADR-0002 Skill naming `/dw:*` namespace
+  - ADR-0003 Pillar 6 Janitors (deferred, post-v2.0)
+  - `_template.md`
+
+**CLI additions:**
+- `dw init --solo` / `--preset team` / `--preset enterprise` presets (audience-tuned defaults)
+- `dw active` — regenerate `.dw/tasks/ACTIVE.md` index from v1+v2 task folders
+- `dw metrics [show | cut-analysis]` — inspect telemetry + apply ADR-0001 Cut Criteria Matrix
+- `dw dashboard` — active tasks + ADRs + telemetry summary + health checks
+- `dw doctor` — detect v2 artifacts (PILLARS.md, decisions/, ACTIVE.md, metrics/)
+
+**Library:**
+- `src/lib/telemetry.mjs` — local-only logger; `DW_NO_TELEMETRY=1` kill-switch; session-hash anonymization
+- `src/lib/active-index.mjs` — v1+v2 task frontmatter parser
+- `src/lib/cut-analysis.mjs` — ADR-0001 threshold evaluator (uses/week/dev, fires/session)
+
+**Hooks:**
+- `.claude/hooks/telemetry-log.sh` — shell-side logger wired into 3 hooks (extended in v1.3.x to 8/9 hooks)
+- `.claude/hooks/stop-check.sh` — auto-handoff snippet to `tracking.md` when uncommitted + active task
+
+**Skill namespace rename:** all 30 skills `/dw-*` → `/dw:*` (per ADR-0002 Accepted). Filesystem paths kept `.claude/skills/dw-*/` (colon illegal on Windows).
+
+**Rules consolidation:** 6 rules files (11,322 bytes) consolidated into 4 files (8,019 bytes) — 29% reduction toward ADR-0001 50% cut goal. Remaining cut deferred to v1.4 with telemetry evidence.
+
+**Docs:**
+- `MIGRATION-v1.3.md` — full migration guide (old → new skill mapping, rollback)
+- `README.md` — v1.3 positioning + 5-pillar architecture section
+- `CLAUDE.md` — slimmed and refocused
+
+Bump: 1.2.1 → 1.3.0. Backward compatible (new features opt-in). Gitignore `.dw/metrics/events.jsonl` (per-dev, auto-created).
+
+---
+
 ## [v1.2.1] — 2026-04-15
 
 ### Fixed — Cross-Platform Hook Reliability

@@ -3,7 +3,7 @@
 Workflow toolkit codebase. Rules live in `.claude/rules/` (auto-loaded).
 
 **v2.0 direction:** Context-First SDLC Governance Layer (5 pillars — see `.dw/core/PILLARS.md`)
-**Current:** v1.4.0-dev · v1.3.0 ready to ship · ADR-0001 active
+**Current:** v1.3.5 (released 2026-05-12) · ADR-0001 active · ADR-0005 Accepted (Supply-Chain Guard, sunset review 2026-08-12) · v1.4 cuts pending telemetry
 
 ---
 
@@ -30,6 +30,8 @@ src/
   tasks/      Active + archive/ (Bridges pillar — via tracking.md)
   metrics/    Local telemetry (events.jsonl)
   config/     dw.config.yml
+  security/   IoC namespace fixture (Guards pillar — ADR-0005)
+  research/   Investigation notes, RFC-style proposals, voter panel outputs
 ```
 
 ## Dev Notes
