@@ -5,6 +5,7 @@ import { banner, ok, warn, info, log, ask, choose } from '../lib/ui.mjs';
 import { buildConfig, writeConfig } from '../lib/config.mjs';
 import { copyDir, copyFile, ensureDir } from '../lib/copy.mjs';
 import { detectPlatform, platformLabel } from '../lib/platform.mjs';
+import { ensureDwGitignore, ensureClaudeGitignore } from '../lib/gitignore.mjs';
 
 const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
@@ -153,6 +154,20 @@ async function setupProject(projectDir, { projectName, depth, roles, language, a
 
   createRuntimeDirs(projectDir);
   updateGitignore(projectDir);
+  writeScopedGitignores(projectDir, adapter);
+}
+
+function writeScopedGitignores(projectDir, adapter) {
+  try {
+    const dwR = ensureDwGitignore(projectDir);
+    if (dwR.action !== 'noop') ok(`.dw/.gitignore ${dwR.action}`);
+    if (adapter === 'claude-cli') {
+      const cR = ensureClaudeGitignore(projectDir);
+      if (cR.action !== 'noop') ok(`.claude/.gitignore ${cR.action}`);
+    }
+  } catch (e) {
+    warn(`Scoped gitignore: ${e.message}`);
+  }
 }
 
 async function maybeInstallSupplyChainHook(projectDir, presetKey) {

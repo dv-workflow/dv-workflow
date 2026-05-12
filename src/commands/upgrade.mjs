@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { header, ok, warn, err, info, log, dry } from '../lib/ui.mjs';
 import { loadConfig, writeConfig, getToolkitVersions } from '../lib/config.mjs';
 import { diffDirs, copyDir, copyFile } from '../lib/copy.mjs';
+import { ensureDwGitignore, ensureClaudeGitignore } from '../lib/gitignore.mjs';
 
 const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
@@ -57,6 +58,7 @@ export async function upgradeCommand(opts) {
 
   upgradeScripts(projectDir, opts);
   upgradeConfigSchema(projectDir, opts);
+  upgradeScopedGitignores(projectDir, opts);
 
   if (!opts.dryRun && totalChanges > 0) {
     updateVersionTracking(configPath, projectConfig, toolkitVersions);
@@ -187,6 +189,27 @@ function mergeSettingsJson(projectDir, opts) {
   // deepMerge replaces arrays, so user's PostToolUse array may not contain the new
   // hook entry. We must add it explicitly. Respects existing wiring.
   installSupplyChainHookOnUpgrade(projectDir, opts);
+}
+
+function upgradeScopedGitignores(projectDir, opts) {
+  info('Scoped .gitignore (.dw/, .claude/)');
+  if (opts.dryRun) {
+    dry('refresh .dw/.gitignore + .claude/.gitignore managed blocks');
+    return;
+  }
+  try {
+    const dwR = ensureDwGitignore(projectDir);
+    if (dwR.action === 'noop') log('  .dw/.gitignore: up to date');
+    else ok(`.dw/.gitignore: ${dwR.action}`);
+
+    if (existsSync(join(projectDir, '.claude'))) {
+      const cR = ensureClaudeGitignore(projectDir);
+      if (cR.action === 'noop') log('  .claude/.gitignore: up to date');
+      else ok(`.claude/.gitignore: ${cR.action}`);
+    }
+  } catch (e) {
+    warn(`Scoped gitignore: ${e.message}`);
+  }
 }
 
 function installSupplyChainHookOnUpgrade(projectDir, opts) {
