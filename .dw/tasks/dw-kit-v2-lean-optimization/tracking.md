@@ -548,3 +548,68 @@ Next session: techlead review git diff + split commits -> publish.
 - [ ] Settings.json M state (3 tuần stale) — clean noise permissions tách riêng
 
 **Smoke test**: Not re-run (no code changes — research artifacts only).
+
+---
+
+## Session 2026-05-12 evening — Supply-chain incident response + ADR-0005
+
+**Trigger**: TanStack worm hit npm 2026-05-11 19:20 UTC. TechLead received news. Scan máy local + dw-kit → clean. But strategic question emerged: build proactive guard, ship as moat?
+
+**Decision arc** (3 rounds Multi-Agent Decision Pattern + Goal/Value Champion):
+
+| Round | Outcome | Pattern bug discovered |
+|---|---|---|
+| 1 | 7/8 AUP-blocked. DA → Defer/MODIFY narrow 3-4h. | Bug 4 — AUP topic-sensitivity (briefs paste threat detail) |
+| 2 | 5/6 AUP-blocked. DA refined → Shift MODIFY mid-scope 6-8h with 3 concessions | Bug 4 v1 fix insufficient (Read files = output blocks too) |
+| 3 | 5/5 PASS via sanitized self-contained brief. B=5, D=1 (Solo). | Bug 4 v2 fix verified |
+| 4 (GVC) | 1/1 PASS. A high-conf + TW6 public sunset commitment. | Bug 5 — Effort-anchoring bias / Goal-Champion missing |
+
+**Final tally (8 voters):** A=1 (GVC) / B=5 / C=0 / D=1.
+
+**Decision (TL override of B-consensus → Path A):**
+- Adopt full scope ship dw-kit v1.3.5 in 7-10 days (~5h TL time via AI-augmented capacity)
+- 6 integrated tweaks: pre-announce blog (TW1), audit trail (TW2), doctor health (TW3), FP rate metric (TW4), solo opt-in OFF (TW5), public 90-day sunset commitment (TW6)
+- [ADR-0005](.dw/decisions/0005-supply-chain-guard.md) Status: Accepted
+- Implementation task: [.dw/tasks/sc-guard-v1.3.5/](.dw/tasks/sc-guard-v1.3.5/)
+- Pre-announce blog draft: [.dw/research/sc-guard-launch-blog-draft.md](.dw/research/sc-guard-launch-blog-draft.md)
+- Sunset review committed: 2026-08-12
+
+**Artifacts created (7 new files):**
+1. [.dw/research/supply-chain-incident-2026-05-12.md](.dw/research/supply-chain-incident-2026-05-12.md) — incident report + team broadcast template
+2. [.dw/research/supply-chain-guard-proposal.md](.dw/research/supply-chain-guard-proposal.md) — proposal v1 → v2 Final Synthesis (Section 10 canonical)
+3. [.dw/research/sc-guard-strategic-dispute.md](.dw/research/sc-guard-strategic-dispute.md) — Bug 4 v2 sanitized voter brief artifact
+4. [.dw/research/sc-guard-voter-panel-r3.md](.dw/research/sc-guard-voter-panel-r3.md) — raw 8-voter outputs
+5. [.dw/research/sc-guard-launch-blog-draft.md](.dw/research/sc-guard-launch-blog-draft.md) — pre-announce blog draft (TW1)
+6. [.dw/decisions/0005-supply-chain-guard.md](.dw/decisions/0005-supply-chain-guard.md) — ADR Accepted
+7. [.dw/tasks/sc-guard-v1.3.5/](.dw/tasks/sc-guard-v1.3.5/) — spec.md + tracking.md scaffolded
+
+**Artifacts modified:**
+- [.dw/research/multi-agent-decision-pattern.md](.dw/research/multi-agent-decision-pattern.md) — added Bug 4 v2, Bug 5, Case Study #2 (sc-guard), updated revisit triggers ST4+ST5
+- Memory: feedback-multi-agent-decision-pattern.md synced to 5 bugs
+
+**Pattern evolution this session:**
+- **5 structural bugs documented** vs 3 yesterday morning
+- Bug 4 + Bug 4 v2 fix verified — sanitized self-contained brief unlocks full panel for security topics
+- Bug 5 fix verified — GVC mandatory pair with DA prevents conservatism cascade
+- TL override path explicitly documented (Bug 5 framing) — first case of pattern producing override-with-justification
+
+**Friction journal additions:**
+
+| Date | Friction | Component | Proposed |
+|------|----------|-----------|----------|
+| 2026-05-12 | 7/8 sub-agents AUP-blocked on first run cho security topic | Multi-agent pattern brief design | Bug 4 v2 fix — sanitized self-contained artifact (verified work) |
+| 2026-05-12 | Panel had 6/6 effort-downside lens, 0 goal/value lens → systematic defer bias | Voter role design | Bug 5 fix — Goal/Value Champion mandatory paired with DA (verified work) |
+| 2026-05-12 | Voters applied 2024-effort calculus to 2026-AI-augmented capacity | Voter brief design | Brief MUST include effort reframe context (3-5x multiplier) |
+
+**Doesn't block existing roadmap:**
+- v1.4 cuts (ST-2.1, ST-2.2) — still on track per existing telemetry data
+- v2.0 ship 2026-08-15 — unchanged
+- ADR-0005 implementation runs parallel (5h TL time, won't displace other work)
+- Coincidentally: sunset review 2026-08-12 = 3 days before v2.0 ship target → integrate into v2.0 retro
+
+**Next session TODO:**
+- [ ] Day 1 (2026-05-13): start ST-1 (hook) + ST-8 (blog) + ST-9 (ADR cross-ref) in parallel
+- [ ] Commit batch artifacts (incident report + proposal + ADR-0005 + tasks + pattern bug updates) lên dev branch — 4-6 commits split theo type
+- [ ] Pre-flight: confirm OSV.dev API format + GHSA `gh api` schema before adapter impl
+
+**Smoke test:** Not re-run (no code changes — research + decision docs only).

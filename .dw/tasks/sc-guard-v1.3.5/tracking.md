@@ -1,0 +1,113 @@
+---
+task_id: sc-guard-v1.3.5
+started: 2026-05-12
+last_updated: 2026-05-12
+status: Approved, ready to execute
+current_phase: Day 0 — Scaffolding complete
+blockers: none
+---
+
+# Tracking: AI-Native Supply-Chain Guard (dw-kit v1.3.5)
+
+## Status Snapshot
+
+**Phase:** Day 0 scaffold complete; Day 1 starts 2026-05-13
+**Next milestone:** ADR-0005 finalize + blog draft (2026-05-13)
+**Ship target:** v1.3.5 npm publish by 2026-05-19, public announce by 2026-05-20
+
+## Subtask Progress
+
+| # | Subtask | Status | Date | Notes |
+|---|---------|--------|------|-------|
+| ST-1 | Hook on Edit-lockfile | ⬜ Pending | — | `.claude/hooks/supply-chain-scan.sh` |
+| ST-2 | OSV/GHSA auto-sync adapter | ⬜ Pending | — | `src/lib/sc-sync.mjs` |
+| ST-3 | Core scanner | ⬜ Pending | — | `src/lib/sc-scanner.mjs` |
+| ST-4 | CLI `dw security-scan` | ⬜ Pending | — | `src/commands/security-scan.mjs` |
+| ST-5 | `dw doctor` security section (TW3) | ⬜ Pending | — | Fail loud if stale >7d |
+| ST-6 | Telemetry events (TW2) | ⬜ Pending | — | sc_guard.* schema |
+| ST-7 | Solo preset opt-in OFF (TW5) | ⬜ Pending | — | PRESETS update |
+| ST-8 | Pre-announce blog draft (TW1) | ⬜ Pending | — | `.dw/research/sc-guard-launch-blog-draft.md` |
+| ST-9 | ADR sunset commitment text (TW6) | ⬜ Pending | — | Already in ADR-0005, cross-ref blog |
+| ST-10 | Tests + smoke + docs | ⬜ Pending | — | 25+ smoke pass |
+| ST-11 | Release v1.3.5 | ⬜ Pending | — | npm publish |
+| ST-12 | Public announcement | ⬜ Pending | — | Blog + X + team |
+
+Status legend: ⬜ Pending · 🟡 In Progress · ✅ Done · 🔴 Blocked · ⏸ Paused
+
+## Changelog
+
+### 2026-05-12 evening — Scaffolding
+
+**Actions taken:**
+- Decision finalized: Path A (Ship aggressive v1.3.5) per [ADR-0005](../../decisions/0005-supply-chain-guard.md)
+- Research trail captured: 8-voter Multi-Agent Decision Pattern run across 3+1 rounds → 5 new structural bugs documented (Bug 4 v2 + Bug 5)
+- Task scaffolded: spec.md + this tracking.md created with v2 format
+- ADR-0005 status: Accepted (TL authority override of B-consensus per Bug 5 + TW6 framing)
+- Estimated TL time: ~5h (12-14h human-baseline compressed via AI-augmented capacity)
+
+**Decisions made:**
+- Override panel B-consensus → Path A based on Bug 5 (effort-anchoring bias) + GVC TW6 (public sunset commitment converts panic-ship critique)
+- Drop curated IoC bundle approach (DA's bus-factor objection); use OSV+GHSA auto-sync (read-only, multi-maintainer upstream)
+- Drop dashboard / freshness heuristic from v1.3.5 scope (panel correctly flagged scope creep)
+- Public sunset commitment baked into ADR + blog + release notes (3 places consistent per TW6)
+- TW5: solo preset opt-in OFF default (Solo Dev voter's valid feature-fit concern)
+
+**Pain points logged:** see Friction Journal below
+
+### Next Session — TODO
+
+- [ ] Day 1 (2026-05-13): Start ST-1 + ST-8 + ST-9 in parallel
+- [ ] Read pattern docs to confirm OSV.dev API format before adapter implementation
+- [ ] Decide hook PostToolUse matcher pattern (lockfile glob)
+- [ ] Decide CLI default output format (human-readable vs JSON)
+
+## Handoff Notes
+
+**For next session (or next agent):**
+
+- **Read first:**
+  - [spec.md](spec.md) in this folder
+  - [ADR-0005](../../decisions/0005-supply-chain-guard.md) — decision authority + sunset commitment
+  - [supply-chain-guard-proposal.md §10](../../research/supply-chain-guard-proposal.md) — Final Synthesis with 6 tweaks
+  - [sc-guard-voter-panel-r3.md](../../research/sc-guard-voter-panel-r3.md) — voter context if needed
+- **Current state:** Day 0 complete (scaffolding). Day 1 begins implementation.
+- **Don't do:**
+  - Don't add curated IoC bundle — explicitly rejected, use OSV/GHSA auto-sync only
+  - Don't add PyPI/Go/Cargo support — Won't Contain per ADR-0001
+  - Don't drop TW6 public sunset commitment — TL specifically used this to justify Path A
+- **Watch out:**
+  - 5h TL time hard cap (per ADR-0005 N1) — abort if exceeded
+  - Schema drift risk on OSV/GHSA upstream — TW3 fail-loud is non-negotiable
+  - Marketing claim "AI-Native" must hold up — hook on Edit-lockfile is the structural differentiator
+
+## Friction Journal
+
+| Date | Friction | Component | Proposed fix |
+|------|----------|-----------|-------------|
+| 2026-05-12 | Multi-Agent Pattern Bug 4 v1 fix insufficient — clean briefs alone didn't unlock voter panel for security topic | Pattern doc | Documented Bug 4 v2 (sanitized self-contained brief artifact); verified 5/5 round 3 |
+| 2026-05-12 | Multi-Agent Pattern Bug 5 — panel role design biases toward effort-downside lens, missing pure value/goal voice | Pattern doc | Documented Bug 5; Goal/Value Champion now MANDATORY paired with DA |
+| 2026-05-12 | Panel applied 2024-effort calculus to 2026-AI-augmented capacity | Voter brief design | Brief MUST include effort reframe context (~3-5x multiplier) |
+
+## Agent Debate Log
+
+### 2026-05-12 — Multi-Agent Decision Pattern dogfood (3 rounds + GVC)
+
+**Round 1 (original briefs):** 7/8 AUP-blocked. DA sole-completed → Defer / MODIFY narrow 3-4h.
+
+**Round 2 (Bug 4 v1 fix):** 5/6 AUP-blocked. DA refined → Shift to MODIFY mid-scope 6-8h (3 concessions to strategic frame: bus-factor, AI-specific risk, ADR-0001 alignment).
+
+**Round 3 (Bug 4 v2 sanitized artifact):** 5/5 PASS. Tally: A=0, B=5 (Enterprise/OSS/Strategic/Risk/DA-refined), C=0, D=1 (Solo Dev).
+
+**Round 4 (GVC — Bug 5 fix):** GVC sole-spawned. Verdict A high-confidence + TW6 public sunset commitment. Effort reframe (~3-4h TL vs 12h human-baseline).
+
+**Final tally (8 voters):** A=1 high / B=5 / C=0 / D=1 high.
+
+**TL override of B-consensus to A path documented in [ADR-0005](../../decisions/0005-supply-chain-guard.md) per Bug 5 + TW6 framing.**
+
+**Incorporated tweaks (all 6 non-conflicting):**
+- TW1 (OSS+Strategic): Pre-announce blog within 7 days
+- TW2 (Enterprise): Pin feed SHA + audit trail in events.jsonl
+- TW3 (Risk): `dw doctor` health check fail-loud
+- TW4 (Enterprise): Sunset metric includes FP rate ≤5%
+- TW5 (Solo): Opt-in OFF default for solo preset
+- TW6 (GVC): Public sunset commitment in ADR + blog + release notes
