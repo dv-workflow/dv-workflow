@@ -4,6 +4,7 @@ import { fileURLToPath } from 'node:url';
 import { header, ok, warn, err, info, log } from '../lib/ui.mjs';
 import { loadConfig, getToolkitVersions } from '../lib/config.mjs';
 import { detectPlatform, platformLabel } from '../lib/platform.mjs';
+import { snapshotInfo } from '../lib/sc-sync.mjs';
 
 const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
@@ -147,6 +148,26 @@ export async function doctorCommand() {
       ok(path);
     } else {
       log(`  ${path} — not yet created (opt-in)`);
+    }
+  }
+
+  info('Supply-Chain Guard (ADR-0005, opt-in)');
+  const sc = snapshotInfo(projectDir);
+  if (!sc.exists) {
+    log('  Advisory snapshot — not yet created');
+    log('  Run `dw security-scan --update-db` to fetch from OSV.dev (opt-in feature)');
+  } else {
+    if (!sc.schema_compatible) {
+      err(`Advisory snapshot schema mismatch — expected 1.0, got ${sc.schema_version || 'unknown'}`);
+      log('  Run `dw security-scan --update-db` to refresh');
+      issues++;
+    } else if (sc.stale) {
+      warn(`Advisory snapshot stale: ${sc.age_days.toFixed(1)} days old (>7d threshold)`);
+      log(`  Source: ${sc.source} (${sc.ecosystem}), advisories=${sc.advisory_count}`);
+      log('  Run `dw security-scan --update-db` to refresh');
+      warnings++;
+    } else {
+      ok(`Advisory snapshot — ${sc.age_days.toFixed(1)}d old, ${sc.advisory_count} advisories (${sc.source})`);
     }
   }
 
