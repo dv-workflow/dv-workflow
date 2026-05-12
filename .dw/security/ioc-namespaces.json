@@ -1,0 +1,40 @@
+{
+  "schema_version": "1.0",
+  "updated": "2026-05-13",
+  "purpose": "Curated namespace patterns under ACTIVE incident — fallback for pre-install scan when OSV.dev is unavailable. Auto-expires per active_until date. TL updates when new incident requires fixture-level warning before OSV propagation.",
+  "namespaces": [
+    {
+      "pattern": "@tanstack/",
+      "reason": "Active incident 2026-05-11 — Mini Shai-Hulud worm (CVE-2026-45321 / GHSA-g7cv-rxg3-hmpx). 84 malicious versions across 42 @tanstack/* packages published 2026-05-11 19:20-19:26 UTC. Worm self-propagated to 169+ packages.",
+      "advisory": "https://github.com/advisories/GHSA-g7cv-rxg3-hmpx",
+      "active_until": "2026-11-11",
+      "severity": "critical",
+      "guidance": "If installing @tanstack/* fresh: verify version is NOT in 1.169.5-1.169.8 range; prefer 1.169.9+. Check SLSA provenance attestation matches expected publisher. If already installed and lockfile pins 1.169.5-8: rotate ALL credentials (npm tokens, GitHub PATs, SSH keys, cloud keys, Claude/AI configs) before continuing."
+    },
+    {
+      "pattern": "@uipath/",
+      "reason": "Worm spread vector from TanStack incident (2026-05-11) — 70+ @uipath/* packages compromised via stolen npm OIDC tokens.",
+      "advisory": "https://github.com/advisories/GHSA-g7cv-rxg3-hmpx",
+      "active_until": "2026-11-11",
+      "severity": "critical",
+      "guidance": "Verify each @uipath/* install against official UiPath release notes. Worm SLSA attestations are VALID — provenance check alone is insufficient. Cross-reference with UiPath security bulletin."
+    },
+    {
+      "pattern": "@mistralai/",
+      "reason": "Worm spread vector (2026-05-11) — @mistralai/mistralai 2.2.3-2.2.4 compromised on both npm and PyPI.",
+      "advisory": "https://github.com/advisories/GHSA-g7cv-rxg3-hmpx",
+      "active_until": "2026-11-11",
+      "severity": "critical",
+      "guidance": "Avoid @mistralai/mistralai 2.2.3-2.2.4. Pin to 2.2.2 or 2.2.5+ once available."
+    },
+    {
+      "pattern": "@opensearch-project/opensearch",
+      "reason": "Worm spread vector (2026-05-11) — @opensearch-project/opensearch 3.6.2 compromised (1.3M weekly downloads).",
+      "advisory": "https://github.com/advisories/GHSA-g7cv-rxg3-hmpx",
+      "active_until": "2026-11-11",
+      "severity": "critical",
+      "guidance": "Avoid version 3.6.2. Pin to 3.6.1 or 3.6.3+."
+    }
+  ],
+  "maintenance_note": "This fixture is a SHORT-TERM defensive measure. Per ADR-0005 design, OSV.dev/GHSA auto-sync is the primary source; this fixture handles offline + post-incident pre-propagation window. TL prunes entries past active_until on regular release cycles."
+}

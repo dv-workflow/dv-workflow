@@ -77,6 +77,23 @@ export async function fetchOsvBatch(queries, { timeoutMs = FETCH_TIMEOUT_MS } = 
   }
 }
 
+export async function fetchOsvByName(packageName, ecosystem = 'npm', { timeoutMs = FETCH_TIMEOUT_MS } = {}) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    const res = await fetch('https://api.osv.dev/v1/query', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ package: { name: packageName, ecosystem } }),
+      signal: controller.signal,
+    });
+    if (!res.ok) throw new Error(`OSV name-query HTTP ${res.status}`);
+    return await res.json();
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 export async function fetchOsvDetail(vulnId, { timeoutMs = FETCH_TIMEOUT_MS } = {}) {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);

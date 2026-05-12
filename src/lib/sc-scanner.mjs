@@ -196,3 +196,77 @@ export function worstSeverity(matches) {
   if (!matches || matches.length === 0) return null;
   return matches.reduce((acc, m) => (severityRank(m.severity) > severityRank(acc) ? m.severity : acc), 'unknown');
 }
+
+// ── Pre-install scan helpers (package.json without lockfile) ────────────────
+
+export function parsePackageJson(filepath) {
+  const raw = readFileSync(filepath, 'utf-8');
+  const data = JSON.parse(raw);
+  const out = new Map();
+  for (const section of ['dependencies', 'devDependencies', 'peerDependencies', 'optionalDependencies']) {
+    if (data[section] && typeof data[section] === 'object') {
+      for (const [name, range] of Object.entries(data[section])) {
+        if (typeof range === 'string' && !out.has(name)) out.set(name, range);
+      }
+    }
+  }
+  return out;
+}
+
+export function findPackageJson(rootDir = process.cwd()) {
+  const p = join(rootDir, 'package.json');
+  return existsSync(p) ? p : null;
+}
+
+export function matchPackageByName(packageName, advisories) {
+  const hits = [];
+  for (const adv of advisories || []) {
+    if (!adv.affected) continue;
+    for (const aff of adv.affected) {
+      const affName = aff.package?.name || aff.package_name || aff.name;
+      if (affName !== packageName) continue;
+
+      const fixVersions = [];
+      if (Array.isArray(aff.ranges)) {
+        for (const range of aff.ranges) {
+          if (Array.isArray(range.events)) {
+            for (const evt of range.events) if (evt.fixed) fixVersions.push(evt.fixed);
+          }
+        }
+      }
+      hits.push({
+        advisory_id: adv.id,
+        summary: adv.summary || '',
+        severity: pickSeverity(adv),
+        fix_versions: fixVersions,
+        references: (adv.references || []).map((r) => r.url || r).filter(Boolean),
+      });
+      break;
+    }
+  }
+  return hits;
+}
+
+export function matchNamespaceFixture(packages, fixture) {
+  const now = new Date();
+  const hits = [];
+  for (const entry of fixture?.namespaces || []) {
+    if (entry.active_until && new Date(entry.active_until) < now) continue;
+    if (!entry.pattern) continue;
+
+    for (const [name] of packages) {
+      if (name.startsWith(entry.pattern) || name === entry.pattern) {
+        hits.push({
+          package: name,
+          namespace_pattern: entry.pattern,
+          reason: entry.reason,
+          advisory_url: entry.advisory,
+          active_until: entry.active_until,
+          guidance: entry.guidance,
+          severity: entry.severity || 'high',
+        });
+      }
+    }
+  }
+  return hits;
+}
