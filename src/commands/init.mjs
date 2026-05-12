@@ -82,7 +82,7 @@ export async function initCommand(opts) {
   ok(`Platform: ${platformLabel(adapter)}`);
 
   info('Setting up project...');
-  await setupProject(projectDir, { projectName, depth, roles, language, adapter });
+  await setupProject(projectDir, { projectName, depth, roles, language, adapter, presetKey: opts.preset });
 
   printSummary({ projectName, depth, roles, language, adapter });
 }
@@ -135,7 +135,7 @@ function normalizeRolesForDepth(parsedRoles, depth) {
   return merged;
 }
 
-async function setupProject(projectDir, { projectName, depth, roles, language, adapter }) {
+async function setupProject(projectDir, { projectName, depth, roles, language, adapter, presetKey }) {
   copyCoreDocs(projectDir);
   copyConfig(projectDir, { projectName, depth, roles, language });
   copyAdapterStructure(projectDir);
@@ -143,6 +143,7 @@ async function setupProject(projectDir, { projectName, depth, roles, language, a
   if (adapter === 'claude-cli') {
     copyClaudeFiles(projectDir);
     createMinimalCLAUDEmd(projectDir, projectName);
+    await maybeInstallSupplyChainHook(projectDir, presetKey);
   } else if (adapter === 'cursor') {
     copyCursorFiles(projectDir);
     copyGenericAdapter(projectDir);
@@ -152,6 +153,26 @@ async function setupProject(projectDir, { projectName, depth, roles, language, a
 
   createRuntimeDirs(projectDir);
   updateGitignore(projectDir);
+}
+
+async function maybeInstallSupplyChainHook(projectDir, presetKey) {
+  const preset = presetKey ? PRESETS[presetKey] : null;
+  if (preset && preset.hooksProfile === 'safety-only') {
+    log('  Supply-chain guard: skipped (solo preset — opt-in OFF per ADR-0005 TW5)');
+    log('  Enable later: `dw security-scan --install-hook`');
+    return;
+  }
+
+  const { installHookInProject } = await import('../lib/sc-install.mjs');
+  const result = installHookInProject(projectDir);
+  if (!result.ok) {
+    warn(`Supply-chain hook wiring skipped: ${result.error}`);
+    return;
+  }
+  if (result.action === 'added') {
+    ok('Supply-chain guard hook wired (ADR-0005 — opt-in flag enabled)');
+    log('  First scan: `dw security-scan --update-db`');
+  }
 }
 
 function copyCoreDocs(projectDir) {

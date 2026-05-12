@@ -169,6 +169,7 @@ function mergeSettingsJson(projectDir, opts) {
 
   if (opts.dryRun) {
     dry('merge .claude/settings.json');
+    dry('post-merge: wire supply-chain-scan.sh hook if missing (idempotent)');
     return;
   }
 
@@ -181,6 +182,36 @@ function mergeSettingsJson(projectDir, opts) {
   } catch (e) {
     warn(`settings.json merge failed: ${e.message}`);
   }
+
+  // Post-merge: explicitly install supply-chain-scan hook (ADR-0005, idempotent).
+  // deepMerge replaces arrays, so user's PostToolUse array may not contain the new
+  // hook entry. We must add it explicitly. Respects existing wiring.
+  installSupplyChainHookOnUpgrade(projectDir, opts);
+}
+
+function installSupplyChainHookOnUpgrade(projectDir, opts) {
+  if (opts.dryRun) return;
+  try {
+    const configPath = join(projectDir, '.dw', 'config', 'dw.config.yml');
+    if (existsSync(configPath)) {
+      const cfg = readFileSync(configPath, 'utf-8');
+      if (/depth:\s*quick/i.test(cfg) && !/roles:\s*\[?\s*dev\s*,/i.test(cfg)) {
+        // Heuristic: solo preset → skip per ADR-0005 TW5
+        log('  Supply-chain hook: skipped (solo-style preset detected)');
+        log('  Enable later: `dw security-scan --install-hook`');
+        return;
+      }
+    }
+  } catch { /* fall through */ }
+
+  // Defer import (avoid loading at module top) for clean test isolation
+  import('../lib/sc-install.mjs').then((m) => {
+    const result = m.installHookInProject(projectDir);
+    if (result.ok && result.action === 'added') {
+      ok('Supply-chain guard hook wired (ADR-0005 — opt-in available since v1.3.5)');
+      log('  First scan: `dw security-scan --update-db`');
+    }
+  }).catch(() => { /* silent — installation is best-effort */ });
 }
 
 function deepMerge(base, override) {
