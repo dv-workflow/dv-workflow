@@ -7,7 +7,7 @@
  * Exit code 0 = all pass, 1 = failures found.
  */
 
-import { mkdirSync, rmSync, existsSync, readFileSync } from 'node:fs';
+import { mkdirSync, rmSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 import { execSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
@@ -410,8 +410,9 @@ test('security-scan --install-hook adds entry idempotently', () => {
   const dir = freshDir('sc-install-hook');
   dw('init --preset solo', dir);
 
+  // After init solo: TW5 uninstalls hook even if template had it. So state = clean.
   const out1 = dw('security-scan --install-hook', dir);
-  assert(out1.includes('Hook wired') || out1.includes('added'), 'First install should add');
+  assert(out1.includes('Hook wired') || out1.includes('added'), `First install should add. Got: ${out1.slice(0, 200)}`);
 
   const out2 = dw('security-scan --install-hook', dir);
   assert(out2.includes('already wired') || out2.includes('no-op'), 'Second install should be no-op');
@@ -422,6 +423,96 @@ test('security-scan --install-hook adds entry idempotently', () => {
     0,
   );
   assert(count === 1, `Expected exactly 1 entry, got ${count}`);
+});
+
+test('sc-scanner: parsePackageJson reads all dep sections', async () => {
+  const { parsePackageJson } = await import('../src/lib/sc-scanner.mjs');
+  const dir = freshDir('sc-pkgjson');
+  const pkg = {
+    name: 'test',
+    version: '1.0.0',
+    dependencies: { 'lodash': '^4.17.0', '@tanstack/react-router': '^1.169.0' },
+    devDependencies: { 'jest': '^29.0.0' },
+    peerDependencies: { 'react': '>=18' },
+    optionalDependencies: { 'fsevents': '^2.0.0' },
+  };
+  writeFileSync(join(dir, 'package.json'), JSON.stringify(pkg, null, 2));
+  const result = parsePackageJson(join(dir, 'package.json'));
+  assert(result.size === 5, `Expected 5 packages, got ${result.size}`);
+  assert(result.has('@tanstack/react-router'), 'Missing tanstack');
+  assert(result.has('react'), 'Missing peerDep react');
+});
+
+test('sc-scanner: matchNamespaceFixture detects tanstack pattern', async () => {
+  const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  const fixture = {
+    namespaces: [
+      { pattern: '@tanstack/', severity: 'critical', reason: 'test', active_until: '2099-12-31' },
+    ],
+  };
+  const packages = new Map([
+    ['@tanstack/react-router', '^1.169.0'],
+    ['lodash', '^4.17.0'],
+  ]);
+  const hits = matchNamespaceFixture(packages, fixture);
+  assert(hits.length === 1, `Expected 1 hit, got ${hits.length}`);
+  assert(hits[0].package === '@tanstack/react-router', 'Wrong match');
+  assert(hits[0].severity === 'critical', 'Wrong severity');
+});
+
+test('sc-scanner: namespace fixture skips expired entries', async () => {
+  const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  const fixture = {
+    namespaces: [
+      { pattern: '@expired/', active_until: '2020-01-01', reason: 'old' },
+    ],
+  };
+  const packages = new Map([['@expired/lib', '^1.0.0']]);
+  const hits = matchNamespaceFixture(packages, fixture);
+  assert(hits.length === 0, 'Should skip expired entry');
+});
+
+test('security-scan --pre-install --offline detects tanstack via fixture', () => {
+  const dir = freshDir('sc-pre-install-offline');
+  const pkg = {
+    name: 'vulnerable-app',
+    version: '1.0.0',
+    dependencies: { '@tanstack/react-router': '^1.169.0' },
+  };
+  writeFileSync(join(dir, 'package.json'), JSON.stringify(pkg));
+  try {
+    dw('security-scan --pre-install --offline', dir);
+    assert(false, 'Should have exited non-zero');
+  } catch (e) {
+    assert(e.status === 2, `Expected exit 2 (critical namespace match), got ${e.status}`);
+    const combined = (e.stdout || '') + (e.stderr || '');
+    assert(combined.includes('@tanstack/'), 'Should mention tanstack in output');
+  }
+});
+
+test('security-scan --pre-install --offline --json emits structured output', () => {
+  const dir = freshDir('sc-pre-install-json');
+  const pkg = {
+    name: 'clean-app',
+    version: '1.0.0',
+    dependencies: { 'lodash': '^4.17.0' },
+  };
+  writeFileSync(join(dir, 'package.json'), JSON.stringify(pkg));
+  const out = dw('security-scan --pre-install --offline --json', dir);
+  const parsed = JSON.parse(out.trim());
+  assert(parsed.mode === 'pre-install', 'Wrong mode');
+  assert(parsed.packages === 1, `Expected 1 package, got ${parsed.packages}`);
+  assert(parsed.namespace_hits.length === 0, 'Should have no namespace hits for clean app');
+});
+
+test('security-scan --pre-install fails gracefully without package.json', () => {
+  const dir = freshDir('sc-pre-install-empty');
+  try {
+    dw('security-scan --pre-install --offline', dir);
+    assert(false, 'Should have failed');
+  } catch (e) {
+    assert(e.status === 1, `Expected exit 1, got ${e.status}`);
+  }
 });
 
 test('security-scan --uninstall-hook removes entry', () => {
