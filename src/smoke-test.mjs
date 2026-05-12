@@ -222,6 +222,61 @@ test('init warns on reinitialize', () => {
   assert(out.includes('already initialized'), 'Missing reinitialize warning');
 });
 
+test('init creates .dw/.gitignore with framework dirs excluded', () => {
+  const dir = freshDir('init-gitignore-dw');
+  dw('init --preset team', dir);
+  const content = readFileSync(join(dir, '.dw', '.gitignore'), 'utf-8');
+  for (const expected of ['adapters/', 'core/', 'security/', 'config/*', '!config/dw.config.yml', 'metrics/']) {
+    assert(content.includes(expected), `Missing entry: ${expected}`);
+  }
+  assert(content.includes('dw-kit managed'), 'Missing managed marker');
+});
+
+test('init creates .claude/.gitignore with framework dirs excluded', () => {
+  const dir = freshDir('init-gitignore-claude');
+  dw('init --preset team', dir);
+  const content = readFileSync(join(dir, '.claude', '.gitignore'), 'utf-8');
+  for (const expected of ['agents/', 'hooks/', 'rules/', 'skills/', 'templates/', 'settings.local.json']) {
+    assert(content.includes(expected), `Missing entry: ${expected}`);
+  }
+});
+
+test('gitignore: user customization preserved outside managed block', async () => {
+  const { ensureDwGitignore } = await import('../src/lib/gitignore.mjs');
+  const dir = freshDir('gitignore-preserve');
+  mkdirSync(join(dir, '.dw'), { recursive: true });
+  writeFileSync(join(dir, '.dw', '.gitignore'), '# user custom\nmy-secret.txt\n', 'utf-8');
+  ensureDwGitignore(dir);
+  const content = readFileSync(join(dir, '.dw', '.gitignore'), 'utf-8');
+  assert(content.includes('my-secret.txt'), 'User custom entry should be preserved');
+  assert(content.includes('adapters/'), 'Managed block should be added');
+});
+
+test('gitignore: idempotent (re-running does not duplicate block)', async () => {
+  const { ensureDwGitignore } = await import('../src/lib/gitignore.mjs');
+  const dir = freshDir('gitignore-idempotent');
+  mkdirSync(join(dir, '.dw'), { recursive: true });
+  ensureDwGitignore(dir);
+  const first = readFileSync(join(dir, '.dw', '.gitignore'), 'utf-8');
+  ensureDwGitignore(dir);
+  const second = readFileSync(join(dir, '.dw', '.gitignore'), 'utf-8');
+  assert(first === second, 'Second run should not change content');
+  const markerCount = (second.match(/dw-kit managed/g) || []).length;
+  assert(markerCount === 2, `Expected 2 marker lines (start+end), got ${markerCount}`);
+});
+
+test('upgrade refreshes scoped gitignores', () => {
+  const dir = freshDir('upgrade-gitignore');
+  dw('init --preset team', dir);
+  // delete .dw/.gitignore to verify upgrade re-creates it
+  const dwIgnore = join(dir, '.dw', '.gitignore');
+  rmSync(dwIgnore);
+  dw('upgrade', dir);
+  assert(existsSync(dwIgnore), '.dw/.gitignore should be re-created by upgrade');
+  const content = readFileSync(dwIgnore, 'utf-8');
+  assert(content.includes('adapters/'), 'Managed entries should be present');
+});
+
 // ── Test: dw validate ────────────────────────────────────────────────────────
 console.log();
 console.log('▶ dw validate');

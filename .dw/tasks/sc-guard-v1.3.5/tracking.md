@@ -30,6 +30,7 @@ blockers: none
 | ST-9 | ADR sunset commitment text (TW6) | ✅ Done | 2026-05-12 | In ADR-0005, cross-ref blog draft |
 | ST-10 | Tests + smoke + docs | ✅ Done | 2026-05-13 | 42/42 smoke pass (25 existing + 17 sc_guard incl pre-install fixture/OSV) |
 | ST-13 | Pre-install scan (post-implementation enhancement) | ✅ Done | 2026-05-13 | `--pre-install` mode: namespace fixture (offline, 4 entries for current incident) + OSV.dev name-only query (network, covers 169+ affected packages). New `.dw/security/ioc-namespaces.json` fixture. Covers no-lockfile scenario per user feedback. |
+| ST-14 | Scoped .gitignore for end-user (`.dw/.gitignore` + `.claude/.gitignore`) | ✅ Done | 2026-05-13 | `src/lib/gitignore.mjs` writes managed blocks (idempotent, preserves user customization). Wired into init.mjs setupProject + upgrade.mjs upgradeScopedGitignores. End users: framework files excluded from commit; tasks/decisions/docs/reports/dw.config.yml/settings.json stay committed. |
 | ST-11 | Release v1.3.5 | ⬜ Pending | — | Day 5+ — bump package.json, npm publish |
 | ST-12 | Public announcement | ⬜ Pending | — | Day 6+ — blog publish + team broadcast |
 
@@ -123,6 +124,21 @@ Session ended with uncommitted changes.
  .claude/settings.json                 | 10 +++++++++-
  .dw/tasks/sc-guard-v1.3.5/tracking.md |  8 ++++++++
  2 files changed, 17 insertions(+), 1 deletion(-)
+```
+
+Next session: commit or continue work. Re-read spec.md + this tracking.md first.
+
+
+<!-- dw-auto-handoff -->
+### Auto-handoff — 2026-05-12 08:49 UTC
+
+Session ended with uncommitted changes.
+
+**Files changed:**
+```
+ .claude/settings.json                 | 14 +++++++++++++-
+ .dw/tasks/sc-guard-v1.3.5/tracking.md |  8 ++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
 ```
 
 Next session: commit or continue work. Re-read spec.md + this tracking.md first.
