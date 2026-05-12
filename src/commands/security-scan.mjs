@@ -1,3 +1,6 @@
+import { existsSync, readFileSync } from 'node:fs';
+import { join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { banner, log, info, warn, ok, err } from '../lib/ui.mjs';
 import chalk from 'chalk';
 import {
@@ -6,13 +9,29 @@ import {
   syncSnapshotForProject,
   isStale,
   isSchemaCompatible,
+  fetchOsvByName,
 } from '../lib/sc-sync.mjs';
-import { scanProject, severityRank, worstSeverity } from '../lib/sc-scanner.mjs';
+import {
+  scanProject,
+  severityRank,
+  worstSeverity,
+  parsePackageJson,
+  findPackageJson,
+  matchPackageByName,
+  matchNamespaceFixture,
+} from '../lib/sc-scanner.mjs';
 import { logEvent } from '../lib/telemetry.mjs';
+
+const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+const NAMESPACE_FIXTURE_REL = '.dw/security/ioc-namespaces.json';
 
 export async function securityScanCommand(opts) {
   const rootDir = process.cwd();
   const mode = pickMode(opts);
+
+  if (mode === 'pre-install') {
+    return runPreInstallMode(rootDir, opts);
+  }
 
   if (opts.json) {
     return runJsonMode(rootDir, mode, opts);
@@ -133,8 +152,193 @@ export async function securityScanCommand(opts) {
 }
 
 function pickMode(opts) {
+  if (opts.preInstall) return 'pre-install';
   if (opts.updateDb) return 'update-db';
   return 'scan';
+}
+
+function loadNamespaceFixture(rootDir) {
+  // Prefer project-local fixture, fall back to toolkit-bundled
+  const candidates = [
+    join(rootDir, NAMESPACE_FIXTURE_REL),
+    join(TOOLKIT_ROOT, NAMESPACE_FIXTURE_REL),
+  ];
+  for (const p of candidates) {
+    if (existsSync(p)) {
+      try {
+        return { fixture: JSON.parse(readFileSync(p, 'utf-8')), path: p };
+      } catch {
+        // skip malformed
+      }
+    }
+  }
+  return { fixture: null, path: null };
+}
+
+async function runPreInstallMode(rootDir, opts) {
+  const useJson = !!opts.json;
+  const out = { mode: 'pre-install', ok: true, network_ok: false, packages: 0, osv_hits: [], namespace_hits: [] };
+
+  const pkgPath = findPackageJson(rootDir);
+  if (!pkgPath) {
+    if (useJson) {
+      out.ok = false;
+      out.error = { code: 'NO_PACKAGE_JSON', message: 'No package.json in current directory' };
+      process.stdout.write(JSON.stringify(out) + '\n');
+      process.exit(1);
+    }
+    err('No package.json in current directory.');
+    process.exit(1);
+  }
+
+  let packages;
+  try {
+    packages = parsePackageJson(pkgPath);
+  } catch (e) {
+    if (useJson) {
+      out.ok = false;
+      out.error = { code: 'PARSE_FAILED', message: e.message };
+      process.stdout.write(JSON.stringify(out) + '\n');
+      process.exit(1);
+    }
+    err(`Failed to parse package.json: ${e.message}`);
+    process.exit(1);
+  }
+
+  out.packages = packages.size;
+
+  if (!useJson) {
+    banner('dw-kit Pre-Install Scan');
+    log(chalk.bold('package.json'));
+    log(`  Path     : ${pkgPath}`);
+    log(`  Declared : ${packages.size} packages (across deps/devDeps/peerDeps/optionalDeps)`);
+    log('');
+  }
+
+  // 1. Namespace fixture (offline, fast)
+  const fixtureBundle = loadNamespaceFixture(rootDir);
+  if (fixtureBundle.fixture) {
+    const hits = matchNamespaceFixture(packages, fixtureBundle.fixture);
+    out.namespace_hits = hits;
+    out.fixture_path = fixtureBundle.path;
+    if (!useJson) {
+      log(chalk.bold('Namespace IoC fixture'));
+      log(`  Source   : ${fixtureBundle.path}`);
+      log(`  Entries  : ${(fixtureBundle.fixture.namespaces || []).length} active namespace pattern(s)`);
+      if (hits.length === 0) {
+        ok('  No matches against active namespace patterns');
+      } else {
+        log('');
+        for (const h of hits) {
+          log(`  ${severityTag(h.severity)} ${h.package} matches pattern "${h.namespace_pattern}"`);
+          if (h.reason) log(chalk.dim(`      ${h.reason}`));
+          if (h.guidance) log(chalk.yellow(`      guidance: ${h.guidance}`));
+          if (h.advisory_url) log(chalk.dim(`      advisory: ${h.advisory_url}`));
+        }
+      }
+      log('');
+    }
+  }
+
+  // 2. OSV.dev name-only queries (network, optional)
+  if (!opts.offline) {
+    if (!useJson) log(chalk.bold('OSV.dev name-only query (per declared package)'));
+    const osvErrors = [];
+    let queried = 0;
+    for (const [name] of packages) {
+      try {
+        const result = await fetchOsvByName(name, 'npm', { timeoutMs: 5000 });
+        queried++;
+        const vulns = (result && result.vulns) || [];
+        if (vulns.length > 0) {
+          const hits = matchPackageByName(name, vulns);
+          for (const h of hits) {
+            out.osv_hits.push({ package: name, declared_range: packages.get(name), ...h });
+          }
+        }
+      } catch (e) {
+        osvErrors.push({ package: name, error: e.message });
+      }
+    }
+    out.network_ok = queried > 0;
+    out.osv_queried = queried;
+    out.osv_errors = osvErrors;
+
+    if (!useJson) {
+      log(`  Queried  : ${queried}/${packages.size} packages (${osvErrors.length} errors)`);
+      if (out.osv_hits.length === 0) {
+        ok('  No active advisories for declared packages');
+      } else {
+        const grouped = groupBy(out.osv_hits, 'package');
+        log('');
+        for (const [pkg, hits] of Object.entries(grouped)) {
+          const worst = hits.reduce(
+            (acc, h) => (severityRank(h.severity) > severityRank(acc) ? h.severity : acc),
+            'unknown',
+          );
+          log(`  ${severityTag(worst)} ${pkg}@${packages.get(pkg)} — ${hits.length} active advisory(s)`);
+          for (const h of hits.slice(0, 3)) {
+            log(chalk.dim(`      ${h.advisory_id}: ${h.summary || '(no summary)'}`));
+            if (h.fix_versions && h.fix_versions.length) {
+              log(chalk.dim(`        fix: ${h.fix_versions.slice(0, 3).join(', ')}`));
+            }
+          }
+          if (hits.length > 3) log(chalk.dim(`      ... and ${hits.length - 3} more`));
+        }
+      }
+      log('');
+    }
+  } else if (!useJson) {
+    log(chalk.dim('  OSV.dev query: skipped (--offline)'));
+    log('');
+  }
+
+  // Summarize
+  const namespaceCrit = out.namespace_hits.length;
+  const osvHigh = out.osv_hits.filter((h) => severityRank(h.severity) >= severityRank('high')).length;
+  const exitCode = namespaceCrit > 0 ? 2 : (osvHigh > 0 ? 2 : (out.osv_hits.length > 0 ? 1 : 0));
+
+  logEvent(
+    {
+      event: 'sc_guard',
+      action: exitCode >= 2 ? 'block' : (exitCode === 1 ? 'allow' : 'scan_run'),
+      sub_mode: 'pre-install',
+      packages: packages.size,
+      namespace_hits: namespaceCrit,
+      osv_hits: out.osv_hits.length,
+      osv_high: osvHigh,
+      network_ok: out.network_ok,
+    },
+    rootDir,
+  );
+
+  if (useJson) {
+    out.summary = { namespace_hits: namespaceCrit, osv_hits: out.osv_hits.length, osv_high: osvHigh, exit_code: exitCode };
+    process.stdout.write(JSON.stringify(out) + '\n');
+    process.exit(exitCode);
+  }
+
+  log(chalk.bold('Summary'));
+  if (exitCode === 0) {
+    ok(`Clean — ${packages.size} packages scanned, no matches`);
+  } else if (exitCode === 1) {
+    warn(`${out.osv_hits.length} low/medium advisor(y/ies) found — review recommended`);
+  } else {
+    err(`${namespaceCrit} namespace match(es) + ${osvHigh} HIGH+ advisory(s) — rotate credentials if already installed`);
+  }
+  log('');
+  advisoryFooter();
+  process.exit(exitCode);
+}
+
+function groupBy(arr, key) {
+  const out = {};
+  for (const item of arr) {
+    const k = item[key];
+    if (!out[k]) out[k] = [];
+    out[k].push(item);
+  }
+  return out;
 }
 
 function severityTag(label) {

@@ -106,6 +106,8 @@ export function run(argv) {
     .description('Scan project lockfile against advisory snapshot (OSV.dev). Supply-chain guard (ADR-0005, opt-in).')
     .option('--quick', 'Offline mode — use existing snapshot only (default behavior)')
     .option('--update-db', 'Fetch fresh advisory snapshot from OSV.dev before scanning')
+    .option('--pre-install', 'Scan package.json without lockfile (OSV name-only + namespace fixture)')
+    .option('--offline', 'Skip network in --pre-install mode (fixture-only)')
     .option('--json', 'Output machine-readable JSON')
     .option('--install-hook', 'Wire supply-chain-scan.sh into .claude/settings.json PostToolUse (idempotent)')
     .option('--uninstall-hook', 'Remove supply-chain-scan.sh entry from .claude/settings.json')

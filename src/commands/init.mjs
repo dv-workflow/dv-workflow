@@ -157,13 +157,20 @@ async function setupProject(projectDir, { projectName, depth, roles, language, a
 
 async function maybeInstallSupplyChainHook(projectDir, presetKey) {
   const preset = presetKey ? PRESETS[presetKey] : null;
+  const { installHookInProject, uninstallHookFromProject } = await import('../lib/sc-install.mjs');
+
   if (preset && preset.hooksProfile === 'safety-only') {
-    log('  Supply-chain guard: skipped (solo preset — opt-in OFF per ADR-0005 TW5)');
+    // Solo preset — explicitly uninstall hook even if template provided it (TW5: opt-in OFF)
+    const result = uninstallHookFromProject(projectDir);
+    if (result.ok && result.action === 'removed') {
+      log('  Supply-chain guard: hook removed from settings (solo preset — opt-in OFF per ADR-0005 TW5)');
+    } else {
+      log('  Supply-chain guard: skipped (solo preset — opt-in OFF per ADR-0005 TW5)');
+    }
     log('  Enable later: `dw security-scan --install-hook`');
     return;
   }
 
-  const { installHookInProject } = await import('../lib/sc-install.mjs');
   const result = installHookInProject(projectDir);
   if (!result.ok) {
     warn(`Supply-chain hook wiring skipped: ${result.error}`);
