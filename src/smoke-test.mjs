@@ -308,6 +308,133 @@ test('claude-vn-fix patches known bug fixture', () => {
   assert(patched.includes('dw-kit Vietnamese IME fix'), 'Patch marker missing in output file');
 });
 
+// ── Test: dw security-scan (ADR-0005) ────────────────────────────────────────
+console.log();
+console.log('▶ dw security-scan');
+
+test('security-scan --help shows options', () => {
+  const out = dw('security-scan --help', TEMP_BASE);
+  assert(out.includes('--quick'), 'Missing --quick');
+  assert(out.includes('--update-db'), 'Missing --update-db');
+  assert(out.includes('--json'), 'Missing --json');
+});
+
+test('security-scan without snapshot exits non-zero', () => {
+  const dir = freshDir('sc-scan-no-snapshot');
+  try {
+    dw('security-scan', dir);
+    assert(false, 'Should have exited');
+  } catch (e) {
+    assert(e.status === 1 || e.status === 2, `Expected exit 1 or 2, got ${e.status}`);
+  }
+});
+
+test('security-scan JSON output is parseable', () => {
+  const dir = freshDir('sc-scan-json');
+  try {
+    dw('security-scan --json', dir);
+  } catch (e) {
+    const parsed = JSON.parse((e.stdout || '').trim());
+    assert(parsed.ok === false, 'Should have ok:false without snapshot');
+    assert(parsed.error?.code === 'NO_SNAPSHOT', 'Expected NO_SNAPSHOT error code');
+  }
+});
+
+test('sc-scanner: parses package-lock.json correctly', async () => {
+  const { parsePackageLockfile } = await import('../src/lib/sc-scanner.mjs');
+  const lockPath = resolve(__dirname, '..', 'package-lock.json');
+  if (!existsSync(lockPath)) {
+    // skip — dw-kit may not have lockfile in some CI states
+    return;
+  }
+  const pkgs = parsePackageLockfile(lockPath);
+  assert(pkgs.size > 0, 'Expected at least 1 package parsed');
+  assert(pkgs.has('ajv') || pkgs.has('chalk'), 'Expected to find at least one known dep');
+});
+
+test('sc-scanner: matchAdvisory detects in-range version', async () => {
+  const { matchAdvisory } = await import('../src/lib/sc-scanner.mjs');
+  const advisory = {
+    id: 'TEST-0001',
+    summary: 'test advisory',
+    severity: [{ type: 'CVSS_V3', score: '7.5' }],
+    affected: [
+      {
+        package: { name: 'fast-uri', ecosystem: 'npm' },
+        ranges: [{ type: 'SEMVER', events: [{ introduced: '0.0.0' }, { fixed: '3.1.1' }] }],
+      },
+    ],
+  };
+  const hit = matchAdvisory('fast-uri', '3.1.0', advisory);
+  assert(hit !== null, 'Should match in-range version');
+  assert(hit.severity === 'high', `Expected high severity, got ${hit.severity}`);
+  const miss = matchAdvisory('fast-uri', '3.1.1', advisory);
+  assert(miss === null, 'Should NOT match fixed version');
+});
+
+test('sc-scanner: compareVersions handles dotted semver', async () => {
+  const { compareVersions } = await import('../src/lib/sc-scanner.mjs');
+  assert(compareVersions('1.2.3', '1.2.4') < 0, '1.2.3 < 1.2.4');
+  assert(compareVersions('1.2.3', '1.2.3') === 0, '1.2.3 === 1.2.3');
+  assert(compareVersions('2.0.0', '1.99.99') > 0, '2.0.0 > 1.99.99');
+});
+
+test('sc-sync: snapshotInfo on missing snapshot returns exists:false', async () => {
+  const { snapshotInfo } = await import('../src/lib/sc-sync.mjs');
+  const dir = freshDir('sc-sync-empty');
+  const info = snapshotInfo(dir);
+  assert(info.exists === false, 'Should report exists:false');
+});
+
+test('init --preset team auto-wires supply-chain hook', () => {
+  const dir = freshDir('init-team-sc-hook');
+  dw('init --preset team', dir);
+  const settings = JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf-8'));
+  const wired = (settings.hooks?.PostToolUse || []).some((g) =>
+    (g.hooks || []).some((h) => h.command && h.command.includes('supply-chain-scan.sh')),
+  );
+  assert(wired, 'Hook should be auto-wired for team preset');
+});
+
+test('init --preset solo skips supply-chain hook (opt-in OFF per TW5)', () => {
+  const dir = freshDir('init-solo-sc-hook');
+  dw('init --preset solo', dir);
+  const settings = JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf-8'));
+  const wired = (settings.hooks?.PostToolUse || []).some((g) =>
+    (g.hooks || []).some((h) => h.command && h.command.includes('supply-chain-scan.sh')),
+  );
+  assert(!wired, 'Solo preset should NOT auto-wire hook');
+});
+
+test('security-scan --install-hook adds entry idempotently', () => {
+  const dir = freshDir('sc-install-hook');
+  dw('init --preset solo', dir);
+
+  const out1 = dw('security-scan --install-hook', dir);
+  assert(out1.includes('Hook wired') || out1.includes('added'), 'First install should add');
+
+  const out2 = dw('security-scan --install-hook', dir);
+  assert(out2.includes('already wired') || out2.includes('no-op'), 'Second install should be no-op');
+
+  const settings = JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf-8'));
+  const count = (settings.hooks?.PostToolUse || []).reduce(
+    (sum, g) => sum + (g.hooks || []).filter((h) => h.command && h.command.includes('supply-chain-scan.sh')).length,
+    0,
+  );
+  assert(count === 1, `Expected exactly 1 entry, got ${count}`);
+});
+
+test('security-scan --uninstall-hook removes entry', () => {
+  const dir = join(TEMP_BASE, 'sc-install-hook');
+  const out = dw('security-scan --uninstall-hook', dir);
+  assert(out.includes('Removed') || out.includes('not wired'), 'Should remove or report not wired');
+  const settings = JSON.parse(readFileSync(join(dir, '.claude', 'settings.json'), 'utf-8'));
+  const wired = (settings.hooks?.PostToolUse || []).some((g) =>
+    (g.hooks || []).some((h) => h.command && h.command.includes('supply-chain-scan.sh')),
+  );
+  assert(!wired, 'Hook should be removed');
+});
+
 // ── Test: dw upgrade ─────────────────────────────────────────────────────────
 console.log();
 console.log('▶ dw upgrade');
