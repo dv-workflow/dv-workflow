@@ -62,11 +62,17 @@ export function summarize(events) {
   const bySkill = {};
   const byHook = {};
   const byTask = {};
+  const bySupplyChain = { scan_run: 0, block: 0, allow: 0, sync: 0 };
 
   for (const e of events) {
     if (e.event === 'skill') bySkill[e.name] = (bySkill[e.name] || 0) + 1;
     else if (e.event === 'hook') byHook[e.name] = (byHook[e.name] || 0) + 1;
     else if (e.event === 'task') byTask[e.action || 'unknown'] = (byTask[e.action || 'unknown'] || 0) + 1;
+    else if (e.event === 'sc_guard') {
+      const action = e.action || e.name || 'scan_run';
+      if (bySupplyChain[action] === undefined) bySupplyChain[action] = 0;
+      bySupplyChain[action]++;
+    }
   }
 
   return {
@@ -74,6 +80,7 @@ export function summarize(events) {
     bySkill,
     byHook,
     byTask,
+    bySupplyChain,
     dateRange:
       events.length > 0 ? { from: events[0].ts, to: events[events.length - 1].ts } : null,
   };

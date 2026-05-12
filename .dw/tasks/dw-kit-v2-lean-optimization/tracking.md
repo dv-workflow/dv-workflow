@@ -506,3 +506,110 @@ v2.0 polish còn lại:
 - ST-2.6 Living docs detection: DEFERRED v2.1 (scope risk)
 
 Next session: techlead review git diff + split commits -> publish.
+
+---
+
+## Session 2026-05-12 — Bayesian investigation + Multi-Agent Decision Pattern
+
+**Trigger**: TechLead investigate "Bayesian inference có giá trị cho dw-kit không?" — Wikipedia link + multi-agent experiment để so sánh dw-thinking vs plain Claude.
+
+**Quy trình chạy (8 sub-agents tổng)**:
+1. 2 research agent song song: Agent A (dw-thinking framework) → DEFER; Agent B (plain) → adopt narrow 2 UC.
+2. Judge agent (Opus 4.7) đọc 2 verdict → PILOT UC2 + 4/4 contention ruled. Self-played debate (platform constraint: sub-agent không nest sub-agent).
+3. 5 voter song song (Solo/Enterprise/OSS/Data/Risk): 1 AGREE / 4 MODIFY / 0 reject. 4 tweak tương thích, hội tụ "thiếu guardrails".
+4. Tích hợp tweaks → verdict v1.1 → [ADR-0004](.dw/decisions/0004-bayesian-pilot-uc2.md) Proposed.
+
+**Decision (ADR-0004 Proposed)**: PILOT UC2 narrow — `dw metrics cut-analysis --bayesian` opt-in, post-v1.4 ship (2026-07-01 → 07-08), 12h hard cap, 4 guardrails (governance / statistical / risk / audit). Phase 2 retention decision 2026-07-15; silent removal path nếu redundant.
+
+**Artifacts created**:
+- [.dw/research/bayesian-dw-thinking.md](.dw/research/bayesian-dw-thinking.md) — Agent A
+- [.dw/research/bayesian-plain.md](.dw/research/bayesian-plain.md) — Agent B
+- [.dw/research/bayesian-verdict.md](.dw/research/bayesian-verdict.md) — Judge v1.0
+- [.dw/research/bayesian-verdict-v1.1.md](.dw/research/bayesian-verdict-v1.1.md) — Voting-integrated v1.1
+- [.dw/decisions/0004-bayesian-pilot-uc2.md](.dw/decisions/0004-bayesian-pilot-uc2.md) — ADR Proposed
+- [.dw/research/multi-agent-decision-pattern.md](.dw/research/multi-agent-decision-pattern.md) — Pattern doc + skillify deferral
+
+**Pattern reflection (separate output)**: Captured multi-agent A/B → judge → voting recipe. **NOT skillified** — 3 structural bugs cần fix trước: (1) sub-agent không nest → main-thread orchestrate, (2) voter framing bias → blind vote 2-stage, (3) no kill-switch voter → Devil's Advocate mandatory. ST1-ST6 revisit triggers documented. Treatment same as ADR-0003 (concept Draft + defer implementation).
+
+**Friction journal additions**:
+
+| Date | Friction | Component | Proposed |
+|------|----------|-----------|----------|
+| 2026-05-12 | Sub-agent (general-purpose) không spawn được nested Agent — broke arbiter debate | Agent/Task tool nesting | Main-thread orchestrate debate; document constraint trong skill design |
+| 2026-05-12 | Voters thấy verdict trước khi vote → priming bias | Voting setup | 2-stage: blind verdict → compare vote |
+| 2026-05-12 | Pattern manufactures decisions — không voter nào argue "đừng làm gì" | Multi-agent workflow | Devil's Advocate role mandatory |
+
+**Doesn't block v1.4 timeline**: ADR-0004 Proposed, Phase 1 prototype scheduled 2026-07-01 (sau v1.4 ship target 2026-06-30). v2.0 ship target 2026-08-15 unchanged.
+
+**Next session TODO**:
+- [ ] Verify telemetry collection: `dw metrics show` — đủ ≥4 tuần data chưa? Currently ~235 events at investigation time.
+- [ ] Decide ST-2.1/ST-2.2 (hook + skill cuts) execution window if data đủ
+- [ ] Plan ST-3.2 (skills as pure context injectors) + ST-3.4 (OSS launch comms)
+- [ ] Settings.json M state (3 tuần stale) — clean noise permissions tách riêng
+
+**Smoke test**: Not re-run (no code changes — research artifacts only).
+
+---
+
+## Session 2026-05-12 evening — Supply-chain incident response + ADR-0005
+
+**Trigger**: TanStack worm hit npm 2026-05-11 19:20 UTC. TechLead received news. Scan máy local + dw-kit → clean. But strategic question emerged: build proactive guard, ship as moat?
+
+**Decision arc** (3 rounds Multi-Agent Decision Pattern + Goal/Value Champion):
+
+| Round | Outcome | Pattern bug discovered |
+|---|---|---|
+| 1 | 7/8 AUP-blocked. DA → Defer/MODIFY narrow 3-4h. | Bug 4 — AUP topic-sensitivity (briefs paste threat detail) |
+| 2 | 5/6 AUP-blocked. DA refined → Shift MODIFY mid-scope 6-8h with 3 concessions | Bug 4 v1 fix insufficient (Read files = output blocks too) |
+| 3 | 5/5 PASS via sanitized self-contained brief. B=5, D=1 (Solo). | Bug 4 v2 fix verified |
+| 4 (GVC) | 1/1 PASS. A high-conf + TW6 public sunset commitment. | Bug 5 — Effort-anchoring bias / Goal-Champion missing |
+
+**Final tally (8 voters):** A=1 (GVC) / B=5 / C=0 / D=1.
+
+**Decision (TL override of B-consensus → Path A):**
+- Adopt full scope ship dw-kit v1.3.5 in 7-10 days (~5h TL time via AI-augmented capacity)
+- 6 integrated tweaks: pre-announce blog (TW1), audit trail (TW2), doctor health (TW3), FP rate metric (TW4), solo opt-in OFF (TW5), public 90-day sunset commitment (TW6)
+- [ADR-0005](.dw/decisions/0005-supply-chain-guard.md) Status: Accepted
+- Implementation task: [.dw/tasks/sc-guard-v1.3.5/](.dw/tasks/sc-guard-v1.3.5/)
+- Pre-announce blog draft: [.dw/research/sc-guard-launch-blog-draft.md](.dw/research/sc-guard-launch-blog-draft.md)
+- Sunset review committed: 2026-08-12
+
+**Artifacts created (7 new files):**
+1. [.dw/research/supply-chain-incident-2026-05-12.md](.dw/research/supply-chain-incident-2026-05-12.md) — incident report + team broadcast template
+2. [.dw/research/supply-chain-guard-proposal.md](.dw/research/supply-chain-guard-proposal.md) — proposal v1 → v2 Final Synthesis (Section 10 canonical)
+3. [.dw/research/sc-guard-strategic-dispute.md](.dw/research/sc-guard-strategic-dispute.md) — Bug 4 v2 sanitized voter brief artifact
+4. [.dw/research/sc-guard-voter-panel-r3.md](.dw/research/sc-guard-voter-panel-r3.md) — raw 8-voter outputs
+5. [.dw/research/sc-guard-launch-blog-draft.md](.dw/research/sc-guard-launch-blog-draft.md) — pre-announce blog draft (TW1)
+6. [.dw/decisions/0005-supply-chain-guard.md](.dw/decisions/0005-supply-chain-guard.md) — ADR Accepted
+7. [.dw/tasks/sc-guard-v1.3.5/](.dw/tasks/sc-guard-v1.3.5/) — spec.md + tracking.md scaffolded
+
+**Artifacts modified:**
+- [.dw/research/multi-agent-decision-pattern.md](.dw/research/multi-agent-decision-pattern.md) — added Bug 4 v2, Bug 5, Case Study #2 (sc-guard), updated revisit triggers ST4+ST5
+- Memory: feedback-multi-agent-decision-pattern.md synced to 5 bugs
+
+**Pattern evolution this session:**
+- **5 structural bugs documented** vs 3 yesterday morning
+- Bug 4 + Bug 4 v2 fix verified — sanitized self-contained brief unlocks full panel for security topics
+- Bug 5 fix verified — GVC mandatory pair with DA prevents conservatism cascade
+- TL override path explicitly documented (Bug 5 framing) — first case of pattern producing override-with-justification
+
+**Friction journal additions:**
+
+| Date | Friction | Component | Proposed |
+|------|----------|-----------|----------|
+| 2026-05-12 | 7/8 sub-agents AUP-blocked on first run cho security topic | Multi-agent pattern brief design | Bug 4 v2 fix — sanitized self-contained artifact (verified work) |
+| 2026-05-12 | Panel had 6/6 effort-downside lens, 0 goal/value lens → systematic defer bias | Voter role design | Bug 5 fix — Goal/Value Champion mandatory paired with DA (verified work) |
+| 2026-05-12 | Voters applied 2024-effort calculus to 2026-AI-augmented capacity | Voter brief design | Brief MUST include effort reframe context (3-5x multiplier) |
+
+**Doesn't block existing roadmap:**
+- v1.4 cuts (ST-2.1, ST-2.2) — still on track per existing telemetry data
+- v2.0 ship 2026-08-15 — unchanged
+- ADR-0005 implementation runs parallel (5h TL time, won't displace other work)
+- Coincidentally: sunset review 2026-08-12 = 3 days before v2.0 ship target → integrate into v2.0 retro
+
+**Next session TODO:**
+- [ ] Day 1 (2026-05-13): start ST-1 (hook) + ST-8 (blog) + ST-9 (ADR cross-ref) in parallel
+- [ ] Commit batch artifacts (incident report + proposal + ADR-0005 + tasks + pattern bug updates) lên dev branch — 4-6 commits split theo type
+- [ ] Pre-flight: confirm OSV.dev API format + GHSA `gh api` schema before adapter impl
+
+**Smoke test:** Not re-run (no code changes — research + decision docs only).

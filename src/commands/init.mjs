@@ -5,6 +5,7 @@ import { banner, ok, warn, info, log, ask, choose } from '../lib/ui.mjs';
 import { buildConfig, writeConfig } from '../lib/config.mjs';
 import { copyDir, copyFile, ensureDir } from '../lib/copy.mjs';
 import { detectPlatform, platformLabel } from '../lib/platform.mjs';
+import { ensureDwGitignore, ensureClaudeGitignore } from '../lib/gitignore.mjs';
 
 const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 
@@ -82,7 +83,7 @@ export async function initCommand(opts) {
   ok(`Platform: ${platformLabel(adapter)}`);
 
   info('Setting up project...');
-  await setupProject(projectDir, { projectName, depth, roles, language, adapter });
+  await setupProject(projectDir, { projectName, depth, roles, language, adapter, presetKey: opts.preset });
 
   printSummary({ projectName, depth, roles, language, adapter });
 }
@@ -135,7 +136,7 @@ function normalizeRolesForDepth(parsedRoles, depth) {
   return merged;
 }
 
-async function setupProject(projectDir, { projectName, depth, roles, language, adapter }) {
+async function setupProject(projectDir, { projectName, depth, roles, language, adapter, presetKey }) {
   copyCoreDocs(projectDir);
   copyConfig(projectDir, { projectName, depth, roles, language });
   copyAdapterStructure(projectDir);
@@ -143,6 +144,7 @@ async function setupProject(projectDir, { projectName, depth, roles, language, a
   if (adapter === 'claude-cli') {
     copyClaudeFiles(projectDir);
     createMinimalCLAUDEmd(projectDir, projectName);
+    await maybeInstallSupplyChainHook(projectDir, presetKey);
   } else if (adapter === 'cursor') {
     copyCursorFiles(projectDir);
     copyGenericAdapter(projectDir);
@@ -152,6 +154,47 @@ async function setupProject(projectDir, { projectName, depth, roles, language, a
 
   createRuntimeDirs(projectDir);
   updateGitignore(projectDir);
+  writeScopedGitignores(projectDir, adapter);
+}
+
+function writeScopedGitignores(projectDir, adapter) {
+  try {
+    const dwR = ensureDwGitignore(projectDir);
+    if (dwR.action !== 'noop') ok(`.dw/.gitignore ${dwR.action}`);
+    if (adapter === 'claude-cli') {
+      const cR = ensureClaudeGitignore(projectDir);
+      if (cR.action !== 'noop') ok(`.claude/.gitignore ${cR.action}`);
+    }
+  } catch (e) {
+    warn(`Scoped gitignore: ${e.message}`);
+  }
+}
+
+async function maybeInstallSupplyChainHook(projectDir, presetKey) {
+  const preset = presetKey ? PRESETS[presetKey] : null;
+  const { installHookInProject, uninstallHookFromProject } = await import('../lib/sc-install.mjs');
+
+  if (preset && preset.hooksProfile === 'safety-only') {
+    // Solo preset — explicitly uninstall hook even if template provided it (TW5: opt-in OFF)
+    const result = uninstallHookFromProject(projectDir);
+    if (result.ok && result.action === 'removed') {
+      log('  Supply-chain guard: hook removed from settings (solo preset — opt-in OFF per ADR-0005 TW5)');
+    } else {
+      log('  Supply-chain guard: skipped (solo preset — opt-in OFF per ADR-0005 TW5)');
+    }
+    log('  Enable later: `dw security-scan --install-hook`');
+    return;
+  }
+
+  const result = installHookInProject(projectDir);
+  if (!result.ok) {
+    warn(`Supply-chain hook wiring skipped: ${result.error}`);
+    return;
+  }
+  if (result.action === 'added') {
+    ok('Supply-chain guard hook wired (ADR-0005 — opt-in flag enabled)');
+    log('  First scan: `dw security-scan --update-db`');
+  }
 }
 
 function copyCoreDocs(projectDir) {

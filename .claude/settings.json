@@ -29,7 +29,15 @@
       "Bash(bash -n /dev/stdin)",
       "Bash(dos2unix .claude/hooks/pre-commit-gate.sh)",
       "Bash(sed -i 's/\\\\r$//' .claude/hooks/pre-commit-gate.sh)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Edit(/.claude/skills/dw-task-init/**)",
+      "Edit(/.claude/skills/dw-retroactive/**)",
+      "Edit(/.claude/skills/dw-research/**)",
+      "Edit(/.claude/skills/dw-plan/**)",
+      "Edit(/.claude/skills/dw-execute/**)",
+      "Edit(/.claude/skills/dw-handoff/**)",
+      "Bash(git commit -m 'fix\\(v1.3.3\\): writer skills v1/v2 compat + cleanup legacy slash-command refs *)",
+      "Bash(git commit -m 'feat\\(v1.3.4\\): /dw:plan integrated Quick Debate \\(red/blue team\\) - depth-driven *)"
     ],
     "additionalDirectories": [
       "D:\\huygdv_projects\\dw-kit\\.claude\\rules"
@@ -91,6 +99,10 @@
           {
             "type": "command",
             "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/post-write.sh\""
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR/.claude/hooks/supply-chain-scan.sh\""
           }
         ]
       }
