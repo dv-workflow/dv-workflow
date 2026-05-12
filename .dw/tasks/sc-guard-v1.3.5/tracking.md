@@ -143,3 +143,62 @@ Session ended with uncommitted changes.
 
 Next session: commit or continue work. Re-read spec.md + this tracking.md first.
 
+
+<!-- dw-auto-handoff -->
+### Auto-handoff — 2026-05-12 08:56 UTC
+
+Session ended with uncommitted changes.
+
+**Files changed:**
+```
+ .claude/settings.json                 | 14 +++++++++++++-
+ .dw/tasks/sc-guard-v1.3.5/tracking.md |  8 ++++++++
+ 2 files changed, 21 insertions(+), 1 deletion(-)
+```
+
+Next session: commit or continue work. Re-read spec.md + this tracking.md first.
+
+
+<!-- dw-auto-handoff -->
+### Auto-handoff — 2026-05-12 08:58 UTC
+
+Session ended with uncommitted changes.
+
+**Files changed:**
+```
+ .claude/settings.json                 | 14 +++++++++++++-
+ .dw/tasks/sc-guard-v1.3.5/tracking.md | 23 +++++++++++++++++++++++
+ 2 files changed, 36 insertions(+), 1 deletion(-)
+```
+
+Next session: commit or continue work. Re-read spec.md + this tracking.md first.
+
+
+<!-- dw-auto-handoff -->
+### Auto-handoff — 2026-05-12 09:00 UTC
+
+Session ended with uncommitted changes.
+
+**Files changed:**
+```
+ .claude/settings.json                 | 14 ++++++++++++-
+ .dw/tasks/sc-guard-v1.3.5/tracking.md | 38 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 51 insertions(+), 1 deletion(-)
+```
+
+Next session: commit or continue work. Re-read spec.md + this tracking.md first.
+
+
+<!-- dw-auto-handoff -->
+### Auto-handoff — 2026-05-12 09:06 UTC
+
+Session ended with uncommitted changes.
+
+**Files changed:**
+```
+ .dw/tasks/sc-guard-v1.3.5/tracking.md | 53 +++++++++++++++++++++++++++++++++++
+ 1 file changed, 53 insertions(+)
+```
+
+Next session: commit or continue work. Re-read spec.md + this tracking.md first.
+
