@@ -102,6 +102,31 @@ export function run(argv) {
     });
 
   program
+    .command('security-scan')
+    .description('Scan project lockfile against advisory snapshot (OSV.dev). Supply-chain guard (ADR-0005, opt-in).')
+    .option('--quick', 'Offline mode — use existing snapshot only (default behavior)')
+    .option('--update-db', 'Fetch fresh advisory snapshot from OSV.dev before scanning')
+    .option('--json', 'Output machine-readable JSON')
+    .option('--install-hook', 'Wire supply-chain-scan.sh into .claude/settings.json PostToolUse (idempotent)')
+    .option('--uninstall-hook', 'Remove supply-chain-scan.sh entry from .claude/settings.json')
+    .action(async (opts) => {
+      if (opts.installHook || opts.uninstallHook) {
+        const { installHookInProject, uninstallHookFromProject } = await import('./lib/sc-install.mjs');
+        const r = opts.uninstallHook ? uninstallHookFromProject() : installHookInProject();
+        if (!r.ok) {
+          console.error(chalk.red(`✗ ${r.error}`));
+          process.exit(1);
+        }
+        if (r.action === 'added') console.log(chalk.green(`✓ Hook wired into ${r.path}`));
+        else if (r.action === 'removed') console.log(chalk.green(`✓ Removed ${r.count} entry from ${r.path}`));
+        else console.log(chalk.dim(`  (no-op: ${r.reason})`));
+        return;
+      }
+      const { securityScanCommand } = await import('./commands/security-scan.mjs');
+      await securityScanCommand(opts);
+    });
+
+  program
     .command('claude-vn-fix')
     .description('Patch Claude CLI to fix Vietnamese IME (local, with backup/restore)')
     .option('--path <file>', 'Path to @anthropic-ai/claude-code/cli.js (optional; auto-detect if omitted)')
