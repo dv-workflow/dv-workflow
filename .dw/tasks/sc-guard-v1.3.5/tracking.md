@@ -1,9 +1,9 @@
 ---
 task_id: sc-guard-v1.3.5
 started: 2026-05-12
-last_updated: 2026-05-12
-status: Approved, ready to execute
-current_phase: Day 0 — Scaffolding complete
+last_updated: 2026-05-13
+status: In Progress (Day 1-3 core complete; pending ST-7, ST-11, ST-12)
+current_phase: Day 4 — Core ship-ready; awaiting Day 5+ release prep
 blockers: none
 ---
 
@@ -19,18 +19,18 @@ blockers: none
 
 | # | Subtask | Status | Date | Notes |
 |---|---------|--------|------|-------|
-| ST-1 | Hook on Edit-lockfile | ⬜ Pending | — | `.claude/hooks/supply-chain-scan.sh` |
-| ST-2 | OSV/GHSA auto-sync adapter | ⬜ Pending | — | `src/lib/sc-sync.mjs` |
-| ST-3 | Core scanner | ⬜ Pending | — | `src/lib/sc-scanner.mjs` |
-| ST-4 | CLI `dw security-scan` | ⬜ Pending | — | `src/commands/security-scan.mjs` |
-| ST-5 | `dw doctor` security section (TW3) | ⬜ Pending | — | Fail loud if stale >7d |
-| ST-6 | Telemetry events (TW2) | ⬜ Pending | — | sc_guard.* schema |
-| ST-7 | Solo preset opt-in OFF (TW5) | ⬜ Pending | — | PRESETS update |
-| ST-8 | Pre-announce blog draft (TW1) | ⬜ Pending | — | `.dw/research/sc-guard-launch-blog-draft.md` |
-| ST-9 | ADR sunset commitment text (TW6) | ⬜ Pending | — | Already in ADR-0005, cross-ref blog |
-| ST-10 | Tests + smoke + docs | ⬜ Pending | — | 25+ smoke pass |
-| ST-11 | Release v1.3.5 | ⬜ Pending | — | npm publish |
-| ST-12 | Public announcement | ⬜ Pending | — | Blog + X + team |
+| ST-1 | Hook on Edit-lockfile | ✅ Done | 2026-05-13 | `.claude/hooks/supply-chain-scan.sh` shipped; settings.json wiring documented for manual paste (harness-level block) |
+| ST-2 | OSV auto-sync adapter | ✅ Done | 2026-05-13 | `src/lib/sc-sync.mjs` (OSV.dev only, GHSA deferred to v1.4.x) |
+| ST-3 | Core scanner | ✅ Done | 2026-05-13 | `src/lib/sc-scanner.mjs` — npm lockfile v1/v2/v3 + OSV range matching |
+| ST-4 | CLI `dw security-scan` | ✅ Done | 2026-05-13 | `src/commands/security-scan.mjs` + cli.mjs wired |
+| ST-5 | `dw doctor` security section (TW3) | ✅ Done | 2026-05-13 | Fail loud if stale >7d or schema mismatch |
+| ST-6 | Telemetry events (TW2) | ✅ Done | 2026-05-13 | sc_guard.* schema extended in telemetry.mjs `summarize()` |
+| ST-7 | Solo preset opt-in OFF (TW5) | ✅ Done | 2026-05-13 | init.mjs `maybeInstallSupplyChainHook` respects `hooksProfile: safety-only` (solo); upgrade.mjs heuristic-skips solo-style configs |
+| ST-8 | Pre-announce blog draft (TW1) | ✅ Done | 2026-05-12 | `.dw/research/sc-guard-launch-blog-draft.md` |
+| ST-9 | ADR sunset commitment text (TW6) | ✅ Done | 2026-05-12 | In ADR-0005, cross-ref blog draft |
+| ST-10 | Tests + smoke + docs | ✅ Done | 2026-05-13 | 32/32 smoke pass (25 existing + 7 new sc_guard) |
+| ST-11 | Release v1.3.5 | ⬜ Pending | — | Day 5+ — bump package.json, npm publish |
+| ST-12 | Public announcement | ⬜ Pending | — | Day 6+ — blog publish + team broadcast |
 
 Status legend: ⬜ Pending · 🟡 In Progress · ✅ Done · 🔴 Blocked · ⏸ Paused
 
