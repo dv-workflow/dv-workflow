@@ -506,3 +506,45 @@ v2.0 polish còn lại:
 - ST-2.6 Living docs detection: DEFERRED v2.1 (scope risk)
 
 Next session: techlead review git diff + split commits -> publish.
+
+---
+
+## Session 2026-05-12 — Bayesian investigation + Multi-Agent Decision Pattern
+
+**Trigger**: TechLead investigate "Bayesian inference có giá trị cho dw-kit không?" — Wikipedia link + multi-agent experiment để so sánh dw-thinking vs plain Claude.
+
+**Quy trình chạy (8 sub-agents tổng)**:
+1. 2 research agent song song: Agent A (dw-thinking framework) → DEFER; Agent B (plain) → adopt narrow 2 UC.
+2. Judge agent (Opus 4.7) đọc 2 verdict → PILOT UC2 + 4/4 contention ruled. Self-played debate (platform constraint: sub-agent không nest sub-agent).
+3. 5 voter song song (Solo/Enterprise/OSS/Data/Risk): 1 AGREE / 4 MODIFY / 0 reject. 4 tweak tương thích, hội tụ "thiếu guardrails".
+4. Tích hợp tweaks → verdict v1.1 → [ADR-0004](.dw/decisions/0004-bayesian-pilot-uc2.md) Proposed.
+
+**Decision (ADR-0004 Proposed)**: PILOT UC2 narrow — `dw metrics cut-analysis --bayesian` opt-in, post-v1.4 ship (2026-07-01 → 07-08), 12h hard cap, 4 guardrails (governance / statistical / risk / audit). Phase 2 retention decision 2026-07-15; silent removal path nếu redundant.
+
+**Artifacts created**:
+- [.dw/research/bayesian-dw-thinking.md](.dw/research/bayesian-dw-thinking.md) — Agent A
+- [.dw/research/bayesian-plain.md](.dw/research/bayesian-plain.md) — Agent B
+- [.dw/research/bayesian-verdict.md](.dw/research/bayesian-verdict.md) — Judge v1.0
+- [.dw/research/bayesian-verdict-v1.1.md](.dw/research/bayesian-verdict-v1.1.md) — Voting-integrated v1.1
+- [.dw/decisions/0004-bayesian-pilot-uc2.md](.dw/decisions/0004-bayesian-pilot-uc2.md) — ADR Proposed
+- [.dw/research/multi-agent-decision-pattern.md](.dw/research/multi-agent-decision-pattern.md) — Pattern doc + skillify deferral
+
+**Pattern reflection (separate output)**: Captured multi-agent A/B → judge → voting recipe. **NOT skillified** — 3 structural bugs cần fix trước: (1) sub-agent không nest → main-thread orchestrate, (2) voter framing bias → blind vote 2-stage, (3) no kill-switch voter → Devil's Advocate mandatory. ST1-ST6 revisit triggers documented. Treatment same as ADR-0003 (concept Draft + defer implementation).
+
+**Friction journal additions**:
+
+| Date | Friction | Component | Proposed |
+|------|----------|-----------|----------|
+| 2026-05-12 | Sub-agent (general-purpose) không spawn được nested Agent — broke arbiter debate | Agent/Task tool nesting | Main-thread orchestrate debate; document constraint trong skill design |
+| 2026-05-12 | Voters thấy verdict trước khi vote → priming bias | Voting setup | 2-stage: blind verdict → compare vote |
+| 2026-05-12 | Pattern manufactures decisions — không voter nào argue "đừng làm gì" | Multi-agent workflow | Devil's Advocate role mandatory |
+
+**Doesn't block v1.4 timeline**: ADR-0004 Proposed, Phase 1 prototype scheduled 2026-07-01 (sau v1.4 ship target 2026-06-30). v2.0 ship target 2026-08-15 unchanged.
+
+**Next session TODO**:
+- [ ] Verify telemetry collection: `dw metrics show` — đủ ≥4 tuần data chưa? Currently ~235 events at investigation time.
+- [ ] Decide ST-2.1/ST-2.2 (hook + skill cuts) execution window if data đủ
+- [ ] Plan ST-3.2 (skills as pure context injectors) + ST-3.4 (OSS launch comms)
+- [ ] Settings.json M state (3 tuần stale) — clean noise permissions tách riêng
+
+**Smoke test**: Not re-run (no code changes — research artifacts only).
