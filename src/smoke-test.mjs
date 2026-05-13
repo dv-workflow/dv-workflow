@@ -441,6 +441,163 @@ test('sc-sync: snapshotInfo on missing snapshot returns exists:false', async () 
   assert(info.exists === false, 'Should report exists:false');
 });
 
+// ── #7 Bug 1 regression: chunked OSV batch ─────────────────────────────────
+//
+// fetch is stubbed via globalThis.fetch to count calls and assert chunking
+// without hitting the network. Restore in finally.
+
+function makeLockfile(dir, packageCount) {
+  const packages = { '': { name: 'synthetic-large', version: '1.0.0' } };
+  for (let i = 0; i < packageCount; i++) {
+    packages[`node_modules/synthetic-pkg-${i}`] = { version: '1.0.0', resolved: '', integrity: '' };
+  }
+  writeFileSync(join(dir, 'package-lock.json'), JSON.stringify({
+    name: 'synthetic-large',
+    version: '1.0.0',
+    lockfileVersion: 3,
+    requires: true,
+    packages,
+  }));
+}
+
+test('sc-sync: 2500-package lockfile chunks into 3 OSV calls (Closes #7 Bug 1)', async () => {
+  const { syncSnapshotForProject } = await import('../src/lib/sc-sync.mjs');
+  const dir = freshDir('sc-sync-chunked');
+  makeLockfile(dir, 2500);
+
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, body: init?.body ? JSON.parse(init.body) : null });
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ results: [] }),
+    };
+  };
+  try {
+    const res = await syncSnapshotForProject(dir);
+    const batchCalls = calls.filter((c) => c.url === 'https://api.osv.dev/v1/querybatch');
+    assert(batchCalls.length === 3, `Expected 3 batch calls (1000+1000+500), got ${batchCalls.length}`);
+    assert(batchCalls[0].body.queries.length === 1000, `Chunk 1 size: ${batchCalls[0].body.queries.length}`);
+    assert(batchCalls[1].body.queries.length === 1000, `Chunk 2 size: ${batchCalls[1].body.queries.length}`);
+    assert(batchCalls[2].body.queries.length === 500, `Chunk 3 size: ${batchCalls[2].body.queries.length}`);
+    assert(res.partial === false, 'All chunks ok → partial should be false');
+    assert(res.chunks.total === 3, `chunks.total: ${res.chunks.total}`);
+    assert(res.chunks.succeeded === 3, `chunks.succeeded: ${res.chunks.succeeded}`);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('sc-sync: <1000-pkg lockfile sends exactly 1 batch (regression guard)', async () => {
+  const { syncSnapshotForProject } = await import('../src/lib/sc-sync.mjs');
+  const dir = freshDir('sc-sync-single');
+  makeLockfile(dir, 50);
+
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, body: init?.body ? JSON.parse(init.body) : null });
+    return { ok: true, status: 200, json: async () => ({ results: [] }) };
+  };
+  try {
+    await syncSnapshotForProject(dir);
+    const batchCalls = calls.filter((c) => c.url === 'https://api.osv.dev/v1/querybatch');
+    assert(batchCalls.length === 1, `Expected 1 batch call, got ${batchCalls.length}`);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('sc-sync: partial flag set when 1 of 3 chunks fails permanently', async () => {
+  const { syncSnapshotForProject, loadSnapshot } = await import('../src/lib/sc-sync.mjs');
+  const dir = freshDir('sc-sync-partial');
+  makeLockfile(dir, 2500);
+
+  let callCount = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    callCount++;
+    // Fail chunk 2 (calls 2 onwards return 400 — non-retryable)
+    // Chunks 1 and 3 succeed. After concurrency=2, call order is
+    // [chunk0, chunk1] then [chunk2]. Fail anything for chunk index 1.
+    if (callCount === 2) {
+      return { ok: false, status: 400, json: async () => ({}) };
+    }
+    return { ok: true, status: 200, json: async () => ({ results: [] }) };
+  };
+  try {
+    const res = await syncSnapshotForProject(dir);
+    assert(res.partial === true, `Expected partial=true, got ${res.partial}`);
+    assert(res.chunks.failed === 1, `chunks.failed: ${res.chunks.failed}`);
+    assert(res.chunks.succeeded === 2, `chunks.succeeded: ${res.chunks.succeeded}`);
+    const snap = loadSnapshot(dir);
+    assert(snap.partial === true, 'Persisted snapshot should carry partial=true');
+    assert(Array.isArray(snap.chunks.failed_indices), 'chunks.failed_indices should be array');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('sc-sync: hard fail (SYNC_ALL_CHUNKS_FAILED) when every chunk errors', async () => {
+  const { syncSnapshotForProject } = await import('../src/lib/sc-sync.mjs');
+  const dir = freshDir('sc-sync-all-fail');
+  makeLockfile(dir, 1200);
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: false, status: 400, json: async () => ({}) });
+  try {
+    let thrown = null;
+    try {
+      await syncSnapshotForProject(dir);
+    } catch (e) {
+      thrown = e;
+    }
+    assert(thrown !== null, 'Should throw when all chunks fail');
+    assert(thrown.code === 'SYNC_ALL_CHUNKS_FAILED', `code: ${thrown.code}`);
+    assert(Array.isArray(thrown.failedChunks), 'Error should carry failedChunks');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('sc-sync: 503 triggers retry+backoff before giving up', async () => {
+  const { fetchOsvBatch } = await import('../src/lib/sc-sync.mjs');
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => ({}) });
+  try {
+    let thrown = null;
+    try {
+      await fetchOsvBatch([{ package: { name: 'a', ecosystem: 'npm' } }]);
+    } catch (e) {
+      thrown = e;
+    }
+    assert(thrown !== null, 'Should throw on 503');
+    assert(thrown.retryable === true, `503 should be retryable, got: ${thrown.retryable}`);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('telemetry: supplyChainBySource separates osv vs fixture vs mixed (sunset integrity)', async () => {
+  const { summarize } = await import('../src/lib/telemetry.mjs');
+  const events = [
+    { event: 'sc_guard', action: 'block', source: 'osv' },
+    { event: 'sc_guard', action: 'allow', source: 'osv' },
+    { event: 'sc_guard', action: 'block', source: 'pre-install-mixed', block_source: 'fixture' },
+    { event: 'sc_guard', action: 'block', source: 'pre-install-mixed', block_source: 'fixture+osv' },
+    { event: 'sc_guard', action: 'sync', source: 'osv', partial: true },
+    { event: 'sc_guard', action: 'scan_run', source: 'osv', partial_snapshot: true },
+  ];
+  const sum = summarize(events);
+  assert(sum.supplyChainBySource.osv === 2, `osv: ${sum.supplyChainBySource.osv}`);
+  assert(sum.supplyChainBySource.fixture === 1, `fixture: ${sum.supplyChainBySource.fixture}`);
+  assert(sum.supplyChainBySource.mixed === 1, `mixed: ${sum.supplyChainBySource.mixed}`);
+  assert(sum.supplyChainPartial.partial_syncs === 1, `partial_syncs: ${sum.supplyChainPartial.partial_syncs}`);
+  assert(sum.supplyChainPartial.partial_scans === 1, `partial_scans: ${sum.supplyChainPartial.partial_scans}`);
+});
+
 test('init --preset team auto-wires supply-chain hook', () => {
   const dir = freshDir('init-team-sc-hook');
   dw('init --preset team', dir);
