@@ -4,6 +4,31 @@
 
 ---
 
+## [v1.3.6] — 2026-05-13
+
+### Fixed — Supply-Chain Guard hardening (Closes [#7](https://github.com/dv-workflow/dv-workflow/issues/7))
+
+**Bug 1 (blocking) — `dw security-scan --update-db` HTTP 400 on >1000 packages**
+
+- OSV.dev `/v1/querybatch` rejects requests with >1000 queries. Projects with 1000+ packages crashed every time with a generic `OSV batch HTTP 400`.
+- Now chunked at `OSV_BATCH_LIMIT=1000` with `Promise.allSettled` + `OSV_BATCH_CONCURRENCY=2` (polite default) + retry-with-jittered-backoff on 429/502/503/504.
+- Per-chunk fail-soft: one chunk failure no longer discards sibling successes. Snapshot persists with `partial: true` + per-chunk index, scan output warns the user, `dw doctor` reports degraded state. Hard fail (`SYNC_ALL_CHUNKS_FAILED`) only when every chunk fails.
+
+**Sunset-review integrity (preparation for v1.4 fixture wiring)**
+
+- All `sc_guard` telemetry events now carry an explicit `source` field (`'osv'` or `'pre-install-mixed'`); pre-install events also carry `block_source` (`'fixture'` / `'osv'` / `'fixture+osv'` / `'none'`).
+- `summarize()` exposes `supplyChainBySource` and `supplyChainPartial` breakdowns so the 2026-08-12 sunset review can distinguish OSV-driven catches from fixture-driven catches and exclude partial-snapshot scans from the 0-catches denominator — per [ADR-0005 §Sunset](.dw/decisions/0005-supply-chain-guard.md).
+
+### Test suite
+
+- +6 smoke cases (47 → 53/53 pass): chunked 2500-pkg call accounting, <1000-pkg regression, partial-failure persistence, all-chunk-fail hard error, retry-on-503, telemetry source breakdown.
+
+### Deferred to v1.4 (gated on ADR-0005 amendment)
+
+The remaining suggestions from [#7](https://github.com/dv-workflow/dv-workflow/issues/7) (wire bundled namespace fixture into default `scan` mode, remote fixture refresh) need (a) a version-aware matcher to avoid blowing past the ≤5% FP sunset criterion, and (b) signed fetch with pinned commit-SHA to avoid recreating the supply-chain trust gap inside a supply-chain guard. Tracked in `.dw/tasks/sc-guard-v1.4-fixture-wiring/`.
+
+---
+
 ## [v1.3.5] — 2026-05-12
 
 ### Added — AI-Native Supply-Chain Guard ([ADR-0005](.dw/decisions/0005-supply-chain-guard.md))
