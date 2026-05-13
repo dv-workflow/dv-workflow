@@ -2,8 +2,8 @@
 task_id: sc-guard-v1.3.5
 started: 2026-05-12
 last_updated: 2026-05-13
-status: In Progress (Day 1-3 core complete; pending ST-7, ST-11, ST-12)
-current_phase: Day 4 — Core ship-ready; awaiting Day 5+ release prep
+status: Done — released 2026-05-12 (npm v1.3.5 published); ST-12 manual broadcast pending; ready to archive after ST-12 ships
+current_phase: Closed — sunset review scheduled 2026-08-12
 blockers: none
 ---
 
@@ -11,9 +11,9 @@ blockers: none
 
 ## Status Snapshot
 
-**Phase:** Day 0 scaffold complete; Day 1 starts 2026-05-13
-**Next milestone:** ADR-0005 finalize + blog draft (2026-05-13)
-**Ship target:** v1.3.5 npm publish by 2026-05-19, public announce by 2026-05-20
+**Phase:** Released. Core STs complete; ST-12 (public broadcast) pending manual maintainer action.
+**Released:** v1.3.5 on 2026-05-12 (CHANGELOG + README + CLAUDE.md backfilled 2026-05-13)
+**Next milestone:** Sunset review 2026-08-12 (TW6 — retire if 0 catches OR FP rate >5%)
 
 ## Subtask Progress
 
@@ -31,8 +31,8 @@ blockers: none
 | ST-10 | Tests + smoke + docs | ✅ Done | 2026-05-13 | 42/42 smoke pass (25 existing + 17 sc_guard incl pre-install fixture/OSV) |
 | ST-13 | Pre-install scan (post-implementation enhancement) | ✅ Done | 2026-05-13 | `--pre-install` mode: namespace fixture (offline, 4 entries for current incident) + OSV.dev name-only query (network, covers 169+ affected packages). New `.dw/security/ioc-namespaces.json` fixture. Covers no-lockfile scenario per user feedback. |
 | ST-14 | Scoped .gitignore for end-user (`.dw/.gitignore` + `.claude/.gitignore`) | ✅ Done | 2026-05-13 | `src/lib/gitignore.mjs` writes managed blocks (idempotent, preserves user customization). Wired into init.mjs setupProject + upgrade.mjs upgradeScopedGitignores. End users: framework files excluded from commit; tasks/decisions/docs/reports/dw.config.yml/settings.json stay committed. |
-| ST-11 | Release v1.3.5 | ⬜ Pending | — | Day 5+ — bump package.json, npm publish |
-| ST-12 | Public announcement | ⬜ Pending | — | Day 6+ — blog publish + team broadcast |
+| ST-11 | Release v1.3.5 | ✅ Done | 2026-05-12 | npm published; commit `7984380` release: v1.3.5 |
+| ST-12 | Public announcement | ⬜ Pending | — | Blog draft ready (`.dw/research/sc-guard-launch-blog-draft.md`); team broadcast template ready (incident report §5) — manual maintainer ship |
 
 Status legend: ⬜ Pending · 🟡 In Progress · ✅ Done · 🔴 Blocked · ⏸ Paused
 
@@ -114,91 +114,11 @@ Status legend: ⬜ Pending · 🟡 In Progress · ✅ Done · 🔴 Blocked · �
 - TW5 (Solo): Opt-in OFF default for solo preset
 - TW6 (GVC): Public sunset commitment in ADR + blog + release notes
 
-<!-- dw-auto-handoff -->
-### Auto-handoff — 2026-05-12 08:35 UTC
+### 2026-05-13 — Release closeout
 
-Session ended with uncommitted changes.
-
-**Files changed:**
-```
- .claude/settings.json                 | 10 +++++++++-
- .dw/tasks/sc-guard-v1.3.5/tracking.md |  8 ++++++++
- 2 files changed, 17 insertions(+), 1 deletion(-)
-```
-
-Next session: commit or continue work. Re-read spec.md + this tracking.md first.
-
-
-<!-- dw-auto-handoff -->
-### Auto-handoff — 2026-05-12 08:49 UTC
-
-Session ended with uncommitted changes.
-
-**Files changed:**
-```
- .claude/settings.json                 | 14 +++++++++++++-
- .dw/tasks/sc-guard-v1.3.5/tracking.md |  8 ++++++++
- 2 files changed, 21 insertions(+), 1 deletion(-)
-```
-
-Next session: commit or continue work. Re-read spec.md + this tracking.md first.
-
-
-<!-- dw-auto-handoff -->
-### Auto-handoff — 2026-05-12 08:56 UTC
-
-Session ended with uncommitted changes.
-
-**Files changed:**
-```
- .claude/settings.json                 | 14 +++++++++++++-
- .dw/tasks/sc-guard-v1.3.5/tracking.md |  8 ++++++++
- 2 files changed, 21 insertions(+), 1 deletion(-)
-```
-
-Next session: commit or continue work. Re-read spec.md + this tracking.md first.
-
-
-<!-- dw-auto-handoff -->
-### Auto-handoff — 2026-05-12 08:58 UTC
-
-Session ended with uncommitted changes.
-
-**Files changed:**
-```
- .claude/settings.json                 | 14 +++++++++++++-
- .dw/tasks/sc-guard-v1.3.5/tracking.md | 23 +++++++++++++++++++++++
- 2 files changed, 36 insertions(+), 1 deletion(-)
-```
-
-Next session: commit or continue work. Re-read spec.md + this tracking.md first.
-
-
-<!-- dw-auto-handoff -->
-### Auto-handoff — 2026-05-12 09:00 UTC
-
-Session ended with uncommitted changes.
-
-**Files changed:**
-```
- .claude/settings.json                 | 14 ++++++++++++-
- .dw/tasks/sc-guard-v1.3.5/tracking.md | 38 +++++++++++++++++++++++++++++++++++
- 2 files changed, 51 insertions(+), 1 deletion(-)
-```
-
-Next session: commit or continue work. Re-read spec.md + this tracking.md first.
-
-
-<!-- dw-auto-handoff -->
-### Auto-handoff — 2026-05-12 09:06 UTC
-
-Session ended with uncommitted changes.
-
-**Files changed:**
-```
- .dw/tasks/sc-guard-v1.3.5/tracking.md | 53 +++++++++++++++++++++++++++++++++++
- 1 file changed, 53 insertions(+)
-```
-
-Next session: commit or continue work. Re-read spec.md + this tracking.md first.
+- v1.3.5 released to npm (commit `7984380`)
+- Living docs backfilled — CHANGELOG/README/CLAUDE.md (commit `8234a1d`)
+- ST-11 ✅ Done. ST-12 (broadcast) pending manual maintainer action.
+- 7 auto-handoff dump blocks trimmed — work was committed; blocks no longer reflect state.
+- GH issue #7 filed by maintainer dogfooding on food-fe: Bug 1 (OSV >1000 batch limit, blocking) + Gap 2 (OSV indexing lag for active SC attacks). Route via `/dw-kit-evolve 7` for v1.3.6 patch.
 
