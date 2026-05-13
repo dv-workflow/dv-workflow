@@ -45,11 +45,26 @@ export async function securityScanCommand(opts) {
       const start = Date.now();
       const res = await syncSnapshotForProject(rootDir);
       const elapsed = Date.now() - start;
-      ok(`Snapshot updated — ${res.advisoryCount} advisories for ${res.packageCount} packages (${elapsed}ms)`);
-      logEvent({ event: 'sc_guard', action: 'sync', advisories: res.advisoryCount, packages: res.packageCount, latency_ms: elapsed }, rootDir);
+      const partialNote = res.partial ? ` (PARTIAL — ${res.chunks.failed}/${res.chunks.total} chunks failed)` : '';
+      ok(`Snapshot updated — ${res.advisoryCount} advisories for ${res.packageCount} packages (${elapsed}ms)${partialNote}`);
+      if (res.partial) {
+        warn(`Snapshot incomplete: chunks ${res.chunks.failed_indices.join(',')} failed after retries. Advisories may be missing; retry --update-db when network is healthy.`);
+      }
+      logEvent({
+        event: 'sc_guard',
+        action: 'sync',
+        source: 'osv',
+        advisories: res.advisoryCount,
+        packages: res.packageCount,
+        latency_ms: elapsed,
+        partial: !!res.partial,
+        chunks_total: res.chunks?.total ?? 1,
+        chunks_failed: res.chunks?.failed ?? 0,
+      }, rootDir);
     } catch (e) {
       err(`Sync failed: ${e.message}`);
       if (e.code === 'NO_LOCKFILE') warn('Run `npm install` first to create package-lock.json.');
+      if (e.code === 'SYNC_ALL_CHUNKS_FAILED') warn('All OSV batches failed — likely a network or rate-limit issue. Re-run later.');
       process.exit(2);
     }
     if (mode === 'update-db') {
@@ -82,6 +97,9 @@ export async function securityScanCommand(opts) {
   if (info_.stale) {
     warn(`  Snapshot is stale (>7 days). Run \`dw security-scan --update-db\` to refresh.`);
   }
+  if (info_.partial) {
+    warn(`  Snapshot is PARTIAL (${info_.chunks?.failed}/${info_.chunks?.total} chunks failed last sync). Results may be incomplete — re-run --update-db.`);
+  }
 
   log('');
   log(chalk.bold('Scanning project lockfile...'));
@@ -106,7 +124,16 @@ export async function securityScanCommand(opts) {
 
   if (result.matches.length === 0) {
     ok('No advisory matches — clean.');
-    logEvent({ event: 'sc_guard', action: 'scan_run', matches: 0, packages: result.packages_scanned, outcome: 'clean', latency_ms: elapsed }, rootDir);
+    logEvent({
+      event: 'sc_guard',
+      action: 'scan_run',
+      source: 'osv',
+      matches: 0,
+      packages: result.packages_scanned,
+      outcome: 'clean',
+      latency_ms: elapsed,
+      partial_snapshot: info_.partial === true,
+    }, rootDir);
     log('');
     advisoryFooter();
     return;
@@ -131,12 +158,14 @@ export async function securityScanCommand(opts) {
     {
       event: 'sc_guard',
       action: blockCount > 0 ? 'block' : 'allow',
+      source: 'osv',
       matches: result.matches.length,
       block_count: blockCount,
       worst_severity: worst,
       packages: result.packages_scanned,
       latency_ms: elapsed,
       snapshot_age_days: ageDays,
+      partial_snapshot: info_.partial === true,
     },
     rootDir,
   );
@@ -298,10 +327,18 @@ async function runPreInstallMode(rootDir, opts) {
   const osvHigh = out.osv_hits.filter((h) => severityRank(h.severity) >= severityRank('high')).length;
   const exitCode = namespaceCrit > 0 ? 2 : (osvHigh > 0 ? 2 : (out.osv_hits.length > 0 ? 1 : 0));
 
+  // Distinguish what triggered the block — fixture catches must NOT be
+  // counted as OSV catches for the 2026-08-12 sunset review (see ADR-0005).
+  const blockSource = exitCode >= 2
+    ? (namespaceCrit > 0 && osvHigh > 0 ? 'fixture+osv' : namespaceCrit > 0 ? 'fixture' : 'osv')
+    : (out.osv_hits.length > 0 ? 'osv' : 'none');
+
   logEvent(
     {
       event: 'sc_guard',
       action: exitCode >= 2 ? 'block' : (exitCode === 1 ? 'allow' : 'scan_run'),
+      source: 'pre-install-mixed',
+      block_source: blockSource,
       sub_mode: 'pre-install',
       packages: packages.size,
       namespace_hits: namespaceCrit,
@@ -370,8 +407,23 @@ async function runJsonMode(rootDir, mode, opts) {
     try {
       const start = Date.now();
       const res = await syncSnapshotForProject(rootDir);
-      out.sync = { advisory_count: res.advisoryCount, package_count: res.packageCount, latency_ms: Date.now() - start };
-      logEvent({ event: 'sc_guard', action: 'sync', advisories: res.advisoryCount, packages: res.packageCount }, rootDir);
+      out.sync = {
+        advisory_count: res.advisoryCount,
+        package_count: res.packageCount,
+        latency_ms: Date.now() - start,
+        partial: !!res.partial,
+        chunks: res.chunks,
+      };
+      logEvent({
+        event: 'sc_guard',
+        action: 'sync',
+        source: 'osv',
+        advisories: res.advisoryCount,
+        packages: res.packageCount,
+        partial: !!res.partial,
+        chunks_total: res.chunks?.total ?? 1,
+        chunks_failed: res.chunks?.failed ?? 0,
+      }, rootDir);
     } catch (e) {
       out.ok = false;
       out.error = { code: e.code || 'SYNC_FAILED', message: e.message };
@@ -413,11 +465,13 @@ async function runJsonMode(rootDir, mode, opts) {
     {
       event: 'sc_guard',
       action: blockCount > 0 ? 'block' : (result.matches.length > 0 ? 'allow' : 'scan_run'),
+      source: 'osv',
       matches: result.matches.length,
       block_count: blockCount,
       worst_severity: worst,
       packages: result.packages_scanned,
       snapshot_age_days: info_.age_days,
+      partial_snapshot: info_.partial === true,
     },
     rootDir,
   );
