@@ -63,6 +63,11 @@ export function summarize(events) {
   const byHook = {};
   const byTask = {};
   const bySupplyChain = { scan_run: 0, block: 0, allow: 0, sync: 0 };
+  // ADR-0005 sunset review: separate OSV catches from fixture catches.
+  // A catch from a curated namespace fixture is NOT evidence the OSV-based
+  // guard worked; conflating them would compromise the 2026-08-12 retire/keep decision.
+  const supplyChainBySource = { osv: 0, fixture: 0, mixed: 0, unknown: 0 };
+  const supplyChainPartial = { partial_syncs: 0, partial_scans: 0 };
 
   for (const e of events) {
     if (e.event === 'skill') bySkill[e.name] = (bySkill[e.name] || 0) + 1;
@@ -72,6 +77,19 @@ export function summarize(events) {
       const action = e.action || e.name || 'scan_run';
       if (bySupplyChain[action] === undefined) bySupplyChain[action] = 0;
       bySupplyChain[action]++;
+
+      // Track block/allow source for sunset-review integrity.
+      // Pre-install mode reports block_source explicitly (fixture vs osv vs mixed).
+      // Scan/JSON/update-db modes report source=osv directly.
+      if (action === 'block' || action === 'allow') {
+        const src = e.block_source || e.source || 'unknown';
+        const key = src === 'pre-install-mixed' ? 'mixed' : src.startsWith('fixture+') ? 'mixed' : src;
+        if (supplyChainBySource[key] === undefined) supplyChainBySource[key] = 0;
+        supplyChainBySource[key]++;
+      }
+
+      if (action === 'sync' && e.partial === true) supplyChainPartial.partial_syncs++;
+      if (action === 'scan_run' && e.partial_snapshot === true) supplyChainPartial.partial_scans++;
     }
   }
 
@@ -81,6 +99,8 @@ export function summarize(events) {
     byHook,
     byTask,
     bySupplyChain,
+    supplyChainBySource,
+    supplyChainPartial,
     dateRange:
       events.length > 0 ? { from: events[0].ts, to: events[events.length - 1].ts } : null,
   };

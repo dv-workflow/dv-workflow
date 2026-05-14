@@ -60,9 +60,12 @@ fi
 
 START_TS=$(date +%s%N 2>/dev/null || date +%s)
 
-# Run scan in lockfile's project dir. Capture exit code without failing parent.
+# Pillar 3 (ADR-0006): heuristic-only mode probes ONLY the NEW/bumped packages
+# from the lockfile diff against npm registry metadata. Cached 1h per package
+# so repeat edits hit cache. This is the AI-Native moat — catches zero-day-ish
+# at the edit boundary, before OSV indexes and before any TL fixture bump.
 set +e
-SCAN_OUTPUT=$(cd "$LOCKFILE_DIR" && $DW_BIN security-scan --quick 2>&1)
+SCAN_OUTPUT=$(cd "$LOCKFILE_DIR" && $DW_BIN security-scan --heuristic-only 2>&1)
 SCAN_EXIT=$?
 set -e
 
@@ -73,28 +76,27 @@ case "$SCAN_EXIT" in
   0)
     # Clean — silent unless verbose
     if [ "${DW_SC_GUARD_VERBOSE:-}" = "1" ]; then
-      echo "✓ supply-chain-scan: clean (no advisory matches in $BASENAME)" >&2
+      echo "✓ supply-chain-scan: clean (no heuristic flags on NEW/bumped packages in $BASENAME)" >&2
     fi
     ;;
   1)
-    # Low/medium matches — warn, do not block
+    # Mid-risk heuristic flags — warn, do not block
     echo "" >&2
-    echo "⚠  supply-chain-scan: advisory matches in $BASENAME (low/medium)" >&2
-    echo "$SCAN_OUTPUT" | tail -20 >&2
-    echo "   (advisory — not blocking; run \`dw security-scan\` for full report)" >&2
+    echo "⚠  supply-chain-scan: heuristic flags on NEW/bumped packages in $BASENAME" >&2
+    echo "$SCAN_OUTPUT" | tail -30 >&2
+    echo "   (advisory — not blocking; run \`dw security-scan\` for full pillar 1+2+3 report)" >&2
     ;;
   2)
-    # HIGH+ matches — loud warning, still non-blocking per ADR-0005 v1.3.5 (advisory-only)
+    # HIGH-risk heuristic flag (score ≥80) — loud warning, still non-blocking
     echo "" >&2
-    echo "⚠  supply-chain-scan: HIGH+ severity advisory match in $BASENAME" >&2
-    echo "$SCAN_OUTPUT" | tail -25 >&2
-    echo "   ADVISORY ONLY — threshold matrix in v14-evaluation-protocol.md is authoritative." >&2
-    echo "   Run \`dw security-scan\` for full report. Public sunset review 2026-08-12 (ADR-0005)." >&2
+    echo "⚠  supply-chain-scan: HIGH-RISK heuristic flag on NEW/bumped package in $BASENAME" >&2
+    echo "$SCAN_OUTPUT" | tail -40 >&2
+    echo "   ADVISORY ONLY — review before commit. Public sunset review 2026-08-12 (ADR-0005)." >&2
     ;;
   *)
-    # Setup error (no snapshot, schema mismatch, etc.) — quiet hint
+    # Setup error (no lockfile, network failure) — quiet hint
     if [ "${DW_SC_GUARD_VERBOSE:-}" = "1" ]; then
-      echo "supply-chain-scan: setup needed — run \`dw security-scan --update-db\`" >&2
+      echo "supply-chain-scan: heuristic check skipped or errored — run \`dw security-scan\` manually" >&2
     fi
     ;;
 esac

@@ -20,15 +20,24 @@ const TEMP_BASE = join(resolve(__dirname, '..'), '.smoke-test-tmp');
 let passed = 0;
 let failed = 0;
 
+const PENDING = [];
+
 function test(name, fn) {
-  try {
-    fn();
-    console.log(`  ✓  ${name}`);
-    passed++;
-  } catch (e) {
-    console.log(`  ✗  ${name}`);
-    console.log(`     ${e.message}`);
-    failed++;
+  PENDING.push({ name, fn });
+}
+
+async function runPending() {
+  for (const { name, fn } of PENDING) {
+    try {
+      const ret = fn();
+      if (ret && typeof ret.then === 'function') await ret;
+      console.log(`  ✓  ${name}`);
+      passed++;
+    } catch (e) {
+      console.log(`  ✗  ${name}`);
+      console.log(`     ${e.message}`);
+      failed++;
+    }
   }
 }
 
@@ -441,6 +450,163 @@ test('sc-sync: snapshotInfo on missing snapshot returns exists:false', async () 
   assert(info.exists === false, 'Should report exists:false');
 });
 
+// ── #7 Bug 1 regression: chunked OSV batch ─────────────────────────────────
+//
+// fetch is stubbed via globalThis.fetch to count calls and assert chunking
+// without hitting the network. Restore in finally.
+
+function makeLockfile(dir, packageCount) {
+  const packages = { '': { name: 'synthetic-large', version: '1.0.0' } };
+  for (let i = 0; i < packageCount; i++) {
+    packages[`node_modules/synthetic-pkg-${i}`] = { version: '1.0.0', resolved: '', integrity: '' };
+  }
+  writeFileSync(join(dir, 'package-lock.json'), JSON.stringify({
+    name: 'synthetic-large',
+    version: '1.0.0',
+    lockfileVersion: 3,
+    requires: true,
+    packages,
+  }));
+}
+
+test('sc-sync: 2500-package lockfile chunks into 3 OSV calls (Closes #7 Bug 1)', async () => {
+  const { syncSnapshotForProject } = await import('../src/lib/sc-sync.mjs');
+  const dir = freshDir('sc-sync-chunked');
+  makeLockfile(dir, 2500);
+
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, body: init?.body ? JSON.parse(init.body) : null });
+    return {
+      ok: true,
+      status: 200,
+      json: async () => ({ results: [] }),
+    };
+  };
+  try {
+    const res = await syncSnapshotForProject(dir);
+    const batchCalls = calls.filter((c) => c.url === 'https://api.osv.dev/v1/querybatch');
+    assert(batchCalls.length === 3, `Expected 3 batch calls (1000+1000+500), got ${batchCalls.length}`);
+    assert(batchCalls[0].body.queries.length === 1000, `Chunk 1 size: ${batchCalls[0].body.queries.length}`);
+    assert(batchCalls[1].body.queries.length === 1000, `Chunk 2 size: ${batchCalls[1].body.queries.length}`);
+    assert(batchCalls[2].body.queries.length === 500, `Chunk 3 size: ${batchCalls[2].body.queries.length}`);
+    assert(res.partial === false, 'All chunks ok → partial should be false');
+    assert(res.chunks.total === 3, `chunks.total: ${res.chunks.total}`);
+    assert(res.chunks.succeeded === 3, `chunks.succeeded: ${res.chunks.succeeded}`);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('sc-sync: <1000-pkg lockfile sends exactly 1 batch (regression guard)', async () => {
+  const { syncSnapshotForProject } = await import('../src/lib/sc-sync.mjs');
+  const dir = freshDir('sc-sync-single');
+  makeLockfile(dir, 50);
+
+  const calls = [];
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url, init) => {
+    calls.push({ url, body: init?.body ? JSON.parse(init.body) : null });
+    return { ok: true, status: 200, json: async () => ({ results: [] }) };
+  };
+  try {
+    await syncSnapshotForProject(dir);
+    const batchCalls = calls.filter((c) => c.url === 'https://api.osv.dev/v1/querybatch');
+    assert(batchCalls.length === 1, `Expected 1 batch call, got ${batchCalls.length}`);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('sc-sync: partial flag set when 1 of 3 chunks fails permanently', async () => {
+  const { syncSnapshotForProject, loadSnapshot } = await import('../src/lib/sc-sync.mjs');
+  const dir = freshDir('sc-sync-partial');
+  makeLockfile(dir, 2500);
+
+  let callCount = 0;
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    callCount++;
+    // Fail chunk 2 (calls 2 onwards return 400 — non-retryable)
+    // Chunks 1 and 3 succeed. After concurrency=2, call order is
+    // [chunk0, chunk1] then [chunk2]. Fail anything for chunk index 1.
+    if (callCount === 2) {
+      return { ok: false, status: 400, json: async () => ({}) };
+    }
+    return { ok: true, status: 200, json: async () => ({ results: [] }) };
+  };
+  try {
+    const res = await syncSnapshotForProject(dir);
+    assert(res.partial === true, `Expected partial=true, got ${res.partial}`);
+    assert(res.chunks.failed === 1, `chunks.failed: ${res.chunks.failed}`);
+    assert(res.chunks.succeeded === 2, `chunks.succeeded: ${res.chunks.succeeded}`);
+    const snap = loadSnapshot(dir);
+    assert(snap.partial === true, 'Persisted snapshot should carry partial=true');
+    assert(Array.isArray(snap.chunks.failed_indices), 'chunks.failed_indices should be array');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('sc-sync: hard fail (SYNC_ALL_CHUNKS_FAILED) when every chunk errors', async () => {
+  const { syncSnapshotForProject } = await import('../src/lib/sc-sync.mjs');
+  const dir = freshDir('sc-sync-all-fail');
+  makeLockfile(dir, 1200);
+
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: false, status: 400, json: async () => ({}) });
+  try {
+    let thrown = null;
+    try {
+      await syncSnapshotForProject(dir);
+    } catch (e) {
+      thrown = e;
+    }
+    assert(thrown !== null, 'Should throw when all chunks fail');
+    assert(thrown.code === 'SYNC_ALL_CHUNKS_FAILED', `code: ${thrown.code}`);
+    assert(Array.isArray(thrown.failedChunks), 'Error should carry failedChunks');
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('sc-sync: 503 triggers retry+backoff before giving up', async () => {
+  const { fetchOsvBatch } = await import('../src/lib/sc-sync.mjs');
+  const originalFetch = globalThis.fetch;
+  globalThis.fetch = async () => ({ ok: false, status: 503, json: async () => ({}) });
+  try {
+    let thrown = null;
+    try {
+      await fetchOsvBatch([{ package: { name: 'a', ecosystem: 'npm' } }]);
+    } catch (e) {
+      thrown = e;
+    }
+    assert(thrown !== null, 'Should throw on 503');
+    assert(thrown.retryable === true, `503 should be retryable, got: ${thrown.retryable}`);
+  } finally {
+    globalThis.fetch = originalFetch;
+  }
+});
+
+test('telemetry: supplyChainBySource separates osv vs fixture vs mixed (sunset integrity)', async () => {
+  const { summarize } = await import('../src/lib/telemetry.mjs');
+  const events = [
+    { event: 'sc_guard', action: 'block', source: 'osv' },
+    { event: 'sc_guard', action: 'allow', source: 'osv' },
+    { event: 'sc_guard', action: 'block', source: 'pre-install-mixed', block_source: 'fixture' },
+    { event: 'sc_guard', action: 'block', source: 'pre-install-mixed', block_source: 'fixture+osv' },
+    { event: 'sc_guard', action: 'sync', source: 'osv', partial: true },
+    { event: 'sc_guard', action: 'scan_run', source: 'osv', partial_snapshot: true },
+  ];
+  const sum = summarize(events);
+  assert(sum.supplyChainBySource.osv === 2, `osv: ${sum.supplyChainBySource.osv}`);
+  assert(sum.supplyChainBySource.fixture === 1, `fixture: ${sum.supplyChainBySource.fixture}`);
+  assert(sum.supplyChainBySource.mixed === 1, `mixed: ${sum.supplyChainBySource.mixed}`);
+  assert(sum.supplyChainPartial.partial_syncs === 1, `partial_syncs: ${sum.supplyChainPartial.partial_syncs}`);
+  assert(sum.supplyChainPartial.partial_scans === 1, `partial_scans: ${sum.supplyChainPartial.partial_scans}`);
+});
+
 test('init --preset team auto-wires supply-chain hook', () => {
   const dir = freshDir('init-team-sc-hook');
   dw('init --preset team', dir);
@@ -498,8 +664,9 @@ test('sc-scanner: parsePackageJson reads all dep sections', async () => {
   assert(result.has('react'), 'Missing peerDep react');
 });
 
-test('sc-scanner: matchNamespaceFixture detects tanstack pattern', async () => {
+test('sc-scanner: matchNamespaceFixture prefix-only match downgrades severity (ADR-0006)', async () => {
   const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  // Entry without affected_range → prefix-only path → critical downgrades to high
   const fixture = {
     namespaces: [
       { pattern: '@tanstack/', severity: 'critical', reason: 'test', active_until: '2099-12-31' },
@@ -512,7 +679,242 @@ test('sc-scanner: matchNamespaceFixture detects tanstack pattern', async () => {
   const hits = matchNamespaceFixture(packages, fixture);
   assert(hits.length === 1, `Expected 1 hit, got ${hits.length}`);
   assert(hits[0].package === '@tanstack/react-router', 'Wrong match');
-  assert(hits[0].severity === 'critical', 'Wrong severity');
+  assert(hits[0].severity === 'high', `Expected severity downgrade critical→high, got ${hits[0].severity}`);
+  assert(hits[0].version_check === 'prefix-only', `Expected version_check=prefix-only, got ${hits[0].version_check}`);
+});
+
+test('sc-scanner: matchNamespaceFixture concrete version IN affected_range hits with full severity', async () => {
+  const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  const fixture = {
+    namespaces: [{
+      pattern: '@tanstack/',
+      severity: 'critical',
+      active_until: '2099-12-31',
+      affected_range: { type: 'SEMVER', events: [{ introduced: '1.169.5' }, { fixed: '1.169.9' }] },
+    }],
+  };
+  const packages = new Map([['@tanstack/react-router', '1.169.7']]);
+  const hits = matchNamespaceFixture(packages, fixture);
+  assert(hits.length === 1, `Expected 1 hit, got ${hits.length}`);
+  assert(hits[0].severity === 'critical', `Concrete in-range should keep critical, got ${hits[0].severity}`);
+  assert(hits[0].version_check === 'in-range', `Expected in-range, got ${hits[0].version_check}`);
+});
+
+test('sc-scanner: matchNamespaceFixture concrete version OUT of range is skipped (no FP)', async () => {
+  const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  const fixture = {
+    namespaces: [{
+      pattern: '@tanstack/',
+      severity: 'critical',
+      active_until: '2099-12-31',
+      affected_range: { type: 'SEMVER', events: [{ introduced: '1.169.5' }, { fixed: '1.169.9' }] },
+    }],
+  };
+  const packages = new Map([['@tanstack/react-router', '1.169.9']]);
+  const hits = matchNamespaceFixture(packages, fixture);
+  assert(hits.length === 0, `Out-of-range concrete should NOT match (FP guard), got ${hits.length}`);
+});
+
+test('sc-scanner: matchNamespaceFixture range spec (^1.169.0) emits range-ambiguous hit', async () => {
+  const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  const fixture = {
+    namespaces: [{
+      pattern: '@tanstack/',
+      severity: 'critical',
+      active_until: '2099-12-31',
+      affected_range: { type: 'SEMVER', events: [{ introduced: '1.169.5' }, { fixed: '1.169.9' }] },
+    }],
+  };
+  // ^1.169.0 may resolve to 1.169.5+ on install — warn but downgrade
+  const packages = new Map([['@tanstack/react-router', '^1.169.0']]);
+  const hits = matchNamespaceFixture(packages, fixture);
+  assert(hits.length === 1, `Range-spec below fixed should warn, got ${hits.length}`);
+  assert(hits[0].version_check === 'range-ambiguous', `Expected range-ambiguous, got ${hits[0].version_check}`);
+  assert(hits[0].severity === 'high', `Expected severity downgrade, got ${hits[0].severity}`);
+});
+
+test('sc-heuristic: scoreSignals fires very_recent_publish + popular_package (combo block)', async () => {
+  const { scoreSignals } = await import('../src/lib/sc-heuristic.mjs');
+  const signals = {
+    package: '@tanstack/react-query',
+    version: '1.169.5',
+    publish_age_hours: 6, // very recent
+    package_modified_age_days: 5, // recent maintainer activity
+  };
+  const result = scoreSignals(signals, 50000, undefined, { change: 'added' });
+  assert(result.score >= 80, `Expected block-tier score (≥80), got ${result.score}`);
+  assert(result.reasons.some((r) => r.signal === 'very_recent_publish'), 'Missing very_recent_publish');
+  assert(result.reasons.some((r) => r.signal === 'popular_package'), 'Missing popular_package');
+  assert(result.reasons.some((r) => r.signal === 'maintainer_change_recent'), 'Missing maintainer_change_recent');
+});
+
+test('sc-heuristic: scoreSignals returns 0 for old + unpopular package (no FP cascade)', async () => {
+  const { scoreSignals } = await import('../src/lib/sc-heuristic.mjs');
+  const signals = {
+    package: 'some-random-pkg',
+    version: '1.2.3',
+    publish_age_hours: 24 * 365, // 1 year old
+    package_modified_age_days: 200,
+  };
+  const result = scoreSignals(signals, 100, undefined);
+  assert(result.score === 0, `Expected 0, got ${result.score}`);
+  assert(result.reasons.length === 0, `Expected no reasons, got ${result.reasons.length}`);
+});
+
+test('sc-heuristic: scoreSignals detects typo-squat (Levenshtein=1 of popular)', async () => {
+  const { scoreSignals } = await import('../src/lib/sc-heuristic.mjs');
+  // "reactt" is Lev=1 from "react"
+  const signals = { package: 'reactt', version: '1.0.0', publish_age_hours: 240 };
+  const result = scoreSignals(signals, 0, undefined);
+  assert(result.reasons.some((r) => r.signal === 'typo_squat'), 'Should flag typo-squat');
+  assert(result.score >= 60, `Typo-squat alone should block-tier, got ${result.score}`);
+});
+
+test('npm-registry: cache TTL respects 1h boundary', async () => {
+  const { cachePut, cacheGet, pruneCache } = await import('../src/lib/npm-registry.mjs');
+  const dir = freshDir('npm-cache-ttl');
+  mkdirSync(join(dir, '.dw', 'security'), { recursive: true });
+  cachePut(dir, 'pkg:test-a', { foo: 'bar' });
+  const fresh = cacheGet(dir, 'pkg:test-a', 60 * 60 * 1000);
+  assert(fresh && fresh.foo === 'bar', `Cache should return fresh entry, got ${JSON.stringify(fresh)}`);
+  // Force-expire by passing TTL of 0
+  const expired = cacheGet(dir, 'pkg:test-a', 0);
+  assert(expired === null, `Cache should expire when TTL=0, got ${JSON.stringify(expired)}`);
+  // Prune does not throw on the cache file
+  pruneCache(dir, 0);
+});
+
+test('sc-heuristic: diffLockfilePackages cold-start (no git history) reports all as cold-start', async () => {
+  const { diffLockfilePackages } = await import('../src/lib/sc-heuristic.mjs');
+  const dir = freshDir('sc-heur-coldstart');
+  // freshDir already calls git init; no commits, no HEAD → diff falls through to cold-start
+  writeFileSync(join(dir, 'package-lock.json'), JSON.stringify({
+    name: 'cold', version: '1.0.0', lockfileVersion: 3, requires: true,
+    packages: {
+      '': { name: 'cold', version: '1.0.0' },
+      'node_modules/lodash': { version: '4.17.21' },
+      'node_modules/express': { version: '4.18.2' },
+    },
+  }));
+  const diff = diffLockfilePackages(dir);
+  assert(diff.length === 2, `Expected 2 entries (cold-start), got ${diff.length}`);
+  assert(diff.every((d) => d.change === 'cold-start'), 'All entries should be marked cold-start');
+});
+
+test('sc-heuristic: diffLockfilePackages detects added + bumped against git HEAD', async () => {
+  const { diffLockfilePackages } = await import('../src/lib/sc-heuristic.mjs');
+  const dir = freshDir('sc-heur-diff');
+  // Commit a baseline lockfile
+  const baseline = {
+    name: 'app', version: '1.0.0', lockfileVersion: 3, requires: true,
+    packages: {
+      '': { name: 'app', version: '1.0.0' },
+      'node_modules/lodash': { version: '4.17.20' },
+    },
+  };
+  writeFileSync(join(dir, 'package-lock.json'), JSON.stringify(baseline));
+  execSync('git add package-lock.json', { cwd: dir, stdio: 'pipe' });
+  execSync('git -c user.email=t@t -c user.name=t commit -m baseline', { cwd: dir, stdio: 'pipe' });
+
+  // Now bump lodash AND add @tanstack/react-query
+  const updated = {
+    ...baseline,
+    packages: {
+      '': baseline.packages[''],
+      'node_modules/lodash': { version: '4.17.21' },
+      'node_modules/@tanstack/react-query': { version: '1.169.5' },
+    },
+  };
+  writeFileSync(join(dir, 'package-lock.json'), JSON.stringify(updated));
+
+  const diff = diffLockfilePackages(dir);
+  const lodash = diff.find((d) => d.name === 'lodash');
+  const tanstack = diff.find((d) => d.name === '@tanstack/react-query');
+  assert(lodash && lodash.change === 'bumped', `lodash should be bumped, got ${JSON.stringify(lodash)}`);
+  assert(lodash.from === '4.17.20' && lodash.version === '4.17.21', `wrong from/to: ${JSON.stringify(lodash)}`);
+  assert(tanstack && tanstack.change === 'added', `tanstack should be added, got ${JSON.stringify(tanstack)}`);
+});
+
+test('security-scan --heuristic-only exits 0 when no diff to probe', () => {
+  const dir = freshDir('sc-heur-only-nothing');
+  // Empty/non-existent lockfile → diff returns 0 entries → exit 0
+  try {
+    dw('security-scan --heuristic-only', dir);
+  } catch (e) {
+    assert(e.status === 0, `Expected exit 0 (no candidates), got ${e.status}`);
+  }
+});
+
+// ── UX fixes for v1.3.6 PR ────────────────────────────────────────────────
+
+test('cli: `dw scan` alias resolves to security-scan command', () => {
+  const out = dw('scan --help', TEMP_BASE);
+  assert(out.includes('Scan project') || out.includes('supply-chain') || out.includes('--update-db'),
+    `Expected scan help to show security-scan options, got: ${out.slice(0, 200)}`);
+});
+
+test('scan: no lockfile but package.json exists → falls back to pre-install (not error)', () => {
+  const dir = freshDir('sc-no-lockfile-fallback');
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({
+    name: 'fresh-app', version: '1.0.0',
+    dependencies: { 'lodash': '^4.17.21' },
+  }));
+  // Pre-create a tiny stale snapshot so the auto-refresh path doesn't hit network
+  mkdirSync(join(dir, '.dw', 'security'), { recursive: true });
+  writeFileSync(join(dir, '.dw', 'security', 'advisory-snapshot.json'), JSON.stringify({
+    schema_version: '1.0',
+    fetched_at: new Date().toISOString(),
+    source: 'osv.dev', ecosystem: 'npm',
+    package_count: 0, advisory_count: 0, advisories: [],
+  }));
+  let combined;
+  try {
+    combined = dw('scan --offline', dir);
+  } catch (e) {
+    // offline + lodash safe → pillar 2 no fixture → pillar 3 skipped (offline) → clean exit 0
+    combined = (e.stdout || '') + (e.stderr || '');
+    // If fallback to pre-install happens with lodash safe → exit code 0 expected, but
+    // execSync throws only on non-zero. So this branch fires if pre-install hit something.
+    assert(e.status === 0 || e.status === 1, `Unexpected exit ${e.status}`);
+  }
+  // The key behavior: did NOT die with "no lockfile" hard error
+  assert(!/^.*No lockfile.*not a Node project.*$/m.test(combined || ''),
+    'Should NOT report "not a Node project" when package.json exists');
+});
+
+test('scan: no lockfile AND no package.json → exits gracefully with hint', () => {
+  const dir = freshDir('sc-no-project');
+  // Pre-create a tiny snapshot so we don't trigger auto-refresh network call
+  mkdirSync(join(dir, '.dw', 'security'), { recursive: true });
+  writeFileSync(join(dir, '.dw', 'security', 'advisory-snapshot.json'), JSON.stringify({
+    schema_version: '1.0',
+    fetched_at: new Date().toISOString(),
+    source: 'osv.dev', ecosystem: 'npm',
+    package_count: 0, advisory_count: 0, advisories: [],
+  }));
+  try {
+    dw('scan --offline', dir);
+    assert(false, 'Expected non-zero exit when no Node project');
+  } catch (e) {
+    assert(e.status === 1, `Expected exit 1, got ${e.status}`);
+    const combined = (e.stdout || '') + (e.stderr || '');
+    assert(/no package\.json|not a Node project|No lockfile/i.test(combined),
+      `Expected helpful hint, got: ${combined.slice(0, 200)}`);
+  }
+});
+
+test('scan: --offline flag suppresses auto-refresh on missing snapshot', () => {
+  const dir = freshDir('sc-offline-no-snap');
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'a', version: '1.0.0' }));
+  // No snapshot, no lockfile, --offline → must NOT attempt network
+  // Should fall to pre-install --offline path (which works on package.json)
+  try {
+    dw('scan --offline', dir);
+  } catch (e) {
+    // pre-install with clean package.json → exit 0 typical
+    const combined = (e.stdout || '') + (e.stderr || '');
+    assert(!/Auto-sync/i.test(combined), 'Should NOT attempt auto-sync when --offline');
+  }
 });
 
 test('sc-scanner: namespace fixture skips expired entries', async () => {
@@ -606,6 +1008,8 @@ test('upgrade fails on project without config', () => {
     assert(e.status === 1, 'Should exit with code 1');
   }
 });
+
+await runPending();
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────
 rmSync(TEMP_BASE, { recursive: true });

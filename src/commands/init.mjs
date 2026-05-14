@@ -193,7 +193,51 @@ async function maybeInstallSupplyChainHook(projectDir, presetKey) {
   }
   if (result.action === 'added') {
     ok('Supply-chain guard hook wired (ADR-0005 — opt-in flag enabled)');
-    log('  First scan: `dw security-scan --update-db`');
+  }
+
+  // UX: offer one-time OSV snapshot sync so end-user doesn't need to know
+  // `--update-db` exists. Lazy auto-refresh in `dw scan` covers the case
+  // when user declines, but offering during init gets snapshot ready upfront.
+  await maybeBootstrapOsvSnapshot(projectDir);
+}
+
+async function maybeBootstrapOsvSnapshot(projectDir) {
+  // Non-TTY (CI / scripted): default yes so the snapshot exists for next scan.
+  // TTY: prompt user, default yes.
+  let shouldSync = true;
+  if (process.stdin.isTTY && !process.env.DW_INIT_NO_PROMPT) {
+    try {
+      const { prompt } = await import('enquirer');
+      const answer = await prompt({
+        type: 'confirm',
+        name: 'syncNow',
+        message: 'Sync OSV advisory snapshot now? (recommended first-time; ~10-30s)',
+        initial: true,
+      });
+      shouldSync = !!answer.syncNow;
+    } catch {
+      shouldSync = true;
+    }
+  }
+  if (!shouldSync) {
+    log('  Skipped. First `dw scan` will auto-sync if needed.');
+    return;
+  }
+
+  const { findLockfile } = await import('../lib/sc-scanner.mjs');
+  if (!findLockfile(projectDir)) {
+    log('  No lockfile yet — first `dw scan` will sync after `npm install` runs.');
+    return;
+  }
+  log('  Syncing OSV snapshot...');
+  try {
+    const { syncSnapshotForProject } = await import('../lib/sc-sync.mjs');
+    const start = Date.now();
+    const res = await syncSnapshotForProject(projectDir);
+    const partialNote = res.partial ? ` (PARTIAL ${res.chunks.failed}/${res.chunks.total})` : '';
+    ok(`OSV snapshot ready — ${res.advisoryCount} advisories for ${res.packageCount} packages (${Date.now() - start}ms)${partialNote}`);
+  } catch (e) {
+    warn(`OSV sync skipped: ${e.message}. Will retry on first \`dw scan\`.`);
   }
 }
 

@@ -10,6 +10,13 @@ const OSV_BATCH_ENDPOINT = 'https://api.osv.dev/v1/querybatch';
 const STALE_DAYS_DEFAULT = 7;
 const FETCH_TIMEOUT_MS = 15000;
 
+// OSV.dev /v1/querybatch hard cap is 1000 entries per request.
+// Concurrency=2 + jittered backoff keeps us polite to a public free-tier API.
+const OSV_BATCH_LIMIT = 1000;
+const OSV_BATCH_CONCURRENCY = 2;
+const OSV_BATCH_RETRY_MAX = 3;
+const OSV_BATCH_RETRY_BASE_MS = 500;
+
 export function snapshotPath(rootDir = process.cwd()) {
   return join(rootDir, SECURITY_DIR, SNAPSHOT_FILE);
 }
@@ -70,11 +77,47 @@ export async function fetchOsvBatch(queries, { timeoutMs = FETCH_TIMEOUT_MS } = 
       body: JSON.stringify({ queries }),
       signal: controller.signal,
     });
-    if (!res.ok) throw new Error(`OSV batch HTTP ${res.status}`);
+    if (!res.ok) {
+      const err = new Error(`OSV batch HTTP ${res.status}`);
+      err.status = res.status;
+      err.retryable = res.status === 429 || res.status === 503 || res.status === 502 || res.status === 504;
+      throw err;
+    }
     return await res.json();
   } finally {
     clearTimeout(timer);
   }
+}
+
+function chunkArray(arr, size) {
+  const out = [];
+  for (let i = 0; i < arr.length; i += size) out.push(arr.slice(i, i + size));
+  return out;
+}
+
+async function sleep(ms) {
+  return new Promise((r) => setTimeout(r, ms));
+}
+
+async function fetchOsvBatchWithRetry(queries, chunkIndex, { timeoutMs = FETCH_TIMEOUT_MS } = {}) {
+  let lastErr;
+  for (let attempt = 0; attempt < OSV_BATCH_RETRY_MAX; attempt++) {
+    try {
+      return await fetchOsvBatch(queries, { timeoutMs });
+    } catch (e) {
+      lastErr = e;
+      if (!e.retryable || attempt === OSV_BATCH_RETRY_MAX - 1) break;
+      const jitter = Math.floor(Math.random() * 200);
+      const delay = OSV_BATCH_RETRY_BASE_MS * Math.pow(2, attempt) + jitter;
+      await sleep(delay);
+    }
+  }
+  // Wrap with chunk diagnostics for the synthesis layer
+  const wrapped = new Error(`OSV batch chunk ${chunkIndex} failed: ${lastErr.message}`);
+  wrapped.cause = lastErr;
+  wrapped.chunkIndex = chunkIndex;
+  wrapped.retryable = lastErr.retryable;
+  throw wrapped;
 }
 
 export async function fetchOsvByName(packageName, ecosystem = 'npm', { timeoutMs = FETCH_TIMEOUT_MS } = {}) {
@@ -125,17 +168,46 @@ export async function syncSnapshotForProject(rootDir = process.cwd(), { ecosyste
   if (queries.length === 0) {
     const empty = buildEmptySnapshot(ecosystem);
     saveSnapshot(empty, rootDir);
-    return { snapshot: empty, advisoryCount: 0, packageCount: 0 };
+    return { snapshot: empty, advisoryCount: 0, packageCount: 0, partial: false, chunks: { total: 0, succeeded: 0, failed: 0 } };
   }
 
-  const batchResults = await fetchOsvBatch(queries);
-  const vulnIds = new Set();
-  if (batchResults && Array.isArray(batchResults.results)) {
-    for (const r of batchResults.results) {
-      if (r && Array.isArray(r.vulns)) {
-        for (const v of r.vulns) if (v.id) vulnIds.add(v.id);
-      }
+  const chunks = chunkArray(queries, OSV_BATCH_LIMIT);
+  const chunkOutcomes = [];
+  // Process with bounded concurrency. allSettled so a single chunk failure
+  // does not discard sibling successes — critical for fail-soft behavior.
+  for (let i = 0; i < chunks.length; i += OSV_BATCH_CONCURRENCY) {
+    const slice = chunks.slice(i, i + OSV_BATCH_CONCURRENCY);
+    const settled = await Promise.allSettled(
+      slice.map((chunk, j) => fetchOsvBatchWithRetry(chunk, i + j))
+    );
+    for (let j = 0; j < settled.length; j++) {
+      chunkOutcomes.push({ index: i + j, ...settled[j] });
     }
+  }
+
+  const vulnIds = new Set();
+  const failedChunks = [];
+  for (const outcome of chunkOutcomes) {
+    if (outcome.status === 'fulfilled') {
+      const batchResults = outcome.value;
+      if (batchResults && Array.isArray(batchResults.results)) {
+        for (const r of batchResults.results) {
+          if (r && Array.isArray(r.vulns)) {
+            for (const v of r.vulns) if (v.id) vulnIds.add(v.id);
+          }
+        }
+      }
+    } else {
+      failedChunks.push({ index: outcome.index, message: outcome.reason?.message || String(outcome.reason) });
+    }
+  }
+
+  // Hard fail only when ALL chunks failed — otherwise emit partial snapshot.
+  if (failedChunks.length === chunkOutcomes.length) {
+    const err = new Error(`All ${chunkOutcomes.length} OSV batch chunk(s) failed; first: ${failedChunks[0].message}`);
+    err.code = 'SYNC_ALL_CHUNKS_FAILED';
+    err.failedChunks = failedChunks;
+    throw err;
   }
 
   const advisories = [];
@@ -148,6 +220,7 @@ export async function syncSnapshotForProject(rootDir = process.cwd(), { ecosyste
     }
   }
 
+  const partial = failedChunks.length > 0;
   const snapshot = {
     schema_version: SCHEMA_VERSION,
     fetched_at: new Date().toISOString(),
@@ -156,10 +229,23 @@ export async function syncSnapshotForProject(rootDir = process.cwd(), { ecosyste
     package_count: queryIndex.length,
     advisory_count: advisories.length,
     advisories,
+    partial,
+    chunks: {
+      total: chunkOutcomes.length,
+      succeeded: chunkOutcomes.length - failedChunks.length,
+      failed: failedChunks.length,
+      failed_indices: failedChunks.map((c) => c.index),
+    },
   };
 
   saveSnapshot(snapshot, rootDir);
-  return { snapshot, advisoryCount: advisories.length, packageCount: queryIndex.length };
+  return {
+    snapshot,
+    advisoryCount: advisories.length,
+    packageCount: queryIndex.length,
+    partial,
+    chunks: snapshot.chunks,
+  };
 }
 
 function buildEmptySnapshot(ecosystem) {
@@ -171,6 +257,8 @@ function buildEmptySnapshot(ecosystem) {
     package_count: 0,
     advisory_count: 0,
     advisories: [],
+    partial: false,
+    chunks: { total: 0, succeeded: 0, failed: 0, failed_indices: [] },
   };
 }
 
@@ -194,5 +282,7 @@ export function snapshotInfo(rootDir = process.cwd()) {
     age_days: snap ? snapshotAgeDays(snap) : Infinity,
     stale: snap ? isStale(snap) : true,
     schema_compatible: isSchemaCompatible(snap),
+    partial: snap?.partial === true,
+    chunks: snap?.chunks || null,
   };
 }

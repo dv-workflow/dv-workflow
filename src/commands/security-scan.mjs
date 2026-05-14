@@ -16,11 +16,15 @@ import {
   severityRank,
   worstSeverity,
   parsePackageJson,
+  parsePackageLockfile,
+  findLockfile,
   findPackageJson,
   matchPackageByName,
   matchNamespaceFixture,
 } from '../lib/sc-scanner.mjs';
 import { logEvent } from '../lib/telemetry.mjs';
+import { fetchPackageMetadata, extractSignals, fetchWeeklyDownloads } from '../lib/npm-registry.mjs';
+import { diffLockfilePackages, scoreSignals, loadHeuristicConfig, formatHeuristicHit } from '../lib/sc-heuristic.mjs';
 
 const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const NAMESPACE_FIXTURE_REL = '.dw/security/ioc-namespaces.json';
@@ -31,6 +35,12 @@ export async function securityScanCommand(opts) {
 
   if (mode === 'pre-install') {
     return runPreInstallMode(rootDir, opts);
+  }
+
+  // Pillar 3 standalone path — hook fires with --heuristic-only for fast
+  // diff-only scan on lockfile edit. No OSV/fixture noise.
+  if (opts.heuristicOnly) {
+    return runHeuristicOnlyMode(rootDir, opts);
   }
 
   if (opts.json) {
@@ -45,11 +55,26 @@ export async function securityScanCommand(opts) {
       const start = Date.now();
       const res = await syncSnapshotForProject(rootDir);
       const elapsed = Date.now() - start;
-      ok(`Snapshot updated — ${res.advisoryCount} advisories for ${res.packageCount} packages (${elapsed}ms)`);
-      logEvent({ event: 'sc_guard', action: 'sync', advisories: res.advisoryCount, packages: res.packageCount, latency_ms: elapsed }, rootDir);
+      const partialNote = res.partial ? ` (PARTIAL — ${res.chunks.failed}/${res.chunks.total} chunks failed)` : '';
+      ok(`Snapshot updated — ${res.advisoryCount} advisories for ${res.packageCount} packages (${elapsed}ms)${partialNote}`);
+      if (res.partial) {
+        warn(`Snapshot incomplete: chunks ${res.chunks.failed_indices.join(',')} failed after retries. Advisories may be missing; retry --update-db when network is healthy.`);
+      }
+      logEvent({
+        event: 'sc_guard',
+        action: 'sync',
+        source: 'osv',
+        advisories: res.advisoryCount,
+        packages: res.packageCount,
+        latency_ms: elapsed,
+        partial: !!res.partial,
+        chunks_total: res.chunks?.total ?? 1,
+        chunks_failed: res.chunks?.failed ?? 0,
+      }, rootDir);
     } catch (e) {
       err(`Sync failed: ${e.message}`);
       if (e.code === 'NO_LOCKFILE') warn('Run `npm install` first to create package-lock.json.');
+      if (e.code === 'SYNC_ALL_CHUNKS_FAILED') warn('All OSV batches failed — likely a network or rate-limit issue. Re-run later.');
       process.exit(2);
     }
     if (mode === 'update-db') {
@@ -60,11 +85,47 @@ export async function securityScanCommand(opts) {
     log('');
   }
 
-  const info_ = snapshotInfo(rootDir);
+  // UX: lazy auto-refresh — if snapshot is missing OR stale, fetch fresh
+  // automatically (matches `npm audit` zero-friction UX). Skipped on --offline
+  // or --quick (explicit user request to stay offline).
+  let info_ = snapshotInfo(rootDir);
+  const shouldAutoRefresh = !opts.offline && !opts.quick && mode !== 'update-db' && (!info_.exists || info_.stale);
+  if (shouldAutoRefresh) {
+    const reason = !info_.exists ? 'no snapshot yet' : `snapshot ${info_.age_days.toFixed(1)}d old (>7d)`;
+    info(`Auto-syncing OSV snapshot (${reason})...`);
+    try {
+      const start = Date.now();
+      const res = await syncSnapshotForProject(rootDir);
+      const elapsed = Date.now() - start;
+      const partialNote = res.partial ? ` (PARTIAL ${res.chunks.failed}/${res.chunks.total})` : '';
+      ok(`Auto-sync done — ${res.advisoryCount} advisories for ${res.packageCount} packages (${elapsed}ms)${partialNote}`);
+      logEvent({
+        event: 'sc_guard', action: 'sync', source: 'osv',
+        advisories: res.advisoryCount, packages: res.packageCount, latency_ms: elapsed,
+        partial: !!res.partial, sub_mode: 'auto-refresh',
+      }, rootDir);
+      log('');
+      info_ = snapshotInfo(rootDir);
+    } catch (e) {
+      // Auto-refresh failure is NOT fatal — fall back to stale snapshot if available,
+      // or to pillars 2+3 only. Honest message to user.
+      warn(`Auto-sync failed: ${e.message}. Proceeding with available signals.`);
+      if (e.code === 'NO_LOCKFILE') {
+        // Caller-level no-lockfile handler kicks in below
+      }
+    }
+  }
+
   if (!info_.exists) {
-    warn('No advisory snapshot found.');
-    log('Run `dw security-scan --update-db` to fetch from OSV.dev.');
-    log('Quick mode requires an existing snapshot.');
+    // Pillar 1 unavailable. Try to fall back to pre-install if no lockfile.
+    const pkgPath = findPackageJson(rootDir);
+    if (pkgPath) {
+      warn('No advisory snapshot AND no lockfile — falling back to pre-install scan (pillar 2 fixture + OSV name-only).');
+      log('');
+      return runPreInstallMode(rootDir, opts);
+    }
+    err('No advisory snapshot found and no package.json in current directory.');
+    log('Tip: run `dw scan --update-db` from a Node project, or use `dw scan` with --offline to skip pillar 1.');
     process.exit(1);
   }
 
@@ -82,16 +143,27 @@ export async function securityScanCommand(opts) {
   if (info_.stale) {
     warn(`  Snapshot is stale (>7 days). Run \`dw security-scan --update-db\` to refresh.`);
   }
+  if (info_.partial) {
+    warn(`  Snapshot is PARTIAL (${info_.chunks?.failed}/${info_.chunks?.total} chunks failed last sync). Results may be incomplete — re-run --update-db.`);
+  }
 
   log('');
   log(chalk.bold('Scanning project lockfile...'));
   const snap = loadSnapshot(rootDir);
   const start = Date.now();
   const result = scanProject(rootDir, snap);
-  const elapsed = Date.now() - start;
 
   if (result.error === 'no_lockfile') {
-    err('No lockfile found (expected package-lock.json).');
+    // UX: auto-fallback to pre-install mode if package.json exists.
+    // User reported v1.3.5 blocked instead of degrading gracefully.
+    const pkgPath = findPackageJson(rootDir);
+    if (pkgPath) {
+      log('');
+      info('No lockfile yet (npm install not run) — switching to pre-install scan against package.json.');
+      log('');
+      return runPreInstallMode(rootDir, opts);
+    }
+    err('No lockfile and no package.json — this directory is not a Node project.');
     process.exit(1);
   }
   if (result.error === 'no_snapshot') {
@@ -99,55 +171,225 @@ export async function securityScanCommand(opts) {
     process.exit(1);
   }
 
+  // Pillar 2 (ADR-0006): fixture-driven catches in default scan path.
+  // Distinguishes 'source: fixture' from 'source: osv' for sunset-review integrity.
+  const fixtureBundle = loadNamespaceFixture(rootDir);
+  let fixtureHits = [];
+  if (fixtureBundle.fixture) {
+    try {
+      const lockPath = findLockfile(rootDir);
+      const lockPackages = lockPath ? parsePackageLockfile(lockPath) : new Map();
+      fixtureHits = matchNamespaceFixture(lockPackages, fixtureBundle.fixture);
+    } catch {
+      // fixture failure must not break OSV scan
+    }
+  }
+  const elapsed = Date.now() - start;
+
   log(`  Lockfile          : ${result.lockfile}`);
   log(`  Packages scanned  : ${result.packages_scanned}`);
+  if (fixtureBundle.fixture) {
+    const activeCount = (fixtureBundle.fixture.namespaces || []).filter(
+      (n) => !n.active_until || new Date(n.active_until) > new Date(),
+    ).length;
+    log(`  Fixture           : ${activeCount} active IoC pattern(s) (${fixtureBundle.path})`);
+  }
   log(`  Elapsed           : ${elapsed}ms`);
   log('');
 
-  if (result.matches.length === 0) {
-    ok('No advisory matches — clean.');
-    logEvent({ event: 'sc_guard', action: 'scan_run', matches: 0, packages: result.packages_scanned, outcome: 'clean', latency_ms: elapsed }, rootDir);
+  // OSV matches first (existing display)
+  if (result.matches.length > 0) {
+    log(chalk.bold(`OSV advisory matches (${result.matches.length})`));
+    const sorted = result.matches.slice().sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
+    for (const m of sorted) {
+      const tag = severityTag(m.severity);
+      log(`  ${tag} ${m.package}@${m.version}`);
+      if (m.summary) log(chalk.dim(`      ${m.summary}`));
+      log(chalk.dim(`      advisory: ${m.advisory_id}`));
+      if (m.fix_versions.length) log(chalk.dim(`      fix:      ${m.fix_versions.join(', ')}`));
+    }
     log('');
-    advisoryFooter();
-    return;
   }
 
-  log(chalk.bold(`Matches (${result.matches.length})`));
-  const sorted = result.matches.slice().sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
-  for (const m of sorted) {
-    const tag = severityTag(m.severity);
-    log(`  ${tag} ${m.package}@${m.version}`);
-    if (m.summary) log(chalk.dim(`      ${m.summary}`));
-    log(chalk.dim(`      advisory: ${m.advisory_id}`));
-    if (m.fix_versions.length) log(chalk.dim(`      fix:      ${m.fix_versions.join(', ')}`));
+  // Pillar 2: fixture hits (new section, prefixed [NS-IOC])
+  if (fixtureHits.length > 0) {
+    log(chalk.bold.red(`⚠️  ACTIVE INCIDENT IoC matches (${fixtureHits.length}) — curated fixture`));
+    const sortedHits = fixtureHits.slice().sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
+    for (const h of sortedHits) {
+      const tag = severityTag(h.severity);
+      log(`  ${tag} [NS-IOC] ${h.package}${h.version ? '@' + h.version : ''} matches "${h.namespace_pattern}"`);
+      if (h.reason) log(chalk.dim(`      ${h.reason}`));
+      if (h.guidance) log(chalk.yellow(`      guidance: ${h.guidance}`));
+      if (h.advisory_url) log(chalk.dim(`      advisory: ${h.advisory_url}`));
+      if (h.version_check && h.version_check !== 'in-range') {
+        log(chalk.dim(`      version_check: ${h.version_check}`));
+      }
+    }
+    log('');
   }
-  log('');
 
-  const worst = worstSeverity(result.matches);
-  const blockCount = result.matches.filter((m) => severityRank(m.severity) >= severityRank('high')).length;
+  // Pillar 3 (ADR-0006): NEW-package heuristic on diff. Auto-skip if offline
+  // or --no-heuristic. Runs AFTER pillars 1+2 so blocking signals still surface
+  // even if heuristic times out / network fails.
+  let heuristicHits = [];
+  if (!opts.offline && opts.heuristic !== false) {
+    try {
+      heuristicHits = await runHeuristicOnDiff(rootDir, { quiet: false });
+    } catch (e) {
+      warn(`Heuristic check failed: ${e.message} (non-blocking)`);
+    }
+  }
+
+  // Combined severity for exit code (heuristic blocks at score ≥80)
+  const osvBlockCount = result.matches.filter((m) => severityRank(m.severity) >= severityRank('high')).length;
+  const fixtureBlockCount = fixtureHits.filter((h) => severityRank(h.severity) >= severityRank('high')).length;
+  const heuristicBlockCount = heuristicHits.filter((h) => h.score >= 80).length;
+  const blockCount = osvBlockCount + fixtureBlockCount + heuristicBlockCount;
   const exitCode = blockCount > 0 ? 2 : 1;
+  const worst = worstSeverity([...result.matches, ...fixtureHits]);
 
-  logEvent(
-    {
+  // Per-pillar telemetry — sunset metric needs to distinguish
+  if (result.matches.length > 0) {
+    logEvent(
+      {
+        event: 'sc_guard',
+        action: osvBlockCount > 0 ? 'block' : 'allow',
+        source: 'osv',
+        matches: result.matches.length,
+        block_count: osvBlockCount,
+        worst_severity: worstSeverity(result.matches),
+        packages: result.packages_scanned,
+        latency_ms: elapsed,
+        snapshot_age_days: ageDays,
+        partial_snapshot: info_.partial === true,
+      },
+      rootDir,
+    );
+  }
+  if (fixtureHits.length > 0) {
+    logEvent(
+      {
+        event: 'sc_guard',
+        action: fixtureBlockCount > 0 ? 'block' : 'allow',
+        source: 'fixture',
+        matches: fixtureHits.length,
+        block_count: fixtureBlockCount,
+        worst_severity: worstSeverity(fixtureHits),
+        packages: result.packages_scanned,
+        latency_ms: elapsed,
+        fixture_path: fixtureBundle.path,
+      },
+      rootDir,
+    );
+  }
+
+  if (heuristicHits.length > 0) {
+    logEvent({
       event: 'sc_guard',
-      action: blockCount > 0 ? 'block' : 'allow',
-      matches: result.matches.length,
-      block_count: blockCount,
-      worst_severity: worst,
+      action: heuristicBlockCount > 0 ? 'block' : 'allow',
+      source: 'heuristic',
+      matches: heuristicHits.length,
+      block_count: heuristicBlockCount,
       packages: result.packages_scanned,
       latency_ms: elapsed,
-      snapshot_age_days: ageDays,
-    },
-    rootDir,
-  );
+    }, rootDir);
+  }
 
+  const totalAllMatches = result.matches.length + fixtureHits.length + heuristicHits.length;
+  if (totalAllMatches === 0) {
+    ok('No advisory matches — clean (all 3 pillars).');
+    logEvent({
+      event: 'sc_guard',
+      action: 'scan_run',
+      source: 'osv+fixture+heuristic',
+      matches: 0,
+      packages: result.packages_scanned,
+      outcome: 'clean',
+      latency_ms: elapsed,
+      partial_snapshot: info_.partial === true,
+    }, rootDir);
+    log('');
+    advisoryFooter();
+    process.exit(0);
+  }
   if (blockCount > 0) {
-    err(`${blockCount} HIGH+ severity match(es) — review before merging lockfile changes.`);
+    err(`${blockCount} HIGH-risk signal(s) — review before merging lockfile changes. (Worst: ${worst}${heuristicBlockCount > 0 ? `, +${heuristicBlockCount} heuristic` : ''})`);
   } else {
-    warn(`${result.matches.length} low/medium match(es) — review recommended.`);
+    warn(`${totalAllMatches} signal(s) — review recommended.`);
   }
   log('');
   advisoryFooter();
+  process.exit(exitCode);
+}
+
+async function runHeuristicOnDiff(rootDir, { quiet = false } = {}) {
+  const config = loadHeuristicConfig(rootDir);
+  const diff = diffLockfilePackages(rootDir);
+
+  // Skip the cold-start path silently in the default scan flow — checking
+  // 1000+ packages on first install would slam npm registry. Cold start is
+  // only useful when explicitly invoked via --heuristic-only.
+  const candidates = diff.filter((p) => p.change === 'added' || p.change === 'bumped');
+  if (candidates.length === 0) {
+    if (!quiet) log(chalk.dim('Heuristic (pillar 3): no NEW/bumped packages since HEAD — nothing to probe.'));
+    return [];
+  }
+
+  if (!quiet) log(chalk.bold(`Heuristic (pillar 3) — probing ${candidates.length} NEW/bumped package(s)`));
+
+  const hits = [];
+  for (const pkg of candidates) {
+    let metadata;
+    try {
+      metadata = await fetchPackageMetadata(pkg.name, rootDir);
+    } catch (e) {
+      if (!quiet) log(chalk.dim(`  · ${pkg.name}: metadata fetch failed (${e.message}) — skip`));
+      continue;
+    }
+    if (!metadata) {
+      if (!quiet) log(chalk.dim(`  · ${pkg.name}: not found on registry — skip`));
+      continue;
+    }
+    const signals = extractSignals(metadata, pkg.version);
+    const downloads = await fetchWeeklyDownloads(pkg.name, rootDir).catch(() => null);
+    const scoring = scoreSignals(signals, downloads, config, { change: pkg.change, from: pkg.from });
+    if (scoring.score >= config.risk_threshold) {
+      hits.push({
+        package: pkg.name,
+        version: pkg.version,
+        change: pkg.change,
+        score: scoring.score,
+        reasons: scoring.reasons,
+      });
+      if (!quiet) {
+        const formatted = formatHeuristicHit(pkg.name, pkg.version, pkg.change, scoring);
+        const color = scoring.score >= 80 ? chalk.red : chalk.yellow;
+        log(color(formatted));
+      }
+    }
+  }
+  if (!quiet && hits.length === 0) {
+    log(chalk.dim(`  · ${candidates.length} package(s) below risk_threshold=${config.risk_threshold} — no flags`));
+  }
+  return hits;
+}
+
+async function runHeuristicOnlyMode(rootDir, opts) {
+  const useJson = !!opts.json;
+  const hits = await runHeuristicOnDiff(rootDir, { quiet: useJson });
+  const blockCount = hits.filter((h) => h.score >= 80).length;
+  const exitCode = blockCount > 0 ? 2 : hits.length > 0 ? 1 : 0;
+  logEvent({
+    event: 'sc_guard',
+    action: blockCount > 0 ? 'block' : hits.length > 0 ? 'allow' : 'scan_run',
+    source: 'heuristic',
+    sub_mode: 'heuristic-only',
+    matches: hits.length,
+    block_count: blockCount,
+  }, rootDir);
+  if (useJson) {
+    process.stdout.write(JSON.stringify({ mode: 'heuristic-only', hits, exit_code: exitCode }) + '\n');
+  }
   process.exit(exitCode);
 }
 
@@ -298,10 +540,18 @@ async function runPreInstallMode(rootDir, opts) {
   const osvHigh = out.osv_hits.filter((h) => severityRank(h.severity) >= severityRank('high')).length;
   const exitCode = namespaceCrit > 0 ? 2 : (osvHigh > 0 ? 2 : (out.osv_hits.length > 0 ? 1 : 0));
 
+  // Distinguish what triggered the block — fixture catches must NOT be
+  // counted as OSV catches for the 2026-08-12 sunset review (see ADR-0005).
+  const blockSource = exitCode >= 2
+    ? (namespaceCrit > 0 && osvHigh > 0 ? 'fixture+osv' : namespaceCrit > 0 ? 'fixture' : 'osv')
+    : (out.osv_hits.length > 0 ? 'osv' : 'none');
+
   logEvent(
     {
       event: 'sc_guard',
       action: exitCode >= 2 ? 'block' : (exitCode === 1 ? 'allow' : 'scan_run'),
+      source: 'pre-install-mixed',
+      block_source: blockSource,
       sub_mode: 'pre-install',
       packages: packages.size,
       namespace_hits: namespaceCrit,
@@ -370,8 +620,23 @@ async function runJsonMode(rootDir, mode, opts) {
     try {
       const start = Date.now();
       const res = await syncSnapshotForProject(rootDir);
-      out.sync = { advisory_count: res.advisoryCount, package_count: res.packageCount, latency_ms: Date.now() - start };
-      logEvent({ event: 'sc_guard', action: 'sync', advisories: res.advisoryCount, packages: res.packageCount }, rootDir);
+      out.sync = {
+        advisory_count: res.advisoryCount,
+        package_count: res.packageCount,
+        latency_ms: Date.now() - start,
+        partial: !!res.partial,
+        chunks: res.chunks,
+      };
+      logEvent({
+        event: 'sc_guard',
+        action: 'sync',
+        source: 'osv',
+        advisories: res.advisoryCount,
+        packages: res.packageCount,
+        partial: !!res.partial,
+        chunks_total: res.chunks?.total ?? 1,
+        chunks_failed: res.chunks?.failed ?? 0,
+      }, rootDir);
     } catch (e) {
       out.ok = false;
       out.error = { code: e.code || 'SYNC_FAILED', message: e.message };
@@ -396,32 +661,82 @@ async function runJsonMode(rootDir, mode, opts) {
   const snap = loadSnapshot(rootDir);
   const start = Date.now();
   const result = scanProject(rootDir, snap);
-  out.scan = { ...result, elapsed_ms: Date.now() - start };
 
   if (result.error) {
     out.ok = false;
     out.error = { code: result.error.toUpperCase(), message: result.error };
+    out.scan = { ...result, elapsed_ms: Date.now() - start };
     process.stdout.write(JSON.stringify(out) + '\n');
     process.exit(1);
   }
 
-  const worst = worstSeverity(result.matches);
-  const blockCount = result.matches.filter((m) => severityRank(m.severity) >= severityRank('high')).length;
-  out.summary = { matches: result.matches.length, block_count: blockCount, worst_severity: worst };
+  // Pillar 2 (ADR-0006): fixture-driven catches in JSON mode too.
+  const fixtureBundle = loadNamespaceFixture(rootDir);
+  let fixtureHits = [];
+  if (fixtureBundle.fixture) {
+    try {
+      const lockPath = findLockfile(rootDir);
+      const lockPackages = lockPath ? parsePackageLockfile(lockPath) : new Map();
+      fixtureHits = matchNamespaceFixture(lockPackages, fixtureBundle.fixture);
+    } catch {
+      // ignore fixture failure in JSON mode
+    }
+  }
+  out.scan = { ...result, fixture_hits: fixtureHits, elapsed_ms: Date.now() - start };
 
-  logEvent(
-    {
+  const osvBlockCount = result.matches.filter((m) => severityRank(m.severity) >= severityRank('high')).length;
+  const fixtureBlockCount = fixtureHits.filter((h) => severityRank(h.severity) >= severityRank('high')).length;
+  const blockCount = osvBlockCount + fixtureBlockCount;
+  const totalMatches = result.matches.length + fixtureHits.length;
+  const worst = worstSeverity([...result.matches, ...fixtureHits]);
+  out.summary = {
+    matches: totalMatches,
+    osv_matches: result.matches.length,
+    fixture_hits: fixtureHits.length,
+    block_count: blockCount,
+    osv_block_count: osvBlockCount,
+    fixture_block_count: fixtureBlockCount,
+    worst_severity: worst,
+  };
+
+  if (result.matches.length > 0) {
+    logEvent({
       event: 'sc_guard',
-      action: blockCount > 0 ? 'block' : (result.matches.length > 0 ? 'allow' : 'scan_run'),
+      action: osvBlockCount > 0 ? 'block' : 'allow',
+      source: 'osv',
       matches: result.matches.length,
-      block_count: blockCount,
-      worst_severity: worst,
+      block_count: osvBlockCount,
+      worst_severity: worstSeverity(result.matches),
       packages: result.packages_scanned,
       snapshot_age_days: info_.age_days,
-    },
-    rootDir,
-  );
+      partial_snapshot: info_.partial === true,
+    }, rootDir);
+  }
+  if (fixtureHits.length > 0) {
+    logEvent({
+      event: 'sc_guard',
+      action: fixtureBlockCount > 0 ? 'block' : 'allow',
+      source: 'fixture',
+      matches: fixtureHits.length,
+      block_count: fixtureBlockCount,
+      worst_severity: worstSeverity(fixtureHits),
+      packages: result.packages_scanned,
+      fixture_path: fixtureBundle.path,
+    }, rootDir);
+  }
+  if (totalMatches === 0) {
+    logEvent({
+      event: 'sc_guard',
+      action: 'scan_run',
+      source: 'osv+fixture',
+      matches: 0,
+      packages: result.packages_scanned,
+      outcome: 'clean',
+      snapshot_age_days: info_.age_days,
+      partial_snapshot: info_.partial === true,
+    }, rootDir);
+  }
 
   process.stdout.write(JSON.stringify(out) + '\n');
-  process.exit(blockCount > 0 ? 2 : result.matches.length > 0 ? 1 : 0);
+  process.exit(blockCount > 0 ? 2 : totalMatches > 0 ? 1 : 0);
 }

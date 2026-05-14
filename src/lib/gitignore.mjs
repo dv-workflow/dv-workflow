@@ -53,7 +53,11 @@ function applyManagedBlock(content, blockLines) {
   if (startIdx !== -1 && endIdx !== -1 && endIdx > startIdx) {
     const before = content.slice(0, startIdx);
     const after = content.slice(endIdx + MARKER_END.length);
-    return (before + block + after).replace(/\n{3,}/g, '\n\n');
+    // Collapse multiple consecutive blanks AND normalize trailing whitespace
+    // so re-running the helper is byte-identical (required by smoke idempotency test).
+    return (before + block + after)
+      .replace(/\n{3,}/g, '\n\n')
+      .replace(/\n+$/, '\n');
   }
 
   // Markers not present — append block

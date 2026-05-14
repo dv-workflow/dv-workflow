@@ -103,11 +103,14 @@ export function run(argv) {
 
   program
     .command('security-scan')
-    .description('Scan project lockfile against advisory snapshot (OSV.dev). Supply-chain guard (ADR-0005, opt-in).')
+    .alias('scan')
+    .description('Scan project: 3-pillar supply-chain guard (OSV + fixture + AI-Native heuristic). Auto-syncs OSV snapshot if missing or stale.')
     .option('--quick', 'Offline mode — use existing snapshot only (default behavior)')
     .option('--update-db', 'Fetch fresh advisory snapshot from OSV.dev before scanning')
     .option('--pre-install', 'Scan package.json without lockfile (OSV name-only + namespace fixture)')
-    .option('--offline', 'Skip network in --pre-install mode (fixture-only)')
+    .option('--offline', 'Skip network in --pre-install mode + skip pillar 3 heuristic')
+    .option('--no-heuristic', 'Skip pillar 3 (AI-Native NEW-package heuristic). Default: enabled on lockfile diff.')
+    .option('--heuristic-only', 'Run ONLY pillar 3 (used by hook). Skips OSV + fixture pillars.')
     .option('--json', 'Output machine-readable JSON')
     .option('--install-hook', 'Wire supply-chain-scan.sh into .claude/settings.json PostToolUse (idempotent)')
     .option('--uninstall-hook', 'Remove supply-chain-scan.sh entry from .claude/settings.json')
