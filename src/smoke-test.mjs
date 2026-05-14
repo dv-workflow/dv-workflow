@@ -20,15 +20,24 @@ const TEMP_BASE = join(resolve(__dirname, '..'), '.smoke-test-tmp');
 let passed = 0;
 let failed = 0;
 
+const PENDING = [];
+
 function test(name, fn) {
-  try {
-    fn();
-    console.log(`  ✓  ${name}`);
-    passed++;
-  } catch (e) {
-    console.log(`  ✗  ${name}`);
-    console.log(`     ${e.message}`);
-    failed++;
+  PENDING.push({ name, fn });
+}
+
+async function runPending() {
+  for (const { name, fn } of PENDING) {
+    try {
+      const ret = fn();
+      if (ret && typeof ret.then === 'function') await ret;
+      console.log(`  ✓  ${name}`);
+      passed++;
+    } catch (e) {
+      console.log(`  ✗  ${name}`);
+      console.log(`     ${e.message}`);
+      failed++;
+    }
   }
 }
 
@@ -655,8 +664,9 @@ test('sc-scanner: parsePackageJson reads all dep sections', async () => {
   assert(result.has('react'), 'Missing peerDep react');
 });
 
-test('sc-scanner: matchNamespaceFixture detects tanstack pattern', async () => {
+test('sc-scanner: matchNamespaceFixture prefix-only match downgrades severity (ADR-0006)', async () => {
   const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  // Entry without affected_range → prefix-only path → critical downgrades to high
   const fixture = {
     namespaces: [
       { pattern: '@tanstack/', severity: 'critical', reason: 'test', active_until: '2099-12-31' },
@@ -669,7 +679,170 @@ test('sc-scanner: matchNamespaceFixture detects tanstack pattern', async () => {
   const hits = matchNamespaceFixture(packages, fixture);
   assert(hits.length === 1, `Expected 1 hit, got ${hits.length}`);
   assert(hits[0].package === '@tanstack/react-router', 'Wrong match');
-  assert(hits[0].severity === 'critical', 'Wrong severity');
+  assert(hits[0].severity === 'high', `Expected severity downgrade critical→high, got ${hits[0].severity}`);
+  assert(hits[0].version_check === 'prefix-only', `Expected version_check=prefix-only, got ${hits[0].version_check}`);
+});
+
+test('sc-scanner: matchNamespaceFixture concrete version IN affected_range hits with full severity', async () => {
+  const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  const fixture = {
+    namespaces: [{
+      pattern: '@tanstack/',
+      severity: 'critical',
+      active_until: '2099-12-31',
+      affected_range: { type: 'SEMVER', events: [{ introduced: '1.169.5' }, { fixed: '1.169.9' }] },
+    }],
+  };
+  const packages = new Map([['@tanstack/react-router', '1.169.7']]);
+  const hits = matchNamespaceFixture(packages, fixture);
+  assert(hits.length === 1, `Expected 1 hit, got ${hits.length}`);
+  assert(hits[0].severity === 'critical', `Concrete in-range should keep critical, got ${hits[0].severity}`);
+  assert(hits[0].version_check === 'in-range', `Expected in-range, got ${hits[0].version_check}`);
+});
+
+test('sc-scanner: matchNamespaceFixture concrete version OUT of range is skipped (no FP)', async () => {
+  const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  const fixture = {
+    namespaces: [{
+      pattern: '@tanstack/',
+      severity: 'critical',
+      active_until: '2099-12-31',
+      affected_range: { type: 'SEMVER', events: [{ introduced: '1.169.5' }, { fixed: '1.169.9' }] },
+    }],
+  };
+  const packages = new Map([['@tanstack/react-router', '1.169.9']]);
+  const hits = matchNamespaceFixture(packages, fixture);
+  assert(hits.length === 0, `Out-of-range concrete should NOT match (FP guard), got ${hits.length}`);
+});
+
+test('sc-scanner: matchNamespaceFixture range spec (^1.169.0) emits range-ambiguous hit', async () => {
+  const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
+  const fixture = {
+    namespaces: [{
+      pattern: '@tanstack/',
+      severity: 'critical',
+      active_until: '2099-12-31',
+      affected_range: { type: 'SEMVER', events: [{ introduced: '1.169.5' }, { fixed: '1.169.9' }] },
+    }],
+  };
+  // ^1.169.0 may resolve to 1.169.5+ on install — warn but downgrade
+  const packages = new Map([['@tanstack/react-router', '^1.169.0']]);
+  const hits = matchNamespaceFixture(packages, fixture);
+  assert(hits.length === 1, `Range-spec below fixed should warn, got ${hits.length}`);
+  assert(hits[0].version_check === 'range-ambiguous', `Expected range-ambiguous, got ${hits[0].version_check}`);
+  assert(hits[0].severity === 'high', `Expected severity downgrade, got ${hits[0].severity}`);
+});
+
+test('sc-heuristic: scoreSignals fires very_recent_publish + popular_package (combo block)', async () => {
+  const { scoreSignals } = await import('../src/lib/sc-heuristic.mjs');
+  const signals = {
+    package: '@tanstack/react-query',
+    version: '1.169.5',
+    publish_age_hours: 6, // very recent
+    package_modified_age_days: 5, // recent maintainer activity
+  };
+  const result = scoreSignals(signals, 50000, undefined, { change: 'added' });
+  assert(result.score >= 80, `Expected block-tier score (≥80), got ${result.score}`);
+  assert(result.reasons.some((r) => r.signal === 'very_recent_publish'), 'Missing very_recent_publish');
+  assert(result.reasons.some((r) => r.signal === 'popular_package'), 'Missing popular_package');
+  assert(result.reasons.some((r) => r.signal === 'maintainer_change_recent'), 'Missing maintainer_change_recent');
+});
+
+test('sc-heuristic: scoreSignals returns 0 for old + unpopular package (no FP cascade)', async () => {
+  const { scoreSignals } = await import('../src/lib/sc-heuristic.mjs');
+  const signals = {
+    package: 'some-random-pkg',
+    version: '1.2.3',
+    publish_age_hours: 24 * 365, // 1 year old
+    package_modified_age_days: 200,
+  };
+  const result = scoreSignals(signals, 100, undefined);
+  assert(result.score === 0, `Expected 0, got ${result.score}`);
+  assert(result.reasons.length === 0, `Expected no reasons, got ${result.reasons.length}`);
+});
+
+test('sc-heuristic: scoreSignals detects typo-squat (Levenshtein=1 of popular)', async () => {
+  const { scoreSignals } = await import('../src/lib/sc-heuristic.mjs');
+  // "reactt" is Lev=1 from "react"
+  const signals = { package: 'reactt', version: '1.0.0', publish_age_hours: 240 };
+  const result = scoreSignals(signals, 0, undefined);
+  assert(result.reasons.some((r) => r.signal === 'typo_squat'), 'Should flag typo-squat');
+  assert(result.score >= 60, `Typo-squat alone should block-tier, got ${result.score}`);
+});
+
+test('npm-registry: cache TTL respects 1h boundary', async () => {
+  const { cachePut, cacheGet, pruneCache } = await import('../src/lib/npm-registry.mjs');
+  const dir = freshDir('npm-cache-ttl');
+  mkdirSync(join(dir, '.dw', 'security'), { recursive: true });
+  cachePut(dir, 'pkg:test-a', { foo: 'bar' });
+  const fresh = cacheGet(dir, 'pkg:test-a', 60 * 60 * 1000);
+  assert(fresh && fresh.foo === 'bar', `Cache should return fresh entry, got ${JSON.stringify(fresh)}`);
+  // Force-expire by passing TTL of 0
+  const expired = cacheGet(dir, 'pkg:test-a', 0);
+  assert(expired === null, `Cache should expire when TTL=0, got ${JSON.stringify(expired)}`);
+  // Prune does not throw on the cache file
+  pruneCache(dir, 0);
+});
+
+test('sc-heuristic: diffLockfilePackages cold-start (no git history) reports all as cold-start', async () => {
+  const { diffLockfilePackages } = await import('../src/lib/sc-heuristic.mjs');
+  const dir = freshDir('sc-heur-coldstart');
+  // freshDir already calls git init; no commits, no HEAD → diff falls through to cold-start
+  writeFileSync(join(dir, 'package-lock.json'), JSON.stringify({
+    name: 'cold', version: '1.0.0', lockfileVersion: 3, requires: true,
+    packages: {
+      '': { name: 'cold', version: '1.0.0' },
+      'node_modules/lodash': { version: '4.17.21' },
+      'node_modules/express': { version: '4.18.2' },
+    },
+  }));
+  const diff = diffLockfilePackages(dir);
+  assert(diff.length === 2, `Expected 2 entries (cold-start), got ${diff.length}`);
+  assert(diff.every((d) => d.change === 'cold-start'), 'All entries should be marked cold-start');
+});
+
+test('sc-heuristic: diffLockfilePackages detects added + bumped against git HEAD', async () => {
+  const { diffLockfilePackages } = await import('../src/lib/sc-heuristic.mjs');
+  const dir = freshDir('sc-heur-diff');
+  // Commit a baseline lockfile
+  const baseline = {
+    name: 'app', version: '1.0.0', lockfileVersion: 3, requires: true,
+    packages: {
+      '': { name: 'app', version: '1.0.0' },
+      'node_modules/lodash': { version: '4.17.20' },
+    },
+  };
+  writeFileSync(join(dir, 'package-lock.json'), JSON.stringify(baseline));
+  execSync('git add package-lock.json', { cwd: dir, stdio: 'pipe' });
+  execSync('git -c user.email=t@t -c user.name=t commit -m baseline', { cwd: dir, stdio: 'pipe' });
+
+  // Now bump lodash AND add @tanstack/react-query
+  const updated = {
+    ...baseline,
+    packages: {
+      '': baseline.packages[''],
+      'node_modules/lodash': { version: '4.17.21' },
+      'node_modules/@tanstack/react-query': { version: '1.169.5' },
+    },
+  };
+  writeFileSync(join(dir, 'package-lock.json'), JSON.stringify(updated));
+
+  const diff = diffLockfilePackages(dir);
+  const lodash = diff.find((d) => d.name === 'lodash');
+  const tanstack = diff.find((d) => d.name === '@tanstack/react-query');
+  assert(lodash && lodash.change === 'bumped', `lodash should be bumped, got ${JSON.stringify(lodash)}`);
+  assert(lodash.from === '4.17.20' && lodash.version === '4.17.21', `wrong from/to: ${JSON.stringify(lodash)}`);
+  assert(tanstack && tanstack.change === 'added', `tanstack should be added, got ${JSON.stringify(tanstack)}`);
+});
+
+test('security-scan --heuristic-only exits 0 when no diff to probe', () => {
+  const dir = freshDir('sc-heur-only-nothing');
+  // Empty/non-existent lockfile → diff returns 0 entries → exit 0
+  try {
+    dw('security-scan --heuristic-only', dir);
+  } catch (e) {
+    assert(e.status === 0, `Expected exit 0 (no candidates), got ${e.status}`);
+  }
 });
 
 test('sc-scanner: namespace fixture skips expired entries', async () => {
@@ -763,6 +936,8 @@ test('upgrade fails on project without config', () => {
     assert(e.status === 1, 'Should exit with code 1');
   }
 });
+
+await runPending();
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────
 rmSync(TEMP_BASE, { recursive: true });

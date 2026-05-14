@@ -39,6 +39,7 @@ export function cacheGet(rootDir, key, ttlMs = CACHE_TTL_MS) {
   const map = loadCache(rootDir);
   const entry = map.get(key);
   if (!entry) return null;
+  if (ttlMs <= 0) return null;
   if (Date.now() - entry.cached_at > ttlMs) return null;
   return entry.value;
 }
