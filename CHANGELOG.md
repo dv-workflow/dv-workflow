@@ -4,28 +4,93 @@
 
 ---
 
-## [v1.3.6] — 2026-05-13
+## [v1.3.6] — 2026-05-14
 
-### Fixed — Supply-Chain Guard hardening (Closes [#7](https://github.com/dv-workflow/dv-workflow/issues/7))
+### The headline — 3-pillar AI-Native supply-chain guard ([ADR-0006](.dw/decisions/0006-supply-chain-guard-heuristic.md))
+
+v1.3.5 shipped one pillar (OSV snapshot). v1.3.6 ships three. Goal: **vul vừa xảy ra → end-user phản ứng trong giờ, không phải ngày.**
+
+| Pillar | Signal | Latency | Catches |
+|--------|--------|---------|---------|
+| 1. OSV snapshot | osv.dev | 2-7 days | Known + indexed |
+| 2. Curated IoC fixture (NEW: wired into default scan + version-aware) | TL commit | TL response | Known + TL-bumped |
+| 3. NEW-package heuristic at hook fire (NEW: AI-Native moat) | npm registry metadata | Real-time | Zero-day-ish, BEFORE anyone knows |
+
+### Fixed (Closes [#7](https://github.com/dv-workflow/dv-workflow/issues/7))
 
 **Bug 1 (blocking) — `dw security-scan --update-db` HTTP 400 on >1000 packages**
 
-- OSV.dev `/v1/querybatch` rejects requests with >1000 queries. Projects with 1000+ packages crashed every time with a generic `OSV batch HTTP 400`.
-- Now chunked at `OSV_BATCH_LIMIT=1000` with `Promise.allSettled` + `OSV_BATCH_CONCURRENCY=2` (polite default) + retry-with-jittered-backoff on 429/502/503/504.
-- Per-chunk fail-soft: one chunk failure no longer discards sibling successes. Snapshot persists with `partial: true` + per-chunk index, scan output warns the user, `dw doctor` reports degraded state. Hard fail (`SYNC_ALL_CHUNKS_FAILED`) only when every chunk fails.
+OSV.dev `/v1/querybatch` rejects >1000 queries; large projects crashed with `OSV batch HTTP 400`.
+- Chunked at `OSV_BATCH_LIMIT=1000` with `Promise.allSettled` + `OSV_BATCH_CONCURRENCY=2` + retry-with-jittered-backoff on 429/502/503/504.
+- Per-chunk fail-soft: one chunk failure no longer discards sibling successes. Snapshot persists with `partial: true` + per-chunk index. Hard fail (`SYNC_ALL_CHUNKS_FAILED`) only when every chunk fails.
 
-**Sunset-review integrity (preparation for v1.4 fixture wiring)**
+**Gap 2 (degraded) — fixture only consulted in `--pre-install`, not default scan**
 
-- All `sc_guard` telemetry events now carry an explicit `source` field (`'osv'` or `'pre-install-mixed'`); pre-install events also carry `block_source` (`'fixture'` / `'osv'` / `'fixture+osv'` / `'none'`).
-- `summarize()` exposes `supplyChainBySource` and `supplyChainPartial` breakdowns so the 2026-08-12 sunset review can distinguish OSV-driven catches from fixture-driven catches and exclude partial-snapshot scans from the 0-catches denominator — per [ADR-0005 §Sunset](.dw/decisions/0005-supply-chain-guard.md).
+The wiring bug behind "0 matches for `@tanstack/*` 2 days after the incident."
+- `matchNamespaceFixture` now consulted in default `dw security-scan` AND JSON mode.
+- **Version-aware matcher** (schema bumped to 1.1): entries carry `affected_range` (SEMVER events). Concrete version OUT of range is *skipped* (no FP — addresses adversarial review critique #2). Range specs (`^1.169.0`) emit `range-ambiguous` hits with severity downgrade. Prefix-only entries (no range) also severity-downgraded.
+- TanStack fixture entry now `1.169.5..1.169.9`; Mistral `2.2.3..2.2.5`; OpenSearch `3.6.2..3.6.3`.
+
+### Added — Pillar 3: AI-Native NEW-package heuristic
+
+Hook (`PostToolUse` on Claude Code Write/Edit lockfile) now calls `dw security-scan --heuristic-only`:
+
+1. **Diff lockfile** against `git show HEAD:package-lock.json` → list ONLY NEW + bumped packages (typical: 1-5/edit, not 1000+). Optimization the user asked for: "không phải lúc nào cũng quét realtime."
+2. **Fetch npm registry metadata** per package, cached 1h at `.dw/security/npm-registry-cache.jsonl`. Repeated edits hit cache, not network.
+3. **Composite signal scoring**:
+   - `very_recent_publish` (<24h): +50
+   - `recent_publish` (<72h): +30
+   - `popular_package` (≥10k weekly DL): +20
+   - `maintainer_change_recent` (<30d): +40
+   - `major_version_jump`: +15
+   - `typo_squat` (Lev=1 of bundled popular list): +60
+4. **Reports** to stderr non-blocking. Threshold default 50, tunable via `.dw/config/dw.config.yml`:
+   ```yaml
+   security:
+     heuristic:
+       risk_threshold: 50
+       weekly_downloads_min: 10000
+       recent_publish_hours: 72
+   ```
+
+**Reaction-time outcome**: AI adds `@tanstack/react-query@1.169.5` (published 6h ago) → hook → heuristic catches BEFORE OSV indexes, BEFORE TL bumps fixture, BEFORE any npm publish cycle. **Cycle ~1h** instead of 24-72h.
+
+### Telemetry (sunset-review integrity)
+
+- `sc_guard.*` events carry `source` field: `osv` | `fixture` | `heuristic` | `osv+fixture` | `pre-install-mixed`.
+- Pre-install events additionally carry `block_source` (which subsystem blocked).
+- Sync events carry `partial`, `chunks_total`, `chunks_failed`.
+- Scan events carry `partial_snapshot` — partial-clean scans excluded from the 0-catches denominator at 2026-08-12 review.
+- `summarize()` exposes per-pillar `supplyChainBySource` + `supplyChainPartial`. August review attributes catches per pillar; no single FP-prone pillar can sink the metric.
+
+### CLI flags (additions)
+
+```
+dw security-scan                  # default: all 3 pillars
+dw security-scan --no-heuristic   # skip pillar 3 (no network)
+dw security-scan --offline        # skip network (also skips pillar 3)
+dw security-scan --heuristic-only # only pillar 3 (used by hook)
+```
+
+### New files
+
+- `src/lib/npm-registry.mjs` — registry adapter + 1h TTL cache
+- `src/lib/sc-heuristic.mjs` — lockfile diff + scoring engine + bundled popular-package list
+- `.dw/decisions/0006-supply-chain-guard-heuristic.md` — ADR extending ADR-0005
 
 ### Test suite
 
-- +6 smoke cases (47 → 53/53 pass): chunked 2500-pkg call accounting, <1000-pkg regression, partial-failure persistence, all-chunk-fail hard error, retry-on-503, telemetry source breakdown.
++16 smoke cases (47 → 63/63 pass): chunked sync, retry/backoff, version-aware matcher boundaries, heuristic composite scoring, typo-squat detection, lockfile diff (cold-start + git-HEAD-aware), cache TTL boundary.
 
-### Deferred to v1.4 (gated on ADR-0005 amendment)
+**Smoke runner bug fixed**: async tests previously silently masked rejections. After fix, caught a pre-existing `gitignore.mjs` non-idempotence bug (trailing-newline accumulation). Both fixed in this release.
 
-The remaining suggestions from [#7](https://github.com/dv-workflow/dv-workflow/issues/7) (wire bundled namespace fixture into default `scan` mode, remote fixture refresh) need (a) a version-aware matcher to avoid blowing past the ≤5% FP sunset criterion, and (b) signed fetch with pinned commit-SHA to avoid recreating the supply-chain trust gap inside a supply-chain guard. Tracked in `.dw/tasks/sc-guard-v1.4-fixture-wiring/`.
+### ADR-0005 5h/cycle cap intentionally overridden
+
+Documented explicitly in [ADR-0006 §Effort](.dw/decisions/0006-supply-chain-guard-heuristic.md). Total cycle ~9h. Shipping without pillar 3 leaves the AI-Native moat unproven.
+
+### Deferred to v1.4 (tracked in `.dw/tasks/sc-guard-v1.4-fixture-wiring/`)
+
+Remote fixture refresh (signed-pin trust model), pnpm/yarn lockfile support, monorepo workspace discovery, deep maintainer-change history. Pillar 3 reduces the urgency of remote fixture refresh since heuristic catches don't depend on TL bump.
 
 ---
 
