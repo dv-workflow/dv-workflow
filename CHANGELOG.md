@@ -63,13 +63,30 @@ Hook (`PostToolUse` on Claude Code Write/Edit lockfile) now calls `dw security-s
 - Scan events carry `partial_snapshot` — partial-clean scans excluded from the 0-catches denominator at 2026-08-12 review.
 - `summarize()` exposes per-pillar `supplyChainBySource` + `supplyChainPartial`. August review attributes catches per pillar; no single FP-prone pillar can sink the metric.
 
+### UX simplification (post-dogfood feedback)
+
+End-user setup now matches `npm audit` ergonomics — 1 lệnh khi cài, 1 lệnh khi scan:
+
+```bash
+npm i -g dw-kit && dw init --preset team   # prompts "Sync OSV snapshot now?" (Y/n, default Y)
+dw scan                                     # all 3 pillars; auto-syncs if snapshot stale/missing
+```
+
+Changes:
+- **`dw scan` alias** for `dw security-scan`
+- **Lazy auto-refresh** — `dw scan` auto-syncs OSV if snapshot missing OR stale >7d. Skipped on `--offline` / `--quick`. No more weekly chore.
+- **`dw init` prompts for OSV bootstrap** (TTY only; non-TTY auto-yes; skip via `DW_INIT_NO_PROMPT=1`)
+- **No-lockfile graceful fallback** — `dw scan` on a project with `package.json` but no `package-lock.json` (fresh checkout, pre-`npm install`) auto-switches to pre-install mode instead of erroring out
+- **No-project helpful hint** — `dw scan` outside a Node project exits with actionable message, not stack trace
+
 ### CLI flags (additions)
 
 ```
-dw security-scan                  # default: all 3 pillars
-dw security-scan --no-heuristic   # skip pillar 3 (no network)
-dw security-scan --offline        # skip network (also skips pillar 3)
-dw security-scan --heuristic-only # only pillar 3 (used by hook)
+dw scan                  # alias for security-scan
+dw scan --no-heuristic   # skip pillar 3 (no network)
+dw scan --offline        # skip network (also skips pillar 3 + auto-refresh)
+dw scan --heuristic-only # only pillar 3 (used by hook)
+dw scan --update-db      # explicit OSV sync (rarely needed thanks to auto-refresh)
 ```
 
 ### New files
@@ -80,7 +97,7 @@ dw security-scan --heuristic-only # only pillar 3 (used by hook)
 
 ### Test suite
 
-+16 smoke cases (47 → 63/63 pass): chunked sync, retry/backoff, version-aware matcher boundaries, heuristic composite scoring, typo-squat detection, lockfile diff (cold-start + git-HEAD-aware), cache TTL boundary.
++20 smoke cases (47 → 67/67 pass): chunked sync, retry/backoff, version-aware matcher boundaries, heuristic composite scoring, typo-squat detection, lockfile diff (cold-start + git-HEAD-aware), cache TTL boundary, `dw scan` alias resolution, no-lockfile fallback, `--offline` suppresses auto-refresh.
 
 **Smoke runner bug fixed**: async tests previously silently masked rejections. After fix, caught a pre-existing `gitignore.mjs` non-idempotence bug (trailing-newline accumulation). Both fixed in this release.
 
