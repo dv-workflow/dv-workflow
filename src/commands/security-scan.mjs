@@ -23,6 +23,8 @@ import {
   matchNamespaceFixture,
 } from '../lib/sc-scanner.mjs';
 import { logEvent } from '../lib/telemetry.mjs';
+import { fetchPackageMetadata, extractSignals, fetchWeeklyDownloads } from '../lib/npm-registry.mjs';
+import { diffLockfilePackages, scoreSignals, loadHeuristicConfig, formatHeuristicHit } from '../lib/sc-heuristic.mjs';
 
 const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const NAMESPACE_FIXTURE_REL = '.dw/security/ioc-namespaces.json';
@@ -33,6 +35,12 @@ export async function securityScanCommand(opts) {
 
   if (mode === 'pre-install') {
     return runPreInstallMode(rootDir, opts);
+  }
+
+  // Pillar 3 standalone path — hook fires with --heuristic-only for fast
+  // diff-only scan on lockfile edit. No OSV/fixture noise.
+  if (opts.heuristicOnly) {
+    return runHeuristicOnlyMode(rootDir, opts);
   }
 
   if (opts.json) {
@@ -144,24 +152,6 @@ export async function securityScanCommand(opts) {
   log(`  Elapsed           : ${elapsed}ms`);
   log('');
 
-  const totalMatches = result.matches.length + fixtureHits.length;
-  if (totalMatches === 0) {
-    ok('No advisory matches — clean.');
-    logEvent({
-      event: 'sc_guard',
-      action: 'scan_run',
-      source: 'osv+fixture',
-      matches: 0,
-      packages: result.packages_scanned,
-      outcome: 'clean',
-      latency_ms: elapsed,
-      partial_snapshot: info_.partial === true,
-    }, rootDir);
-    log('');
-    advisoryFooter();
-    return;
-  }
-
   // OSV matches first (existing display)
   if (result.matches.length > 0) {
     log(chalk.bold(`OSV advisory matches (${result.matches.length})`));
@@ -193,10 +183,23 @@ export async function securityScanCommand(opts) {
     log('');
   }
 
-  // Combined severity for exit code
+  // Pillar 3 (ADR-0006): NEW-package heuristic on diff. Auto-skip if offline
+  // or --no-heuristic. Runs AFTER pillars 1+2 so blocking signals still surface
+  // even if heuristic times out / network fails.
+  let heuristicHits = [];
+  if (!opts.offline && opts.heuristic !== false) {
+    try {
+      heuristicHits = await runHeuristicOnDiff(rootDir, { quiet: false });
+    } catch (e) {
+      warn(`Heuristic check failed: ${e.message} (non-blocking)`);
+    }
+  }
+
+  // Combined severity for exit code (heuristic blocks at score ≥80)
   const osvBlockCount = result.matches.filter((m) => severityRank(m.severity) >= severityRank('high')).length;
   const fixtureBlockCount = fixtureHits.filter((h) => severityRank(h.severity) >= severityRank('high')).length;
-  const blockCount = osvBlockCount + fixtureBlockCount;
+  const heuristicBlockCount = heuristicHits.filter((h) => h.score >= 80).length;
+  const blockCount = osvBlockCount + fixtureBlockCount + heuristicBlockCount;
   const exitCode = blockCount > 0 ? 2 : 1;
   const worst = worstSeverity([...result.matches, ...fixtureHits]);
 
@@ -235,13 +238,113 @@ export async function securityScanCommand(opts) {
     );
   }
 
+  if (heuristicHits.length > 0) {
+    logEvent({
+      event: 'sc_guard',
+      action: heuristicBlockCount > 0 ? 'block' : 'allow',
+      source: 'heuristic',
+      matches: heuristicHits.length,
+      block_count: heuristicBlockCount,
+      packages: result.packages_scanned,
+      latency_ms: elapsed,
+    }, rootDir);
+  }
+
+  const totalAllMatches = result.matches.length + fixtureHits.length + heuristicHits.length;
+  if (totalAllMatches === 0) {
+    ok('No advisory matches — clean (all 3 pillars).');
+    logEvent({
+      event: 'sc_guard',
+      action: 'scan_run',
+      source: 'osv+fixture+heuristic',
+      matches: 0,
+      packages: result.packages_scanned,
+      outcome: 'clean',
+      latency_ms: elapsed,
+      partial_snapshot: info_.partial === true,
+    }, rootDir);
+    log('');
+    advisoryFooter();
+    process.exit(0);
+  }
   if (blockCount > 0) {
-    err(`${blockCount} HIGH+ severity match(es) — review before merging lockfile changes. (Worst: ${worst})`);
+    err(`${blockCount} HIGH-risk signal(s) — review before merging lockfile changes. (Worst: ${worst}${heuristicBlockCount > 0 ? `, +${heuristicBlockCount} heuristic` : ''})`);
   } else {
-    warn(`${totalMatches} low/medium match(es) — review recommended.`);
+    warn(`${totalAllMatches} signal(s) — review recommended.`);
   }
   log('');
   advisoryFooter();
+  process.exit(exitCode);
+}
+
+async function runHeuristicOnDiff(rootDir, { quiet = false } = {}) {
+  const config = loadHeuristicConfig(rootDir);
+  const diff = diffLockfilePackages(rootDir);
+
+  // Skip the cold-start path silently in the default scan flow — checking
+  // 1000+ packages on first install would slam npm registry. Cold start is
+  // only useful when explicitly invoked via --heuristic-only.
+  const candidates = diff.filter((p) => p.change === 'added' || p.change === 'bumped');
+  if (candidates.length === 0) {
+    if (!quiet) log(chalk.dim('Heuristic (pillar 3): no NEW/bumped packages since HEAD — nothing to probe.'));
+    return [];
+  }
+
+  if (!quiet) log(chalk.bold(`Heuristic (pillar 3) — probing ${candidates.length} NEW/bumped package(s)`));
+
+  const hits = [];
+  for (const pkg of candidates) {
+    let metadata;
+    try {
+      metadata = await fetchPackageMetadata(pkg.name, rootDir);
+    } catch (e) {
+      if (!quiet) log(chalk.dim(`  · ${pkg.name}: metadata fetch failed (${e.message}) — skip`));
+      continue;
+    }
+    if (!metadata) {
+      if (!quiet) log(chalk.dim(`  · ${pkg.name}: not found on registry — skip`));
+      continue;
+    }
+    const signals = extractSignals(metadata, pkg.version);
+    const downloads = await fetchWeeklyDownloads(pkg.name, rootDir).catch(() => null);
+    const scoring = scoreSignals(signals, downloads, config, { change: pkg.change, from: pkg.from });
+    if (scoring.score >= config.risk_threshold) {
+      hits.push({
+        package: pkg.name,
+        version: pkg.version,
+        change: pkg.change,
+        score: scoring.score,
+        reasons: scoring.reasons,
+      });
+      if (!quiet) {
+        const formatted = formatHeuristicHit(pkg.name, pkg.version, pkg.change, scoring);
+        const color = scoring.score >= 80 ? chalk.red : chalk.yellow;
+        log(color(formatted));
+      }
+    }
+  }
+  if (!quiet && hits.length === 0) {
+    log(chalk.dim(`  · ${candidates.length} package(s) below risk_threshold=${config.risk_threshold} — no flags`));
+  }
+  return hits;
+}
+
+async function runHeuristicOnlyMode(rootDir, opts) {
+  const useJson = !!opts.json;
+  const hits = await runHeuristicOnDiff(rootDir, { quiet: useJson });
+  const blockCount = hits.filter((h) => h.score >= 80).length;
+  const exitCode = blockCount > 0 ? 2 : hits.length > 0 ? 1 : 0;
+  logEvent({
+    event: 'sc_guard',
+    action: blockCount > 0 ? 'block' : hits.length > 0 ? 'allow' : 'scan_run',
+    source: 'heuristic',
+    sub_mode: 'heuristic-only',
+    matches: hits.length,
+    block_count: blockCount,
+  }, rootDir);
+  if (useJson) {
+    process.stdout.write(JSON.stringify({ mode: 'heuristic-only', hits, exit_code: exitCode }) + '\n');
+  }
   process.exit(exitCode);
 }
 
