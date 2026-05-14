@@ -845,6 +845,78 @@ test('security-scan --heuristic-only exits 0 when no diff to probe', () => {
   }
 });
 
+// ── UX fixes for v1.3.6 PR ────────────────────────────────────────────────
+
+test('cli: `dw scan` alias resolves to security-scan command', () => {
+  const out = dw('scan --help', TEMP_BASE);
+  assert(out.includes('Scan project') || out.includes('supply-chain') || out.includes('--update-db'),
+    `Expected scan help to show security-scan options, got: ${out.slice(0, 200)}`);
+});
+
+test('scan: no lockfile but package.json exists → falls back to pre-install (not error)', () => {
+  const dir = freshDir('sc-no-lockfile-fallback');
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({
+    name: 'fresh-app', version: '1.0.0',
+    dependencies: { 'lodash': '^4.17.21' },
+  }));
+  // Pre-create a tiny stale snapshot so the auto-refresh path doesn't hit network
+  mkdirSync(join(dir, '.dw', 'security'), { recursive: true });
+  writeFileSync(join(dir, '.dw', 'security', 'advisory-snapshot.json'), JSON.stringify({
+    schema_version: '1.0',
+    fetched_at: new Date().toISOString(),
+    source: 'osv.dev', ecosystem: 'npm',
+    package_count: 0, advisory_count: 0, advisories: [],
+  }));
+  let combined;
+  try {
+    combined = dw('scan --offline', dir);
+  } catch (e) {
+    // offline + lodash safe → pillar 2 no fixture → pillar 3 skipped (offline) → clean exit 0
+    combined = (e.stdout || '') + (e.stderr || '');
+    // If fallback to pre-install happens with lodash safe → exit code 0 expected, but
+    // execSync throws only on non-zero. So this branch fires if pre-install hit something.
+    assert(e.status === 0 || e.status === 1, `Unexpected exit ${e.status}`);
+  }
+  // The key behavior: did NOT die with "no lockfile" hard error
+  assert(!/^.*No lockfile.*not a Node project.*$/m.test(combined || ''),
+    'Should NOT report "not a Node project" when package.json exists');
+});
+
+test('scan: no lockfile AND no package.json → exits gracefully with hint', () => {
+  const dir = freshDir('sc-no-project');
+  // Pre-create a tiny snapshot so we don't trigger auto-refresh network call
+  mkdirSync(join(dir, '.dw', 'security'), { recursive: true });
+  writeFileSync(join(dir, '.dw', 'security', 'advisory-snapshot.json'), JSON.stringify({
+    schema_version: '1.0',
+    fetched_at: new Date().toISOString(),
+    source: 'osv.dev', ecosystem: 'npm',
+    package_count: 0, advisory_count: 0, advisories: [],
+  }));
+  try {
+    dw('scan --offline', dir);
+    assert(false, 'Expected non-zero exit when no Node project');
+  } catch (e) {
+    assert(e.status === 1, `Expected exit 1, got ${e.status}`);
+    const combined = (e.stdout || '') + (e.stderr || '');
+    assert(/no package\.json|not a Node project|No lockfile/i.test(combined),
+      `Expected helpful hint, got: ${combined.slice(0, 200)}`);
+  }
+});
+
+test('scan: --offline flag suppresses auto-refresh on missing snapshot', () => {
+  const dir = freshDir('sc-offline-no-snap');
+  writeFileSync(join(dir, 'package.json'), JSON.stringify({ name: 'a', version: '1.0.0' }));
+  // No snapshot, no lockfile, --offline → must NOT attempt network
+  // Should fall to pre-install --offline path (which works on package.json)
+  try {
+    dw('scan --offline', dir);
+  } catch (e) {
+    // pre-install with clean package.json → exit 0 typical
+    const combined = (e.stdout || '') + (e.stderr || '');
+    assert(!/Auto-sync/i.test(combined), 'Should NOT attempt auto-sync when --offline');
+  }
+});
+
 test('sc-scanner: namespace fixture skips expired entries', async () => {
   const { matchNamespaceFixture } = await import('../src/lib/sc-scanner.mjs');
   const fixture = {
