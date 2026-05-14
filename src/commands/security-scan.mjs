@@ -85,11 +85,47 @@ export async function securityScanCommand(opts) {
     log('');
   }
 
-  const info_ = snapshotInfo(rootDir);
+  // UX: lazy auto-refresh — if snapshot is missing OR stale, fetch fresh
+  // automatically (matches `npm audit` zero-friction UX). Skipped on --offline
+  // or --quick (explicit user request to stay offline).
+  let info_ = snapshotInfo(rootDir);
+  const shouldAutoRefresh = !opts.offline && !opts.quick && mode !== 'update-db' && (!info_.exists || info_.stale);
+  if (shouldAutoRefresh) {
+    const reason = !info_.exists ? 'no snapshot yet' : `snapshot ${info_.age_days.toFixed(1)}d old (>7d)`;
+    info(`Auto-syncing OSV snapshot (${reason})...`);
+    try {
+      const start = Date.now();
+      const res = await syncSnapshotForProject(rootDir);
+      const elapsed = Date.now() - start;
+      const partialNote = res.partial ? ` (PARTIAL ${res.chunks.failed}/${res.chunks.total})` : '';
+      ok(`Auto-sync done — ${res.advisoryCount} advisories for ${res.packageCount} packages (${elapsed}ms)${partialNote}`);
+      logEvent({
+        event: 'sc_guard', action: 'sync', source: 'osv',
+        advisories: res.advisoryCount, packages: res.packageCount, latency_ms: elapsed,
+        partial: !!res.partial, sub_mode: 'auto-refresh',
+      }, rootDir);
+      log('');
+      info_ = snapshotInfo(rootDir);
+    } catch (e) {
+      // Auto-refresh failure is NOT fatal — fall back to stale snapshot if available,
+      // or to pillars 2+3 only. Honest message to user.
+      warn(`Auto-sync failed: ${e.message}. Proceeding with available signals.`);
+      if (e.code === 'NO_LOCKFILE') {
+        // Caller-level no-lockfile handler kicks in below
+      }
+    }
+  }
+
   if (!info_.exists) {
-    warn('No advisory snapshot found.');
-    log('Run `dw security-scan --update-db` to fetch from OSV.dev.');
-    log('Quick mode requires an existing snapshot.');
+    // Pillar 1 unavailable. Try to fall back to pre-install if no lockfile.
+    const pkgPath = findPackageJson(rootDir);
+    if (pkgPath) {
+      warn('No advisory snapshot AND no lockfile — falling back to pre-install scan (pillar 2 fixture + OSV name-only).');
+      log('');
+      return runPreInstallMode(rootDir, opts);
+    }
+    err('No advisory snapshot found and no package.json in current directory.');
+    log('Tip: run `dw scan --update-db` from a Node project, or use `dw scan` with --offline to skip pillar 1.');
     process.exit(1);
   }
 
@@ -118,7 +154,16 @@ export async function securityScanCommand(opts) {
   const result = scanProject(rootDir, snap);
 
   if (result.error === 'no_lockfile') {
-    err('No lockfile found (expected package-lock.json).');
+    // UX: auto-fallback to pre-install mode if package.json exists.
+    // User reported v1.3.5 blocked instead of degrading gracefully.
+    const pkgPath = findPackageJson(rootDir);
+    if (pkgPath) {
+      log('');
+      info('No lockfile yet (npm install not run) — switching to pre-install scan against package.json.');
+      log('');
+      return runPreInstallMode(rootDir, opts);
+    }
+    err('No lockfile and no package.json — this directory is not a Node project.');
     process.exit(1);
   }
   if (result.error === 'no_snapshot') {

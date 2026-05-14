@@ -103,7 +103,8 @@ export function run(argv) {
 
   program
     .command('security-scan')
-    .description('Scan project lockfile against advisory snapshot (OSV.dev). Supply-chain guard (ADR-0005, opt-in).')
+    .alias('scan')
+    .description('Scan project: 3-pillar supply-chain guard (OSV + fixture + AI-Native heuristic). Auto-syncs OSV snapshot if missing or stale.')
     .option('--quick', 'Offline mode — use existing snapshot only (default behavior)')
     .option('--update-db', 'Fetch fresh advisory snapshot from OSV.dev before scanning')
     .option('--pre-install', 'Scan package.json without lockfile (OSV name-only + namespace fixture)')
