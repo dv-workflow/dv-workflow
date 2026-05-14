@@ -16,6 +16,8 @@ import {
   severityRank,
   worstSeverity,
   parsePackageJson,
+  parsePackageLockfile,
+  findLockfile,
   findPackageJson,
   matchPackageByName,
   matchNamespaceFixture,
@@ -106,7 +108,6 @@ export async function securityScanCommand(opts) {
   const snap = loadSnapshot(rootDir);
   const start = Date.now();
   const result = scanProject(rootDir, snap);
-  const elapsed = Date.now() - start;
 
   if (result.error === 'no_lockfile') {
     err('No lockfile found (expected package-lock.json).');
@@ -117,17 +118,39 @@ export async function securityScanCommand(opts) {
     process.exit(1);
   }
 
+  // Pillar 2 (ADR-0006): fixture-driven catches in default scan path.
+  // Distinguishes 'source: fixture' from 'source: osv' for sunset-review integrity.
+  const fixtureBundle = loadNamespaceFixture(rootDir);
+  let fixtureHits = [];
+  if (fixtureBundle.fixture) {
+    try {
+      const lockPath = findLockfile(rootDir);
+      const lockPackages = lockPath ? parsePackageLockfile(lockPath) : new Map();
+      fixtureHits = matchNamespaceFixture(lockPackages, fixtureBundle.fixture);
+    } catch {
+      // fixture failure must not break OSV scan
+    }
+  }
+  const elapsed = Date.now() - start;
+
   log(`  Lockfile          : ${result.lockfile}`);
   log(`  Packages scanned  : ${result.packages_scanned}`);
+  if (fixtureBundle.fixture) {
+    const activeCount = (fixtureBundle.fixture.namespaces || []).filter(
+      (n) => !n.active_until || new Date(n.active_until) > new Date(),
+    ).length;
+    log(`  Fixture           : ${activeCount} active IoC pattern(s) (${fixtureBundle.path})`);
+  }
   log(`  Elapsed           : ${elapsed}ms`);
   log('');
 
-  if (result.matches.length === 0) {
+  const totalMatches = result.matches.length + fixtureHits.length;
+  if (totalMatches === 0) {
     ok('No advisory matches — clean.');
     logEvent({
       event: 'sc_guard',
       action: 'scan_run',
-      source: 'osv',
+      source: 'osv+fixture',
       matches: 0,
       packages: result.packages_scanned,
       outcome: 'clean',
@@ -139,41 +162,83 @@ export async function securityScanCommand(opts) {
     return;
   }
 
-  log(chalk.bold(`Matches (${result.matches.length})`));
-  const sorted = result.matches.slice().sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
-  for (const m of sorted) {
-    const tag = severityTag(m.severity);
-    log(`  ${tag} ${m.package}@${m.version}`);
-    if (m.summary) log(chalk.dim(`      ${m.summary}`));
-    log(chalk.dim(`      advisory: ${m.advisory_id}`));
-    if (m.fix_versions.length) log(chalk.dim(`      fix:      ${m.fix_versions.join(', ')}`));
+  // OSV matches first (existing display)
+  if (result.matches.length > 0) {
+    log(chalk.bold(`OSV advisory matches (${result.matches.length})`));
+    const sorted = result.matches.slice().sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
+    for (const m of sorted) {
+      const tag = severityTag(m.severity);
+      log(`  ${tag} ${m.package}@${m.version}`);
+      if (m.summary) log(chalk.dim(`      ${m.summary}`));
+      log(chalk.dim(`      advisory: ${m.advisory_id}`));
+      if (m.fix_versions.length) log(chalk.dim(`      fix:      ${m.fix_versions.join(', ')}`));
+    }
+    log('');
   }
-  log('');
 
-  const worst = worstSeverity(result.matches);
-  const blockCount = result.matches.filter((m) => severityRank(m.severity) >= severityRank('high')).length;
+  // Pillar 2: fixture hits (new section, prefixed [NS-IOC])
+  if (fixtureHits.length > 0) {
+    log(chalk.bold.red(`⚠️  ACTIVE INCIDENT IoC matches (${fixtureHits.length}) — curated fixture`));
+    const sortedHits = fixtureHits.slice().sort((a, b) => severityRank(b.severity) - severityRank(a.severity));
+    for (const h of sortedHits) {
+      const tag = severityTag(h.severity);
+      log(`  ${tag} [NS-IOC] ${h.package}${h.version ? '@' + h.version : ''} matches "${h.namespace_pattern}"`);
+      if (h.reason) log(chalk.dim(`      ${h.reason}`));
+      if (h.guidance) log(chalk.yellow(`      guidance: ${h.guidance}`));
+      if (h.advisory_url) log(chalk.dim(`      advisory: ${h.advisory_url}`));
+      if (h.version_check && h.version_check !== 'in-range') {
+        log(chalk.dim(`      version_check: ${h.version_check}`));
+      }
+    }
+    log('');
+  }
+
+  // Combined severity for exit code
+  const osvBlockCount = result.matches.filter((m) => severityRank(m.severity) >= severityRank('high')).length;
+  const fixtureBlockCount = fixtureHits.filter((h) => severityRank(h.severity) >= severityRank('high')).length;
+  const blockCount = osvBlockCount + fixtureBlockCount;
   const exitCode = blockCount > 0 ? 2 : 1;
+  const worst = worstSeverity([...result.matches, ...fixtureHits]);
 
-  logEvent(
-    {
-      event: 'sc_guard',
-      action: blockCount > 0 ? 'block' : 'allow',
-      source: 'osv',
-      matches: result.matches.length,
-      block_count: blockCount,
-      worst_severity: worst,
-      packages: result.packages_scanned,
-      latency_ms: elapsed,
-      snapshot_age_days: ageDays,
-      partial_snapshot: info_.partial === true,
-    },
-    rootDir,
-  );
+  // Per-pillar telemetry — sunset metric needs to distinguish
+  if (result.matches.length > 0) {
+    logEvent(
+      {
+        event: 'sc_guard',
+        action: osvBlockCount > 0 ? 'block' : 'allow',
+        source: 'osv',
+        matches: result.matches.length,
+        block_count: osvBlockCount,
+        worst_severity: worstSeverity(result.matches),
+        packages: result.packages_scanned,
+        latency_ms: elapsed,
+        snapshot_age_days: ageDays,
+        partial_snapshot: info_.partial === true,
+      },
+      rootDir,
+    );
+  }
+  if (fixtureHits.length > 0) {
+    logEvent(
+      {
+        event: 'sc_guard',
+        action: fixtureBlockCount > 0 ? 'block' : 'allow',
+        source: 'fixture',
+        matches: fixtureHits.length,
+        block_count: fixtureBlockCount,
+        worst_severity: worstSeverity(fixtureHits),
+        packages: result.packages_scanned,
+        latency_ms: elapsed,
+        fixture_path: fixtureBundle.path,
+      },
+      rootDir,
+    );
+  }
 
   if (blockCount > 0) {
-    err(`${blockCount} HIGH+ severity match(es) — review before merging lockfile changes.`);
+    err(`${blockCount} HIGH+ severity match(es) — review before merging lockfile changes. (Worst: ${worst})`);
   } else {
-    warn(`${result.matches.length} low/medium match(es) — review recommended.`);
+    warn(`${totalMatches} low/medium match(es) — review recommended.`);
   }
   log('');
   advisoryFooter();
@@ -448,34 +513,82 @@ async function runJsonMode(rootDir, mode, opts) {
   const snap = loadSnapshot(rootDir);
   const start = Date.now();
   const result = scanProject(rootDir, snap);
-  out.scan = { ...result, elapsed_ms: Date.now() - start };
 
   if (result.error) {
     out.ok = false;
     out.error = { code: result.error.toUpperCase(), message: result.error };
+    out.scan = { ...result, elapsed_ms: Date.now() - start };
     process.stdout.write(JSON.stringify(out) + '\n');
     process.exit(1);
   }
 
-  const worst = worstSeverity(result.matches);
-  const blockCount = result.matches.filter((m) => severityRank(m.severity) >= severityRank('high')).length;
-  out.summary = { matches: result.matches.length, block_count: blockCount, worst_severity: worst };
+  // Pillar 2 (ADR-0006): fixture-driven catches in JSON mode too.
+  const fixtureBundle = loadNamespaceFixture(rootDir);
+  let fixtureHits = [];
+  if (fixtureBundle.fixture) {
+    try {
+      const lockPath = findLockfile(rootDir);
+      const lockPackages = lockPath ? parsePackageLockfile(lockPath) : new Map();
+      fixtureHits = matchNamespaceFixture(lockPackages, fixtureBundle.fixture);
+    } catch {
+      // ignore fixture failure in JSON mode
+    }
+  }
+  out.scan = { ...result, fixture_hits: fixtureHits, elapsed_ms: Date.now() - start };
 
-  logEvent(
-    {
+  const osvBlockCount = result.matches.filter((m) => severityRank(m.severity) >= severityRank('high')).length;
+  const fixtureBlockCount = fixtureHits.filter((h) => severityRank(h.severity) >= severityRank('high')).length;
+  const blockCount = osvBlockCount + fixtureBlockCount;
+  const totalMatches = result.matches.length + fixtureHits.length;
+  const worst = worstSeverity([...result.matches, ...fixtureHits]);
+  out.summary = {
+    matches: totalMatches,
+    osv_matches: result.matches.length,
+    fixture_hits: fixtureHits.length,
+    block_count: blockCount,
+    osv_block_count: osvBlockCount,
+    fixture_block_count: fixtureBlockCount,
+    worst_severity: worst,
+  };
+
+  if (result.matches.length > 0) {
+    logEvent({
       event: 'sc_guard',
-      action: blockCount > 0 ? 'block' : (result.matches.length > 0 ? 'allow' : 'scan_run'),
+      action: osvBlockCount > 0 ? 'block' : 'allow',
       source: 'osv',
       matches: result.matches.length,
-      block_count: blockCount,
-      worst_severity: worst,
+      block_count: osvBlockCount,
+      worst_severity: worstSeverity(result.matches),
       packages: result.packages_scanned,
       snapshot_age_days: info_.age_days,
       partial_snapshot: info_.partial === true,
-    },
-    rootDir,
-  );
+    }, rootDir);
+  }
+  if (fixtureHits.length > 0) {
+    logEvent({
+      event: 'sc_guard',
+      action: fixtureBlockCount > 0 ? 'block' : 'allow',
+      source: 'fixture',
+      matches: fixtureHits.length,
+      block_count: fixtureBlockCount,
+      worst_severity: worstSeverity(fixtureHits),
+      packages: result.packages_scanned,
+      fixture_path: fixtureBundle.path,
+    }, rootDir);
+  }
+  if (totalMatches === 0) {
+    logEvent({
+      event: 'sc_guard',
+      action: 'scan_run',
+      source: 'osv+fixture',
+      matches: 0,
+      packages: result.packages_scanned,
+      outcome: 'clean',
+      snapshot_age_days: info_.age_days,
+      partial_snapshot: info_.partial === true,
+    }, rootDir);
+  }
 
   process.stdout.write(JSON.stringify(out) + '\n');
-  process.exit(blockCount > 0 ? 2 : result.matches.length > 0 ? 1 : 0);
+  process.exit(blockCount > 0 ? 2 : totalMatches > 0 ? 1 : 0);
 }

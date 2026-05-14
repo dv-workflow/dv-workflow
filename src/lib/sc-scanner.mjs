@@ -247,6 +247,17 @@ export function matchPackageByName(packageName, advisories) {
   return hits;
 }
 
+function stripVersionPrefix(v) {
+  if (!v || typeof v !== 'string') return null;
+  const m = v.match(/(\d+\.\d+\.\d+[\w.\-+]*)/);
+  return m ? m[1] : null;
+}
+
+function isRangeSpec(v) {
+  if (!v || typeof v !== 'string') return false;
+  return /^[\^~]|\s|^[<>=]/.test(v.trim());
+}
+
 export function matchNamespaceFixture(packages, fixture) {
   const now = new Date();
   const hits = [];
@@ -254,18 +265,56 @@ export function matchNamespaceFixture(packages, fixture) {
     if (entry.active_until && new Date(entry.active_until) < now) continue;
     if (!entry.pattern) continue;
 
-    for (const [name] of packages) {
-      if (name.startsWith(entry.pattern) || name === entry.pattern) {
-        hits.push({
-          package: name,
-          namespace_pattern: entry.pattern,
-          reason: entry.reason,
-          advisory_url: entry.advisory,
-          active_until: entry.active_until,
-          guidance: entry.guidance,
-          severity: entry.severity || 'high',
-        });
+    for (const [name, version] of packages) {
+      const prefixMatch = name.startsWith(entry.pattern) || name === entry.pattern;
+      if (!prefixMatch) continue;
+
+      // Version-aware gate (per ADR-0006):
+      //   - Concrete version (1.2.3) → strict in-range check; skip on miss (no FP)
+      //   - Range spec (^1.2.3, ~1.2.3, >=1.2.3) → ambiguity flag with downgrade
+      //     (resolve-on-install could land in affected range; warn but don't block)
+      //   - No affected_range → prefix-only, severity downgraded one tier
+      let versionCheck = 'no-range';
+      let severity = entry.severity || 'high';
+      if (entry.affected_range && version) {
+        const concrete = stripVersionPrefix(version);
+        if (concrete && !isRangeSpec(version)) {
+          if (versionInRange(concrete, entry.affected_range)) {
+            versionCheck = 'in-range';
+          } else {
+            continue;
+          }
+        } else if (concrete && isRangeSpec(version)) {
+          // package.json range — we don't know which version will resolve.
+          // Be cautious: flag with downgrade unless the range's lower bound is
+          // already beyond the fixed version (then certainly safe).
+          const fixedEvent = (entry.affected_range.events || []).find((e) => e.fixed);
+          if (fixedEvent && compareVersions(concrete, fixedEvent.fixed) >= 0) {
+            continue;
+          }
+          versionCheck = 'range-ambiguous';
+          if (severity === 'critical') severity = 'high';
+        } else {
+          versionCheck = 'unresolvable-range';
+          if (severity === 'critical') severity = 'high';
+          else if (severity === 'high') severity = 'medium';
+        }
+      } else if (!entry.affected_range) {
+        versionCheck = 'prefix-only';
+        if (severity === 'critical') severity = 'high';
       }
+
+      hits.push({
+        package: name,
+        version: version || null,
+        namespace_pattern: entry.pattern,
+        reason: entry.reason,
+        advisory_url: entry.advisory,
+        active_until: entry.active_until,
+        guidance: entry.guidance,
+        severity,
+        version_check: versionCheck,
+      });
     }
   }
   return hits;
