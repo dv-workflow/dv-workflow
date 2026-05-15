@@ -102,3 +102,19 @@ export function getToolkitVersions(config) {
     capability: config?._toolkit?.capability_version || 'unknown',
   };
 }
+
+/**
+ * Renderer config for /dw:review --visual + `dw review render` (ADR-0007).
+ * Falls back to defaults when keys are absent so existing projects work
+ * without re-running `dw init`.
+ */
+export function getReviewRendererConfig(config) {
+  const r = config?.claude?.review?.renderer || {};
+  return {
+    strategy: r.strategy || 'auto',
+    theme: r.theme || 'github-dark',
+    font: r.font || 'JetBrains Mono',
+    formats: Array.isArray(r.formats) && r.formats.length ? r.formats : ['svg', 'png'],
+    output_dir: r.output_dir || '.dw/reviews',
+  };
+}

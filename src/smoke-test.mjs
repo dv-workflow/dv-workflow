@@ -1116,6 +1116,25 @@ test('scope-slug: throws on empty-after-sanitization', async () => {
   assert(threw, 'should throw on empty result');
 });
 
+test('renderer config: defaults applied when keys missing', async () => {
+  const { getReviewRendererConfig } = await import('./lib/config.mjs');
+  const d = getReviewRendererConfig({});
+  assert(d.strategy === 'auto', `strategy default: ${d.strategy}`);
+  assert(d.formats.length === 2 && d.formats.includes('svg') && d.formats.includes('png'), 'formats default');
+  assert(d.output_dir === '.dw/reviews', 'output_dir default');
+});
+
+test('renderer config: user override wins over defaults', async () => {
+  const { getReviewRendererConfig } = await import('./lib/config.mjs');
+  const d = getReviewRendererConfig({
+    claude: { review: { renderer: { strategy: 'markdown-only', theme: 'dracula', formats: ['png'] } } },
+  });
+  assert(d.strategy === 'markdown-only', 'strategy override');
+  assert(d.theme === 'dracula', 'theme override');
+  assert(d.formats.length === 1 && d.formats[0] === 'png', 'formats override');
+  assert(d.font === 'JetBrains Mono', 'font keeps default');
+});
+
 await runPending();
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────

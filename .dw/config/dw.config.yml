@@ -59,6 +59,20 @@ claude:
   # Isolate execution trong git worktree (cho risky refactors)
   worktree_execution: false
 
+  # --- Review render pipeline (ADR-0007) ------------------------------------
+  # /dw:review --visual produces a manifest.json then invokes `dw review render`.
+  # Output goes to .dw/reviews/{scope-slug}/ — see ADR-0007.
+  review:
+    renderer:
+      # auto: try dw-kit-render package, fall back to markdown summary if missing
+      # plugin: require dw-kit-render to be installed (fail if missing)
+      # markdown-only: never invoke a renderer, emit markdown summary only
+      strategy: "auto"
+      theme: "github-dark"          # any shiki theme name
+      font: "JetBrains Mono"        # font family for code in SVG
+      formats: ["svg", "png"]       # outputs produced per finding
+      output_dir: ".dw/reviews"
+
   # MCP servers — Claude Code sẽ load các servers này
   mcp: []
   # Ví dụ:
