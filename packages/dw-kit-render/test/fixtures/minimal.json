@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scope": "minimal",
+  "scope_slug": "minimal",
+  "generated_at": "2026-05-15T10:00:00Z",
+  "findings": [
+    {
+      "id": "f1",
+      "severity": "critical",
+      "title": "SQL injection vector",
+      "location": { "file": "src/api/handler.mjs", "line_start": 38, "line_end": 42 },
+      "rule_ref": "Security §2",
+      "body": "User input is interpolated directly into the SQL string without sanitization. Attackers can supply arbitrary IDs to read other rows.",
+      "fix": "Use parameterized query: db.query('SELECT * FROM u WHERE id = ?', [id]).",
+      "code_snippet": "const id = req.query.id;\nconst q = `SELECT * FROM users WHERE id=${id}`;\nconst rows = await db.query(q);\nreturn res.json(rows);",
+      "language": "javascript"
+    }
+  ]
+}

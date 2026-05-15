@@ -1,0 +1,149 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://github.com/dv-workflow/dv-workflow/schemas/review-manifest.json",
+  "title": "dw-kit Review Render Manifest",
+  "description": "Structured findings manifest produced by /dw:review --visual and consumed by `dw review render` + dw-kit-render. Versioned public API surface — see ADR-0007.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "scope", "generated_at", "findings"],
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1,
+      "description": "Manifest schema version. Renderer rejects mismatched versions with clear error."
+    },
+    "scope": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 200,
+      "description": "Review scope identifier (branch slug, task slug, or arbitrary label). NOT used directly as path — caller must sanitize via scope-slug util."
+    },
+    "scope_slug": {
+      "type": "string",
+      "minLength": 1,
+      "maxLength": 80,
+      "pattern": "^[a-zA-Z0-9._-]+$",
+      "description": "Sanitized scope used as directory name under .dw/reviews/. Filesystem-safe on Windows + POSIX."
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "ISO-8601 timestamp when manifest was produced."
+    },
+    "task_id": {
+      "type": "string",
+      "description": "Optional link to .dw/tasks/{task_id}/ — enables /dw:execute to load findings as fix targets."
+    },
+    "review_meta": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "reviewer": { "type": "string", "description": "Skill or agent name that produced this manifest (e.g. 'dw-review')." },
+        "depth": { "type": "string", "enum": ["quick", "standard", "thorough"] },
+        "diff_base": { "type": "string", "description": "Git ref the review was computed against (e.g. 'main', 'origin/dev')." },
+        "files_reviewed": { "type": "integer", "minimum": 0 }
+      }
+    },
+    "findings": {
+      "type": "array",
+      "minItems": 0,
+      "items": { "$ref": "#/definitions/finding" }
+    }
+  },
+  "definitions": {
+    "finding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "severity", "title", "location", "body"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-zA-Z0-9._-]+$",
+          "minLength": 1,
+          "maxLength": 64,
+          "description": "Unique finding ID within the manifest. Used as artifact filename: finding-{id}.svg / .png."
+        },
+        "severity": {
+          "type": "string",
+          "enum": ["critical", "warning", "suggestion"],
+          "description": "Drives banner color in rendered artifact."
+        },
+        "title": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "One-line summary shown as the card heading."
+        },
+        "location": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["file"],
+          "properties": {
+            "file": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Repo-relative path. Forward slashes regardless of OS."
+            },
+            "line_start": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "First relevant line (1-indexed)."
+            },
+            "line_end": {
+              "type": "integer",
+              "minimum": 1,
+              "description": "Last relevant line (1-indexed, inclusive)."
+            }
+          }
+        },
+        "rule_ref": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Optional rule/standard reference shown in card subhead."
+        },
+        "body": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000,
+          "description": "Finding explanation (markdown allowed in rendered output, plain text safe fallback)."
+        },
+        "fix": {
+          "type": "string",
+          "maxLength": 4000,
+          "description": "Optional concrete fix suggestion shown as action banner."
+        },
+        "code_snippet": {
+          "type": "string",
+          "maxLength": 8000,
+          "description": "Raw code lines from `location` range. Pulled by the LLM during manifest generation; renderer does not re-read source files. Cap at ~50 lines around finding."
+        },
+        "language": {
+          "type": "string",
+          "maxLength": 32,
+          "description": "Language identifier for syntax highlighting (e.g. javascript, python, go). Defaults to plain text in renderer if absent or unknown."
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "location": {
+                "required": ["line_start", "line_end"]
+              }
+            }
+          },
+          "then": {
+            "properties": {
+              "location": {
+                "properties": {
+                  "line_end": { "type": "integer" },
+                  "line_start": { "type": "integer" }
+                }
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}

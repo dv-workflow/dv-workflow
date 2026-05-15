@@ -86,6 +86,34 @@
         },
         "structured_output":  { "type": "boolean", "default": true },
         "worktree_execution": { "type": "boolean", "default": false },
+        "review": {
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Review render pipeline (ADR-0007).",
+          "properties": {
+            "renderer": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "strategy": {
+                  "type": "string",
+                  "enum": ["auto", "plugin", "markdown-only"],
+                  "default": "auto"
+                },
+                "theme":  { "type": "string", "default": "github-dark" },
+                "font":   { "type": "string", "default": "JetBrains Mono" },
+                "formats": {
+                  "type": "array",
+                  "items": { "type": "string", "enum": ["svg", "png"] },
+                  "minItems": 1,
+                  "uniqueItems": true,
+                  "default": ["svg", "png"]
+                },
+                "output_dir": { "type": "string", "default": ".dw/reviews" }
+              }
+            }
+          }
+        },
         "mcp": {
           "type": "array",
           "items": {

@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "scope": "torit-5",
+  "scope_slug": "torit-5",
+  "generated_at": "2026-05-15T10:00:00Z",
+  "task_id": "torit-5",
+  "review_meta": {
+    "reviewer": "dw-review",
+    "depth": "thorough",
+    "diff_base": "main",
+    "files_reviewed": 5
+  },
+  "findings": [
+    {
+      "id": "auth-missing",
+      "severity": "critical",
+      "title": "5 endpoints missing auth middleware",
+      "location": { "file": "routes/api.php", "line_start": 106, "line_end": 133 },
+      "rule_ref": "Security · Auth checklist §1",
+      "body": "Routes /api/users, /api/orders, /api/reports, /api/admin/* are registered without the auth() middleware. Any unauthenticated client can read or mutate these resources.",
+      "fix": "Wrap the route group in Route::middleware(['auth:sanctum'])->group(...) or attach ->middleware('auth') per route.",
+      "code_snippet": "Route::get('/api/users', [UserController::class, 'index']);\nRoute::post('/api/orders', [OrderController::class, 'store']);\nRoute::get('/api/reports/{id}', [ReportController::class, 'show']);\nRoute::get('/api/admin/dashboard', [AdminController::class, 'index']);\nRoute::delete('/api/admin/users/{id}', [AdminController::class, 'destroy']);",
+      "language": "php"
+    },
+    {
+      "id": "json-validation",
+      "severity": "warning",
+      "title": "JSON validation missing $request->validate()",
+      "location": { "file": "app/Http/Controllers/OrderController.php", "line_start": 24, "line_end": 30 },
+      "rule_ref": "Convention · Input validation",
+      "body": "Controller reads $request->all() into the model without validation. Convention in this project uses $request->validate([...]) before persistence.",
+      "fix": "Add $request->validate(['amount' => 'required|numeric|min:0', 'sku' => 'required|string']); before save().",
+      "code_snippet": "public function store(Request $request) {\n  $order = new Order($request->all());\n  $order->save();\n  return response()->json($order, 201);\n}",
+      "language": "php"
+    },
+    {
+      "id": "request-global",
+      "severity": "warning",
+      "title": "request() global vs constructor inject",
+      "location": { "file": "app/Services/ReportService.php", "line_start": 18 },
+      "rule_ref": "Architecture · Dependency inject",
+      "body": "Service uses the global request() helper inside a domain method. This couples business logic to HTTP context and breaks unit testing.",
+      "fix": "Inject Request via constructor or pass needed fields as method parameters.",
+      "code_snippet": "public function build() {\n  $userId = request()->user()->id;\n  return Report::forUser($userId)->get();\n}",
+      "language": "php"
+    },
+    {
+      "id": "coalesce-index",
+      "severity": "warning",
+      "title": "COALESCE(NULLIF()) loses index usage",
+      "location": { "file": "database/queries/customer_search.sql", "line_start": 12, "line_end": 14 },
+      "rule_ref": "Performance · Index awareness",
+      "body": "Wrapping the indexed column 'email' in COALESCE(NULLIF(...)) forces a full table scan. EXPLAIN shows seq_scan instead of idx_customers_email.",
+      "fix": "Rewrite as: WHERE (email = :q AND email IS NOT NULL) OR (alt_email = :q). Then both branches can hit their indexes.",
+      "code_snippet": "SELECT id, name, email\nFROM customers\nWHERE COALESCE(NULLIF(email, ''), alt_email) = :q\nLIMIT 50;",
+      "language": "sql"
+    },
+    {
+      "id": "docblock-typo",
+      "severity": "suggestion",
+      "title": "Typo in docblock + missing newline at EOF",
+      "location": { "file": "app/Models/Invoice.php", "line_start": 8 },
+      "body": "Docblock says 'Invioce' instead of 'Invoice'. File also missing trailing newline at EOF.",
+      "fix": "Fix typo. Add newline at end of file.",
+      "code_snippet": "/**\n * Invioce model.\n *\n * Represents a billed invoice on a customer account.\n */\nclass Invoice extends Model {",
+      "language": "php"
+    }
+  ]
+}

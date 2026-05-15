@@ -1,0 +1,53 @@
+{
+  "name": "dw-kit-render",
+  "version": "0.1.0",
+  "description": "Optional renderer for dw-kit /dw:review --visual. Turns a structured findings manifest into SVG + PNG cards (shiki + satori + @resvg/resvg-js, pure JS + WASM).",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./src/index.mjs",
+      "default": "./src/index.mjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "./src/index.mjs",
+  "files": [
+    "src/",
+    "fonts/",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "scripts": {
+    "test": "node test/render.test.mjs"
+  },
+  "keywords": [
+    "dw-kit",
+    "code-review",
+    "renderer",
+    "shiki",
+    "satori",
+    "svg",
+    "png"
+  ],
+  "author": "huygdv <huygdv19@gmail.com>",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dv-workflow/dv-workflow.git",
+    "directory": "packages/dw-kit-render"
+  },
+  "homepage": "https://github.com/dv-workflow/dv-workflow/tree/main/packages/dw-kit-render#readme",
+  "peerDependencies": {
+    "dw-kit": ">=1.4.0"
+  },
+  "peerDependenciesMeta": {
+    "dw-kit": { "optional": true }
+  },
+  "dependencies": {
+    "@resvg/resvg-js": "^2.6.2",
+    "satori": "^0.10.13",
+    "shiki": "^1.22.0"
+  }
+}
