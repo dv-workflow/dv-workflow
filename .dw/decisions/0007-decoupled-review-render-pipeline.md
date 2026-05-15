@@ -1,6 +1,6 @@
 # ADR-0007: Decoupled Review Render Pipeline
 
-## Status: Proposed
+## Status: Accepted
 ## Date: 2026-05-14
 ## Deciders: huygdv (TechLead, dw-kit maintainer)
 

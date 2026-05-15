@@ -2,17 +2,17 @@
 task_id: review-render-pipeline
 started: 2026-05-15
 last_updated: 2026-05-15
-status: In Progress
-current_phase: Phase 0 complete; Phase 1 next (build dw-kit-render sub-package)
-blockers: none
+status: Ship-Ready (PR open)
+current_phase: Phase 0+1+2 all shipped on feat/review-render-pipeline
+blockers: TL review of PR #10
 ---
 
 # Tracking: Decoupled Review Render Pipeline
 
 ## Status Snapshot
 
-**Phase:** Phase 0 complete (8 subtasks shipped on `feat/review-render-pipeline`).
-**Next milestone:** Phase 1 — bootstrap `dw-kit-render` sub-package (shiki + satori + @resvg/resvg-js).
+**Phase:** All 12 subtasks shipped. PR #10 open against `dev`.
+**Next milestone:** TL review → merge `feat/review-render-pipeline` → publish `dw-kit-render` to npm → close Issue #9.
 
 ## Linked Issue
 
@@ -33,17 +33,43 @@ blockers: none
 | ST-5 | dw.config.yml renderer keys | ✅ Done | 2026-05-15 | schema-validated; getReviewRendererConfig loader with defaults |
 | ST-6 | `.dw/reviews/` archive + gitignore | ✅ Done | 2026-05-15 | gitignored; dw-archive skill Step 4a cleans up on archive |
 | ST-7 | `dw doctor` renderer section | ✅ Done | 2026-05-15 | shows strategy/formats/theme/font + plugin resolvability |
-| ST-8 | `dw-kit-render` package skeleton | ⬜ Pending | — | Phase 1 — monorepo vs separate, decide on start |
-| ST-9 | `dw-kit-render` render impl | ⬜ Pending | — | Phase 1 — shiki + satori + resvg |
+| ST-8 | `dw-kit-render` package skeleton | ✅ Done | 2026-05-15 | `packages/dw-kit-render/` in same git repo, separate npm publish; ESM only |
+| ST-9 | `dw-kit-render` render impl | ✅ Done | 2026-05-15 | shiki tokens + satori vDOM tree + resvg WASM; severity card layout; auto-font detection per platform |
 | ST-10 | Telemetry events | ✅ Done | 2026-05-15 | `review_render` event with strategy, formats, duration_ms, fallback_reason |
-| ST-11 | Docs (review-renderer.md + README) | ⬜ Pending | — | Phase 2 — needs Phase 1 screenshots |
-| ST-12 | Sample artifacts + smoke test | 🟡 Partial | 2026-05-15 | Phase 0 smoke tests added (5+ cases); PNG/SVG fixtures wait Phase 1 |
+| ST-11 | Docs (review-renderer.md + README) | ✅ Done | 2026-05-15 | `docs/review-renderer.md` + README + docs/README + CHANGELOG [Unreleased] v1.4 candidate |
+| ST-12 | Sample artifacts + smoke test | ✅ Done | 2026-05-15 | 3 fixtures (minimal/torit-5/vietnamese); 6 renderer integration tests; `npm run test:renderer` wired |
 
 Status legend: ⬜ Pending · 🟡 In Progress · ✅ Done · 🔴 Blocked · ⏸ Paused
 
 ## Changelog
 
-### 2026-05-15 — Phase 0 implementation complete
+### 2026-05-15 (afternoon) — Phase 1 + Phase 2 complete
+
+**Actions taken:**
+- Phase 1.0 (refactor): switched CLI plugin resolution from sync `require()` to async `import()` via `createRequire().resolve() + pathToFileURL()` so `dw-kit-render` can ship ESM-only. Added `DW_REVIEW_NO_RENDERER=1` escape hatch for deterministic tests.
+- ST-8: `packages/dw-kit-render/` skeleton with `shiki` + `satori` + `@resvg/resvg-js` deps. Pure JS + WASM. ESM only.
+- ST-9: renderer pipeline — `src/highlight.mjs` (shiki tokenizer, lazy theme cache), `src/layout.mjs` (severity card vDOM tree), `src/fonts.mjs` (Win/Linux/Mac auto-detect + path/Buffer support), `src/index.mjs` (orchestrator).
+- ST-11: `docs/review-renderer.md` with install/config/CLI/schema/telemetry/privacy/troubleshooting. README + docs/README + CHANGELOG updated.
+- ST-12: 3 fixtures + 6 integration tests + `npm run test:renderer` root script.
+
+**Verification:**
+- Manual E2E on Windows: 5-finding TORIT-5 fixture → 5 SVG (181-432KB) + 5 PNG (32-64KB) in 1.15s; Vietnamese diacritics render correctly.
+- `npm run test:renderer` → 6/6 pass.
+- `node src/smoke-test.mjs` → 87/87 pass.
+
+**Decisions made:**
+- Monorepo: keep `dw-kit-render` in same git repo under `packages/` but publish independently. Root `package.json#files` doesn't include `packages/` so main package stays lean.
+- Font: auto-detect system mono (Consolas/DejaVu/Menlo) instead of bundling a font binary. User can override with absolute path. String like "JetBrains Mono" (not a path) is treated as metadata and auto-detect kicks in.
+- Package `exports`: add `default` condition so `require.resolve()` works (resolve-only; actual load via `import()`).
+- `**/.dw/metrics/events.jsonl` in gitignore to cover nested sub-package telemetry.
+- Test threshold: SVG path-count > 30 (each glyph ≈ 1 path) for Vietnamese-render verification, since satori converts text to paths (no plain-text search possible).
+
+**Pain points logged:**
+- satori output is vector paths — can't grep SVG for literal text. Required reworking test assertions to color/dimension/path-count proxies.
+- npm symlinks on Windows work but `ls` decoration confused initial debug.
+- `exports` field with only `"import"` condition breaks `require.resolve()` even for resolve-only use — must add `default`.
+
+### 2026-05-15 (morning) — Phase 0 implementation complete
 
 **Actions taken:**
 - Synced `dev` ← `main` (v1.3.6 release marker) then branched `feat/review-render-pipeline`
@@ -99,8 +125,8 @@ Status legend: ⬜ Pending · 🟡 In Progress · ✅ Done · 🔴 Blocked · �
   - `.dw/tasks/review-render-pipeline/spec.md`
   - `.dw/decisions/0007-decoupled-review-render-pipeline.md`
   - GitHub Issue #9 comments (Round 1+2+3)
-  - `src/commands/review-render.mjs` (Phase 0 CLI shim — Phase 1 plugin must match its expected interface)
-- **Current state:** Phase 0 complete (8 subtasks shipped on branch `feat/review-render-pipeline`). Next: Phase 1 = build `dw-kit-render` sub-package implementing `render({manifest, outDir, formats, theme, font}) → Promise<{svgPaths, pngPaths}>`.
+  - PR #10 description (full Phase summary)
+- **Current state:** All 12 subtasks done. PR #10 open. Awaiting TL merge → publish `dw-kit-render` to npm (`cd packages/dw-kit-render && npm publish`) → close Issue #9.
 - **Don't do:**
   - KHÔNG port annotate.ps1 vào dw-kit (Round 1 user's tool, giữ riêng)
   - KHÔNG add silicon adapter (R2 deprecated)
@@ -119,6 +145,10 @@ Status legend: ⬜ Pending · 🟡 In Progress · ✅ Done · 🔴 Blocked · �
 | Date | Friction | Component | Proposed fix |
 |------|----------|-----------|-------------|
 | 2026-05-14 | `mkdir` bash command không tạo được trên Windows (cần PowerShell `New-Item -Force`) | dev-env | Document trong handoff: dùng PowerShell cho file ops Windows |
+| 2026-05-15 | satori output = vector paths; SVG cannot be grepped for literal text | testing | Switched to color/dim/path-count proxy assertions in test/render.test.mjs |
+| 2026-05-15 | `package.json#exports` with only `import` condition breaks `require.resolve()` | npm-pkg | Always include `default` condition for resolve-compatibility |
+| 2026-05-15 | Local npm symlink resolve fails with `ERR_PACKAGE_PATH_NOT_EXPORTED` cryptic error | dev-env | Test resolve early when wiring new packages |
+| 2026-05-15 | CLI config `font: "JetBrains Mono"` interpreted as path → renderer crashes | api-design | Renderer's resolveFont distinguishes path vs family name via heuristic (slashes or .ttf/.otf extension) |
 
 ## Agent Debate Log
 
