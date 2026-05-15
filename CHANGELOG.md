@@ -4,7 +4,7 @@
 
 ---
 
-## [Unreleased] — v1.4 candidate
+## [v1.4.0] — 2026-05-15
 
 ### Headline — Optional Review Render Pipeline ([ADR-0007](.dw/decisions/0007-decoupled-review-render-pipeline.md))
 
