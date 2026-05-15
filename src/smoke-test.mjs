@@ -1009,6 +1009,78 @@ test('upgrade fails on project without config', () => {
   }
 });
 
+// ── Test: review render pipeline (ADR-0007) ──────────────────────────────────
+console.log();
+console.log('▶ dw review (manifest schema)');
+
+test('manifest validator accepts a minimal valid manifest', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({
+    schema_version: 1,
+    scope: 'demo',
+    generated_at: '2026-05-15T10:00:00Z',
+    findings: [],
+  });
+  assert(r.ok === true, `expected ok, got ${JSON.stringify(r.errors)}`);
+});
+
+test('manifest validator accepts a full finding with code snippet', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({
+    schema_version: 1,
+    scope: 'feat/x',
+    scope_slug: 'feat-x',
+    generated_at: '2026-05-15T10:00:00Z',
+    task_id: 'review-render-pipeline',
+    review_meta: { reviewer: 'dw-review', depth: 'standard', diff_base: 'origin/dev', files_reviewed: 3 },
+    findings: [{
+      id: 'f1',
+      severity: 'critical',
+      title: 'Unvalidated input',
+      location: { file: 'src/api.mjs', line_start: 38, line_end: 55 },
+      rule_ref: 'Security §2',
+      body: 'No sanitization before query.',
+      fix: 'Call sanitize(input).',
+      code_snippet: 'const q = `SELECT ${id}`;',
+      language: 'javascript',
+    }],
+  });
+  assert(r.ok === true, `expected ok, got ${JSON.stringify(r.errors)}`);
+});
+
+test('manifest validator rejects unknown severity', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({
+    schema_version: 1,
+    scope: 'x',
+    generated_at: '2026-05-15T10:00:00Z',
+    findings: [{ id: 'f1', severity: 'meh', title: 'x', location: { file: 'a' }, body: 'b' }],
+  });
+  assert(r.ok === false, 'expected invalid');
+  assert(r.errors.some((e) => e.path.includes('severity')), `expected severity error, got ${JSON.stringify(r.errors)}`);
+});
+
+test('manifest validator rejects missing required fields', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({ schema_version: 1, scope: 'x', generated_at: '2026-05-15T10:00:00Z' });
+  assert(r.ok === false, 'expected invalid');
+  assert(r.errors.some((e) => e.message.includes("'findings'")), `expected findings required error, got ${JSON.stringify(r.errors)}`);
+});
+
+test('manifest validator rejects schema_version mismatch with clear error', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({ schema_version: 99, scope: 'x', generated_at: '2026-05-15T10:00:00Z', findings: [] });
+  assert(r.ok === false, 'expected invalid');
+  assert(r.errors[0].message.includes('unsupported schema_version'), 'expected version error');
+});
+
+test('manifest parser surfaces JSON parse errors', async () => {
+  const { parseManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = parseManifest('{ not valid json');
+  assert(r.ok === false, 'expected invalid');
+  assert(r.errors[0].message.includes('invalid JSON'), 'expected JSON error');
+});
+
 await runPending();
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────
