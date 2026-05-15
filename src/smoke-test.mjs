@@ -1187,7 +1187,7 @@ test('review render: --strategy plugin without dw-kit-render fails fast', () => 
   const dir = freshDir('review-render-plugin-missing');
   const manifestPath = makeManifestFixture(dir);
   try {
-    dw(`review render "${manifestPath}" --strategy plugin --quiet`, dir);
+    dw(`review render "${manifestPath}" --strategy plugin --quiet`, dir, { DW_REVIEW_NO_RENDERER: '1' });
     assert(false, 'should have thrown');
   } catch (e) {
     assert(e.status === 1, `expected exit 1, got ${e.status}`);
