@@ -36,6 +36,7 @@ It’s designed for collaboration (Dev / Tech Lead / QA / PM) and keeps work aud
 
 ## Release notes
 
+- **v1.4 (in progress)** — Optional **Review Render Pipeline** ([ADR-0007](.dw/decisions/0007-decoupled-review-render-pipeline.md)): `/dw:review --visual` plus a separate `dw-kit-render` package turn findings into SVG + PNG cards for PR comments / Slack / stakeholders. Pure JS + WASM, universal `npm install`, no system deps. See [`docs/review-renderer.md`](docs/review-renderer.md).
 - **v1.3.6** (2026-05-14) — Supply-Chain Guard upgraded to 3-pillar architecture: OSV snapshot + curated IoC fixture (version-aware, wired into default scan) + **AI-Native NEW-package heuristic** that catches zero-day-ish risk at the AI-edit boundary. See [`CHANGELOG.md#v136--2026-05-14`](CHANGELOG.md#v136--2026-05-14) and [ADR-0006](.dw/decisions/0006-supply-chain-guard-heuristic.md).
 - v1.3.5 (2026-05-12) — AI-Native Supply-Chain Guard: `dw security-scan` CLI + OSV.dev auto-sync + Edit-lockfile hook + scoped `.gitignore` for end-user projects. See [ADR-0005](.dw/decisions/0005-supply-chain-guard.md). Public 90-day sunset review committed for 2026-08-12.
 - v1.3.4 (2026-04-21) — `/dw:plan` Quick Debate (red/blue self-critique), depth-driven activation

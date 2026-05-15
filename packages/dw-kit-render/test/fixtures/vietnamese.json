@@ -1,0 +1,19 @@
+{
+  "schema_version": 1,
+  "scope": "vietnamese",
+  "scope_slug": "vietnamese",
+  "generated_at": "2026-05-15T10:00:00Z",
+  "findings": [
+    {
+      "id": "v1",
+      "severity": "warning",
+      "title": "Cần thêm tính năng xử lý lỗi cho hàm này",
+      "location": { "file": "src/services/đơn-hàng.mjs", "line_start": 12, "line_end": 18 },
+      "rule_ref": "Quy ước · Xử lý lỗi",
+      "body": "Hàm không bắt exception nào. Khi API trả về lỗi 5xx, người dùng sẽ thấy stack trace thay vì thông báo thân thiện.",
+      "fix": "Bọc fetch() trong try/catch, log lỗi qua logger, và trả về response phù hợp.",
+      "code_snippet": "async function lấyĐơnHàng(id) {\n  const res = await fetch(`/api/orders/${id}`);\n  const data = await res.json();\n  return data;\n}",
+      "language": "javascript"
+    }
+  ]
+}

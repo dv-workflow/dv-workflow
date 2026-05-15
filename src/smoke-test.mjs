@@ -45,12 +45,12 @@ function assert(condition, msg) {
   if (!condition) throw new Error(msg || 'Assertion failed');
 }
 
-function dw(args, cwd) {
+function dw(args, cwd, extraEnv = {}) {
   return execSync(`node "${DW_BIN}" ${args}`, {
     cwd,
     encoding: 'utf-8',
     timeout: 30000,
-    env: { ...process.env, NO_COLOR: '1' },
+    env: { ...process.env, NO_COLOR: '1', ...extraEnv },
   });
 }
 
@@ -1007,6 +1007,214 @@ test('upgrade fails on project without config', () => {
   } catch (e) {
     assert(e.status === 1, 'Should exit with code 1');
   }
+});
+
+// ── Test: review render pipeline (ADR-0007) ──────────────────────────────────
+console.log();
+console.log('▶ dw review (manifest schema)');
+
+test('manifest validator accepts a minimal valid manifest', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({
+    schema_version: 1,
+    scope: 'demo',
+    generated_at: '2026-05-15T10:00:00Z',
+    findings: [],
+  });
+  assert(r.ok === true, `expected ok, got ${JSON.stringify(r.errors)}`);
+});
+
+test('manifest validator accepts a full finding with code snippet', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({
+    schema_version: 1,
+    scope: 'feat/x',
+    scope_slug: 'feat-x',
+    generated_at: '2026-05-15T10:00:00Z',
+    task_id: 'review-render-pipeline',
+    review_meta: { reviewer: 'dw-review', depth: 'standard', diff_base: 'origin/dev', files_reviewed: 3 },
+    findings: [{
+      id: 'f1',
+      severity: 'critical',
+      title: 'Unvalidated input',
+      location: { file: 'src/api.mjs', line_start: 38, line_end: 55 },
+      rule_ref: 'Security §2',
+      body: 'No sanitization before query.',
+      fix: 'Call sanitize(input).',
+      code_snippet: 'const q = `SELECT ${id}`;',
+      language: 'javascript',
+    }],
+  });
+  assert(r.ok === true, `expected ok, got ${JSON.stringify(r.errors)}`);
+});
+
+test('manifest validator rejects unknown severity', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({
+    schema_version: 1,
+    scope: 'x',
+    generated_at: '2026-05-15T10:00:00Z',
+    findings: [{ id: 'f1', severity: 'meh', title: 'x', location: { file: 'a' }, body: 'b' }],
+  });
+  assert(r.ok === false, 'expected invalid');
+  assert(r.errors.some((e) => e.path.includes('severity')), `expected severity error, got ${JSON.stringify(r.errors)}`);
+});
+
+test('manifest validator rejects missing required fields', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({ schema_version: 1, scope: 'x', generated_at: '2026-05-15T10:00:00Z' });
+  assert(r.ok === false, 'expected invalid');
+  assert(r.errors.some((e) => e.message.includes("'findings'")), `expected findings required error, got ${JSON.stringify(r.errors)}`);
+});
+
+test('manifest validator rejects schema_version mismatch with clear error', async () => {
+  const { validateManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = validateManifest({ schema_version: 99, scope: 'x', generated_at: '2026-05-15T10:00:00Z', findings: [] });
+  assert(r.ok === false, 'expected invalid');
+  assert(r.errors[0].message.includes('unsupported schema_version'), 'expected version error');
+});
+
+test('manifest parser surfaces JSON parse errors', async () => {
+  const { parseManifest } = await import('./lib/review/manifest-validator.mjs');
+  const r = parseManifest('{ not valid json');
+  assert(r.ok === false, 'expected invalid');
+  assert(r.errors[0].message.includes('invalid JSON'), 'expected JSON error');
+});
+
+test('scope-slug: branch with slash becomes dash', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('fix/sc-guard-v1.3.6') === 'fix-sc-guard-v1.3.6', 'slash → dash');
+});
+
+test('scope-slug: preserves Unicode (Vietnamese diacritics)', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('feat: thêm tính năng') === 'feat-thêm-tính-năng', 'unicode preserved');
+});
+
+test('scope-slug: Windows reserved names get underscore prefix', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('CON') === '_CON', 'reserved name prefixed');
+  assert(scopeSlug('com1') === '_com1', 'com1 reserved');
+});
+
+test('scope-slug: strips path traversal + illegal chars', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('../../etc/passwd') === 'etc-passwd', 'traversal stripped');
+  assert(scopeSlug('has<>?:|chars*') === 'has-chars', 'illegal chars stripped');
+});
+
+test('scope-slug: caps length at maxLength', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('x'.repeat(100)).length === 80, 'default cap 80');
+  assert(scopeSlug('x'.repeat(100), { maxLength: 20 }).length === 20, 'custom cap 20');
+});
+
+test('scope-slug: throws on empty-after-sanitization', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  let threw = false;
+  try { scopeSlug('***'); } catch (e) { threw = true; assert(e.message.includes('empty slug')); }
+  assert(threw, 'should throw on empty result');
+});
+
+test('renderer config: defaults applied when keys missing', async () => {
+  const { getReviewRendererConfig } = await import('./lib/config.mjs');
+  const d = getReviewRendererConfig({});
+  assert(d.strategy === 'auto', `strategy default: ${d.strategy}`);
+  assert(d.formats.length === 2 && d.formats.includes('svg') && d.formats.includes('png'), 'formats default');
+  assert(d.output_dir === '.dw/reviews', 'output_dir default');
+});
+
+test('renderer config: user override wins over defaults', async () => {
+  const { getReviewRendererConfig } = await import('./lib/config.mjs');
+  const d = getReviewRendererConfig({
+    claude: { review: { renderer: { strategy: 'markdown-only', theme: 'dracula', formats: ['png'] } } },
+  });
+  assert(d.strategy === 'markdown-only', 'strategy override');
+  assert(d.theme === 'dracula', 'theme override');
+  assert(d.formats.length === 1 && d.formats[0] === 'png', 'formats override');
+  assert(d.font === 'JetBrains Mono', 'font keeps default');
+});
+
+// `dw review render` CLI shim
+function makeManifestFixture(dir, slug = 'demo') {
+  const cfgDir = join(dir, '.dw', 'config');
+  const rDir = join(dir, '.dw', 'reviews', slug);
+  mkdirSync(cfgDir, { recursive: true });
+  mkdirSync(rDir, { recursive: true });
+  writeFileSync(join(cfgDir, 'dw.config.yml'), 'project:\n  name: t\nclaude:\n  review:\n    renderer:\n      strategy: auto\n', 'utf-8');
+  const manifest = {
+    schema_version: 1,
+    scope: slug,
+    scope_slug: slug,
+    generated_at: '2026-05-15T10:00:00Z',
+    findings: [
+      { id: 'f1', severity: 'critical', title: 'X', location: { file: 'a.mjs', line_start: 1, line_end: 2 }, body: 'body', code_snippet: 'x', language: 'javascript' },
+    ],
+  };
+  const manifestPath = join(rDir, 'manifest.json');
+  writeFileSync(manifestPath, JSON.stringify(manifest), 'utf-8');
+  return manifestPath;
+}
+
+test('review render: missing renderer falls back to markdown summary, exit 0', () => {
+  const dir = freshDir('review-render-fallback');
+  const manifestPath = makeManifestFixture(dir);
+  const out = dw(`review render "${manifestPath}" --quiet`, dir, { DW_REVIEW_NO_RENDERER: '1' });
+  assert(existsSync(join(dir, '.dw', 'reviews', 'demo', 'summary.md')), 'summary.md created');
+  const md = readFileSync(join(dir, '.dw', 'reviews', 'demo', 'summary.md'), 'utf-8');
+  assert(md.includes('CRITICAL'), 'severity rendered in markdown');
+  assert(md.includes('a.mjs'), 'file path rendered');
+});
+
+test('review render: invalid manifest exits non-zero with clear error', () => {
+  const dir = freshDir('review-render-invalid');
+  const cfgDir = join(dir, '.dw', 'config');
+  mkdirSync(cfgDir, { recursive: true });
+  writeFileSync(join(cfgDir, 'dw.config.yml'), 'project:\n  name: t\n', 'utf-8');
+  const bad = join(dir, 'bad.json');
+  writeFileSync(bad, '{ bad json', 'utf-8');
+  try {
+    dw(`review render "${bad}" --quiet`, dir);
+    assert(false, 'should have thrown');
+  } catch (e) {
+    assert(e.status === 1, `expected exit 1, got ${e.status}`);
+    const combined = (e.stdout || '') + (e.stderr || '');
+    assert(combined.includes('Manifest invalid'), 'should mention manifest invalid');
+  }
+});
+
+test('review render: --strategy plugin without dw-kit-render fails fast', () => {
+  const dir = freshDir('review-render-plugin-missing');
+  const manifestPath = makeManifestFixture(dir);
+  try {
+    dw(`review render "${manifestPath}" --strategy plugin --quiet`, dir, { DW_REVIEW_NO_RENDERER: '1' });
+    assert(false, 'should have thrown');
+  } catch (e) {
+    assert(e.status === 1, `expected exit 1, got ${e.status}`);
+  }
+});
+
+test('review render: --strategy markdown-only skips renderer entirely', () => {
+  const dir = freshDir('review-render-md-only');
+  const manifestPath = makeManifestFixture(dir);
+  dw(`review render "${manifestPath}" --strategy markdown-only --quiet`, dir);
+  assert(existsSync(join(dir, '.dw', 'reviews', 'demo', 'summary.md')), 'summary.md created');
+});
+
+test('review render: logs telemetry event review_render', () => {
+  const dir = freshDir('review-render-telemetry');
+  const manifestPath = makeManifestFixture(dir);
+  dw(`review render "${manifestPath}" --quiet`, dir, { DW_REVIEW_NO_RENDERER: '1' });
+  const events = readFileSync(join(dir, '.dw', 'metrics', 'events.jsonl'), 'utf-8');
+  assert(events.includes('"event":"review_render"'), 'review_render event logged');
+});
+
+test('doctor: surfaces Review Render Pipeline section', () => {
+  const dir = join(TEMP_BASE, 'init-solo');
+  const out = dw('doctor', dir);
+  assert(out.includes('Review Render Pipeline'), 'shows section header');
+  assert(out.includes('Strategy'), 'shows strategy line');
+  assert(out.includes('dw-kit-render'), 'mentions renderer package');
 });
 
 await runPending();

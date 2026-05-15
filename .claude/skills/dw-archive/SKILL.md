@@ -54,6 +54,20 @@ mv {paths.tasks}/[task-name] {paths.tasks}/archive/[YYYY-MM]/
 
 Tổ chức theo tháng hoàn thành để dễ tìm kiếm sau.
 
+### 4a. Clean up review render artifacts (ADR-0007)
+
+Nếu `.dw/reviews/[task-name]/` hoặc `.dw/reviews/[task-slug]/` tồn tại:
+
+```bash
+# Local-only ephemeral artifacts (gitignored) — safe to remove on archive.
+# User can regenerate via /dw:review --visual nếu cần lại.
+rm -rf .dw/reviews/[task-name]/
+```
+
+Báo cáo trong output Bước 6: "Đã dọn .dw/reviews/[task-name]/ (regenerate via /dw:review --visual nếu cần)."
+
+Nếu task có scope_slug khác task-name (kiểm tra `.dw/reviews/*/manifest.json` có `task_id` matching), dọn cả slug đó.
+
 ## Bước 5: Cập nhật archive index
 
 Ghi/cập nhật `{paths.tasks}/archive/README.md`:
