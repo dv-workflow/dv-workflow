@@ -131,6 +131,21 @@ export function run(argv) {
       await securityScanCommand(opts);
     });
 
+  const reviewCmd = program
+    .command('review')
+    .description('Review subcommands (ADR-0007)');
+
+  reviewCmd
+    .command('render <manifest>')
+    .description('Render a /dw:review --visual manifest into SVG/PNG (requires dw-kit-render) or markdown summary fallback')
+    .option('-f, --format <kind>', 'Override output formats: svg | png | both', null)
+    .option('-s, --strategy <name>', 'Override strategy: auto | plugin | markdown-only', null)
+    .option('-q, --quiet', 'Suppress info logs (still exits non-zero on hard errors)')
+    .action(async (manifest, opts) => {
+      const { reviewRenderCommand } = await import('./commands/review-render.mjs');
+      await reviewRenderCommand(manifest, opts);
+    });
+
   program
     .command('claude-vn-fix')
     .description('Patch Claude CLI to fix Vietnamese IME (local, with backup/restore)')

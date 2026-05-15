@@ -1135,6 +1135,80 @@ test('renderer config: user override wins over defaults', async () => {
   assert(d.font === 'JetBrains Mono', 'font keeps default');
 });
 
+// `dw review render` CLI shim
+function makeManifestFixture(dir, slug = 'demo') {
+  const cfgDir = join(dir, '.dw', 'config');
+  const rDir = join(dir, '.dw', 'reviews', slug);
+  mkdirSync(cfgDir, { recursive: true });
+  mkdirSync(rDir, { recursive: true });
+  writeFileSync(join(cfgDir, 'dw.config.yml'), 'project:\n  name: t\nclaude:\n  review:\n    renderer:\n      strategy: auto\n', 'utf-8');
+  const manifest = {
+    schema_version: 1,
+    scope: slug,
+    scope_slug: slug,
+    generated_at: '2026-05-15T10:00:00Z',
+    findings: [
+      { id: 'f1', severity: 'critical', title: 'X', location: { file: 'a.mjs', line_start: 1, line_end: 2 }, body: 'body', code_snippet: 'x', language: 'javascript' },
+    ],
+  };
+  const manifestPath = join(rDir, 'manifest.json');
+  writeFileSync(manifestPath, JSON.stringify(manifest), 'utf-8');
+  return manifestPath;
+}
+
+test('review render: missing renderer falls back to markdown summary, exit 0', () => {
+  const dir = freshDir('review-render-fallback');
+  const manifestPath = makeManifestFixture(dir);
+  const out = dw(`review render "${manifestPath}" --quiet`, dir);
+  assert(existsSync(join(dir, '.dw', 'reviews', 'demo', 'summary.md')), 'summary.md created');
+  const md = readFileSync(join(dir, '.dw', 'reviews', 'demo', 'summary.md'), 'utf-8');
+  assert(md.includes('CRITICAL'), 'severity rendered in markdown');
+  assert(md.includes('a.mjs'), 'file path rendered');
+});
+
+test('review render: invalid manifest exits non-zero with clear error', () => {
+  const dir = freshDir('review-render-invalid');
+  const cfgDir = join(dir, '.dw', 'config');
+  mkdirSync(cfgDir, { recursive: true });
+  writeFileSync(join(cfgDir, 'dw.config.yml'), 'project:\n  name: t\n', 'utf-8');
+  const bad = join(dir, 'bad.json');
+  writeFileSync(bad, '{ bad json', 'utf-8');
+  try {
+    dw(`review render "${bad}" --quiet`, dir);
+    assert(false, 'should have thrown');
+  } catch (e) {
+    assert(e.status === 1, `expected exit 1, got ${e.status}`);
+    const combined = (e.stdout || '') + (e.stderr || '');
+    assert(combined.includes('Manifest invalid'), 'should mention manifest invalid');
+  }
+});
+
+test('review render: --strategy plugin without dw-kit-render fails fast', () => {
+  const dir = freshDir('review-render-plugin-missing');
+  const manifestPath = makeManifestFixture(dir);
+  try {
+    dw(`review render "${manifestPath}" --strategy plugin --quiet`, dir);
+    assert(false, 'should have thrown');
+  } catch (e) {
+    assert(e.status === 1, `expected exit 1, got ${e.status}`);
+  }
+});
+
+test('review render: --strategy markdown-only skips renderer entirely', () => {
+  const dir = freshDir('review-render-md-only');
+  const manifestPath = makeManifestFixture(dir);
+  dw(`review render "${manifestPath}" --strategy markdown-only --quiet`, dir);
+  assert(existsSync(join(dir, '.dw', 'reviews', 'demo', 'summary.md')), 'summary.md created');
+});
+
+test('review render: logs telemetry event review_render', () => {
+  const dir = freshDir('review-render-telemetry');
+  const manifestPath = makeManifestFixture(dir);
+  dw(`review render "${manifestPath}" --quiet`, dir);
+  const events = readFileSync(join(dir, '.dw', 'metrics', 'events.jsonl'), 'utf-8');
+  assert(events.includes('"event":"review_render"'), 'review_render event logged');
+});
+
 await runPending();
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────
