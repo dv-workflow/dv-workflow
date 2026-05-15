@@ -1081,6 +1081,41 @@ test('manifest parser surfaces JSON parse errors', async () => {
   assert(r.errors[0].message.includes('invalid JSON'), 'expected JSON error');
 });
 
+test('scope-slug: branch with slash becomes dash', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('fix/sc-guard-v1.3.6') === 'fix-sc-guard-v1.3.6', 'slash → dash');
+});
+
+test('scope-slug: preserves Unicode (Vietnamese diacritics)', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('feat: thêm tính năng') === 'feat-thêm-tính-năng', 'unicode preserved');
+});
+
+test('scope-slug: Windows reserved names get underscore prefix', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('CON') === '_CON', 'reserved name prefixed');
+  assert(scopeSlug('com1') === '_com1', 'com1 reserved');
+});
+
+test('scope-slug: strips path traversal + illegal chars', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('../../etc/passwd') === 'etc-passwd', 'traversal stripped');
+  assert(scopeSlug('has<>?:|chars*') === 'has-chars', 'illegal chars stripped');
+});
+
+test('scope-slug: caps length at maxLength', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  assert(scopeSlug('x'.repeat(100)).length === 80, 'default cap 80');
+  assert(scopeSlug('x'.repeat(100), { maxLength: 20 }).length === 20, 'custom cap 20');
+});
+
+test('scope-slug: throws on empty-after-sanitization', async () => {
+  const { scopeSlug } = await import('./lib/review/scope-slug.mjs');
+  let threw = false;
+  try { scopeSlug('***'); } catch (e) { threw = true; assert(e.message.includes('empty slug')); }
+  assert(threw, 'should throw on empty result');
+});
+
 await runPending();
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────
