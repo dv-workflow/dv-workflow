@@ -4,6 +4,40 @@
 
 ---
 
+## [Unreleased] — v1.4 candidate
+
+### Headline — Optional Review Render Pipeline ([ADR-0007](.dw/decisions/0007-decoupled-review-render-pipeline.md))
+
+`/dw:review --visual` produces image cards (SVG + PNG) per finding for PR comments, Slack, and stakeholder review. Rendering ships as a separate package, **`dw-kit-render`** — pure JS + WASM (shiki + satori + @resvg/resvg-js), universal npm install on Windows / Linux / macOS / ARM. No system deps, no native build, no postinstall download.
+
+See [`docs/review-renderer.md`](docs/review-renderer.md). Closes [#9](https://github.com/dv-workflow/dv-workflow/issues/9) once published.
+
+### Added
+
+- **`dw review render <manifest>`** CLI subcommand. Validates manifest, resolves `dw-kit-render` via project + global `npm`, falls back gracefully to a markdown `summary.md` if the renderer is absent. Plugin strategy fails loudly when missing.
+- **`/dw:review --visual`** branch in the dw-review skill — emits a structured `manifest.json` to `.dw/reviews/{scope-slug}/`. `Write` permission scoped narrowly to manifest path only.
+- **Manifest schema v1** (`src/lib/review/manifest-schema.json`) — versioned public API surface for renderers. AJV-validated with clear `unsupported schema_version` error on mismatch.
+- **`scope-slug` util** — filesystem-safe slug for `.dw/reviews/{scope}/` on Windows + POSIX. Strips illegal chars, path traversal, control chars. Preserves Unicode (Vietnamese diacritics round-trip).
+- **`claude.review.renderer`** config block — `strategy` (auto / plugin / markdown-only), `theme`, `font`, `formats`, `output_dir`. Schema-validated. `getReviewRendererConfig()` loader applies defaults so existing projects work without re-init.
+- **`dw doctor`** new section "Review Render Pipeline (ADR-0007, opt-in)" — surfaces strategy, formats, theme/font, plugin resolvability.
+- **Telemetry event** `review_render` — captures action (success/partial/fail), strategy (plugin/fallback-markdown/markdown-only/plugin-missing), formats, duration_ms, fallback_reason.
+- **`.dw/reviews/` archive integration** — gitignored (ephemeral); `/dw:archive {task}` cleans up matching artifacts.
+
+### Renderer package — `dw-kit-render`
+
+- Published from `packages/dw-kit-render/` as a separate npm artifact. Main `dw-kit` package stays lean.
+- Output: 1200px-wide card per finding — severity-colored banner (critical=red, warning=amber, suggestion=blue), title, `file:line` subhead, shiki-highlighted code block (50-line cap), body, fix banner, footer.
+- Font auto-detection: Consolas → DejaVu Sans Mono → Menlo per platform. Accepts custom path or Buffer.
+- Vietnamese / Latin Extended renders correctly out of the box.
+- Render time: ~200-300ms per finding; 5 findings = ~1.2s on a developer laptop.
+- 6 integration tests covering minimal manifest, 5-finding fixture (TORIT-5-style), Vietnamese diacritics, empty manifest, format filters, font resolution.
+
+### Smoke tests
+
+- 87 cases total (from 67) — 20 new for manifest validator, scope-slug, renderer config, CLI shim fallback paths, doctor renderer section.
+
+---
+
 ## [v1.3.6] — 2026-05-14
 
 ### The headline — 3-pillar AI-Native supply-chain guard ([ADR-0006](.dw/decisions/0006-supply-chain-guard-heuristic.md))

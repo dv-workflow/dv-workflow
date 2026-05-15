@@ -31,6 +31,7 @@ dw doctor
 - `dw doctor`: health check cài đặt.
 - `dw prompt`: build structured task prompt (autocomplete + wizard).
 - `dw claude-vn-fix`: patch Vietnamese IME bug trong Claude CLI.
+- `dw review render <manifest>`: render `/dw:review --visual` artifacts (xem [`review-renderer.md`](review-renderer.md)).
 
 ## Config chuẩn v1
 
@@ -67,3 +68,4 @@ Các key quan trọng:
 - Root guide: `README.md`
 - Quick reference: `docs/cheatsheet.md`
 - Custom skills: `docs/custom-skills.md`
+- Review renderer (`/dw:review --visual`, opt-in): `docs/review-renderer.md`
