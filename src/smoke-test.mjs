@@ -1209,6 +1209,14 @@ test('review render: logs telemetry event review_render', () => {
   assert(events.includes('"event":"review_render"'), 'review_render event logged');
 });
 
+test('doctor: surfaces Review Render Pipeline section', () => {
+  const dir = join(TEMP_BASE, 'init-solo');
+  const out = dw('doctor', dir);
+  assert(out.includes('Review Render Pipeline'), 'shows section header');
+  assert(out.includes('Strategy'), 'shows strategy line');
+  assert(out.includes('dw-kit-render'), 'mentions renderer package');
+});
+
 await runPending();
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────

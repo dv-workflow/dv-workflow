@@ -1,12 +1,28 @@
 import { existsSync, readFileSync } from 'node:fs';
+import { createRequire } from 'node:module';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { header, ok, warn, err, info, log } from '../lib/ui.mjs';
-import { loadConfig, getToolkitVersions } from '../lib/config.mjs';
+import { loadConfig, getToolkitVersions, getReviewRendererConfig } from '../lib/config.mjs';
 import { detectPlatform, platformLabel } from '../lib/platform.mjs';
 import { snapshotInfo } from '../lib/sc-sync.mjs';
 
 const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
+const RENDER_PACKAGE = 'dw-kit-render';
+
+function tryResolveRenderer(projectDir) {
+  const reqProject = createRequire(join(projectDir, 'package.json'));
+  for (const req of [reqProject, createRequire(import.meta.url)]) {
+    try {
+      const pkgPath = req.resolve(`${RENDER_PACKAGE}/package.json`);
+      const pkg = JSON.parse(readFileSync(pkgPath, 'utf-8'));
+      return { ok: true, version: pkg.version };
+    } catch {
+      // try next
+    }
+  }
+  return { ok: false };
+}
 
 const CORE_FILES = [
   '.dw/core/WORKFLOW.md',
@@ -148,6 +164,29 @@ export async function doctorCommand() {
       ok(path);
     } else {
       log(`  ${path} — not yet created (opt-in)`);
+    }
+  }
+
+  info('Review Render Pipeline (ADR-0007, opt-in)');
+  const rendererCfg = existsSync(configPath) ? getReviewRendererConfig(loadConfig(configPath) || {}) : getReviewRendererConfig({});
+  log(`  Strategy    : ${rendererCfg.strategy}`);
+  log(`  Formats     : ${rendererCfg.formats.join(', ')}`);
+  log(`  Theme/Font  : ${rendererCfg.theme} / ${rendererCfg.font}`);
+
+  if (rendererCfg.strategy === 'markdown-only') {
+    log('  Renderer    : skipped (strategy=markdown-only)');
+  } else {
+    const r = tryResolveRenderer(projectDir);
+    if (r.ok) {
+      ok(`Renderer    : dw-kit-render v${r.version || '?'} resolvable`);
+    } else if (rendererCfg.strategy === 'plugin') {
+      err("Renderer    : 'dw-kit-render' NOT installed but strategy='plugin'");
+      log(`  Install:  npm install -g dw-kit-render`);
+      issues++;
+    } else {
+      warn(`Renderer    : 'dw-kit-render' not installed — /dw:review --visual will fall back to markdown`);
+      log(`  Install (optional):  npm install -g dw-kit-render`);
+      warnings++;
     }
   }
 
