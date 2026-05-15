@@ -1,6 +1,7 @@
 import { createRequire } from 'node:module';
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve, isAbsolute } from 'node:path';
+import { pathToFileURL } from 'node:url';
 import { performance } from 'node:perf_hooks';
 import chalk from 'chalk';
 import { header, ok, info, log, warn, err } from '../lib/ui.mjs';
@@ -58,7 +59,7 @@ export async function reviewRenderCommand(manifestPath, opts = {}) {
   }
 
   // 4. Resolve renderer (dw-kit-render package).
-  const rendererResolved = strategy === 'markdown-only' ? null : tryResolveRenderer(projectDir);
+  const rendererResolved = strategy === 'markdown-only' ? null : await tryResolveRenderer(projectDir);
   const finalStrategy = strategy === 'markdown-only'
     ? 'markdown-only'
     : (rendererResolved ? 'plugin' : (strategy === 'plugin' ? 'plugin-missing' : 'fallback-markdown'));
@@ -147,20 +148,29 @@ function resolveOutputDir(configDir, manifest, projectDir) {
   return join(baseDir, slug);
 }
 
-function tryResolveRenderer(projectDir) {
-  // Search resolution paths: project node_modules → global npm (createRequire from CLI binary)
-  const require = createRequire(join(projectDir, 'package.json'));
-  try {
-    return require(RENDER_PACKAGE);
-  } catch {
-    // Try global resolution via dw-kit's own require.
+async function tryResolveRenderer(projectDir) {
+  // Test-only escape hatch: tests use this to force the markdown fallback even
+  // when a local renderer is dev-linked from a sibling packages/ dir.
+  if (process.env.DW_REVIEW_NO_RENDERER === '1') return null;
+
+  // Resolution order: project node_modules → CLI's own node_modules (global -g case).
+  // We use createRequire to get a *resolution* path, then dynamic-import that URL
+  // so the renderer can be ESM-only (Phase 1 ships ESM only).
+  for (const anchor of [join(projectDir, 'package.json'), import.meta.url]) {
     try {
-      const globalRequire = createRequire(import.meta.url);
-      return globalRequire(RENDER_PACKAGE);
+      const req = createRequire(anchor);
+      const entry = req.resolve(RENDER_PACKAGE);
+      const mod = await import(pathToFileURL(entry).href);
+      const render = mod?.render || mod?.default?.render;
+      if (typeof render !== 'function') {
+        throw new Error("dw-kit-render module did not export a 'render' function");
+      }
+      return { render };
     } catch {
-      return null;
+      // try next anchor
     }
   }
+  return null;
 }
 
 function buildSummaryMarkdown(manifest, artifacts, { outDir, projectDir }) {

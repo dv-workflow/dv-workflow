@@ -11,6 +11,7 @@ const TOOLKIT_ROOT = resolve(fileURLToPath(import.meta.url), '..', '..', '..');
 const RENDER_PACKAGE = 'dw-kit-render';
 
 function tryResolveRenderer(projectDir) {
+  if (process.env.DW_REVIEW_NO_RENDERER === '1') return { ok: false, reason: 'disabled by DW_REVIEW_NO_RENDERER=1' };
   const reqProject = createRequire(join(projectDir, 'package.json'));
   for (const req of [reqProject, createRequire(import.meta.url)]) {
     try {

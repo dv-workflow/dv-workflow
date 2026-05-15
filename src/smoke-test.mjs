@@ -45,12 +45,12 @@ function assert(condition, msg) {
   if (!condition) throw new Error(msg || 'Assertion failed');
 }
 
-function dw(args, cwd) {
+function dw(args, cwd, extraEnv = {}) {
   return execSync(`node "${DW_BIN}" ${args}`, {
     cwd,
     encoding: 'utf-8',
     timeout: 30000,
-    env: { ...process.env, NO_COLOR: '1' },
+    env: { ...process.env, NO_COLOR: '1', ...extraEnv },
   });
 }
 
@@ -1159,7 +1159,7 @@ function makeManifestFixture(dir, slug = 'demo') {
 test('review render: missing renderer falls back to markdown summary, exit 0', () => {
   const dir = freshDir('review-render-fallback');
   const manifestPath = makeManifestFixture(dir);
-  const out = dw(`review render "${manifestPath}" --quiet`, dir);
+  const out = dw(`review render "${manifestPath}" --quiet`, dir, { DW_REVIEW_NO_RENDERER: '1' });
   assert(existsSync(join(dir, '.dw', 'reviews', 'demo', 'summary.md')), 'summary.md created');
   const md = readFileSync(join(dir, '.dw', 'reviews', 'demo', 'summary.md'), 'utf-8');
   assert(md.includes('CRITICAL'), 'severity rendered in markdown');
@@ -1204,7 +1204,7 @@ test('review render: --strategy markdown-only skips renderer entirely', () => {
 test('review render: logs telemetry event review_render', () => {
   const dir = freshDir('review-render-telemetry');
   const manifestPath = makeManifestFixture(dir);
-  dw(`review render "${manifestPath}" --quiet`, dir);
+  dw(`review render "${manifestPath}" --quiet`, dir, { DW_REVIEW_NO_RENDERER: '1' });
   const events = readFileSync(join(dir, '.dw', 'metrics', 'events.jsonl'), 'utf-8');
   assert(events.includes('"event":"review_render"'), 'review_render event logged');
 });
