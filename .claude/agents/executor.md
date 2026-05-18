@@ -70,11 +70,11 @@ Khi task có risk cao (large refactor, breaking changes):
 ## Commit Format
 
 ```
-<type>(<scope>): <mô tả ≤72 ký tự>
+<type>(<scope>): <imperative English ≤72 chars>
 
-[Chi tiết nếu cần — tại sao, không phải gì]
-
-Co-Authored-By: Claude <noreply@anthropic.com>
+[Optional body — explain WHY, not WHAT, wrap at 72]
 ```
 
 Types: `feat` `fix` `refactor` `test` `docs` `chore` `style` `perf`
+
+English imperative mood. **Do not append `Co-Authored-By: Claude` or any AI signature.** Full rules: `.claude/rules/commit-standards.md`.

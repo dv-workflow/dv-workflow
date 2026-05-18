@@ -48,17 +48,20 @@ Nếu không có changes → thông báo "Không có gì để commit."
 
 ### 5. Tạo commit message
 
-Nếu có `$ARGUMENTS` → dùng làm mô tả:
+Nếu có `$ARGUMENTS` → dùng làm subject (rewrite sang English imperative nếu input không phải English):
 ```
-<auto-detect-type>(<auto-detect-scope>): $ARGUMENTS
+<auto-detect-type>(<auto-detect-scope>): <imperative English ≤72 chars>
 
-Co-Authored-By: Claude <noreply@anthropic.com>
+[Optional body — explain WHY in English, wrap at 72]
 ```
+
+**KHÔNG append `Co-Authored-By: Claude` hoặc bất kỳ AI signature nào.**
+Convention chi tiết: `.claude/rules/commit-standards.md`.
 
 Nếu KHÔNG có `$ARGUMENTS` → phân tích diff và tạo message tự động:
 - Detect type từ loại thay đổi (feat/fix/refactor/test/docs/chore)
 - Detect scope từ files/directories changed
-- Viết mô tả ngắn gọn
+- Subject: imperative English, ≤72 chars (`add X`, `fix Y`, `update Z` — không past tense)
 
 ### 6. Thực hiện commit
 ```bash

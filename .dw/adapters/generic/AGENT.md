@@ -114,10 +114,12 @@ For each subtask:
 
 Commit format:
 ```
-<type>(<scope>): <description ≤72 chars>
+<type>(<scope>): <imperative English subject ≤72 chars>
 
-Co-Authored-By: [AI assistant name]
+[Optional body — explain WHY, wrap at 72]
 ```
+
+English imperative mood. Do not append `Co-Authored-By` AI signatures. Full rules: `.claude/rules/commit-standards.md`.
 
 Update progress file: status → Done.
 If handing off: write handoff notes (done/in-progress/blocked, next steps).
