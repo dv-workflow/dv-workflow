@@ -82,10 +82,12 @@ See `.dw/core/skills-index.md` for complete list with descriptions.
 ## Commit Format
 
 ```
-<type>(<scope>): <description ≤72 chars>
+<type>(<scope>): <imperative English subject ≤72 chars>
 ```
 
 Types: `feat` `fix` `refactor` `test` `docs` `chore` `style` `perf`
+
+English imperative mood (`add`, `fix`, `update` — not past tense or other languages). **Do not append `Co-Authored-By: Claude` or any AI signature.** Full rules: `.claude/rules/commit-standards.md`.
 
 ---
 

@@ -1217,6 +1217,41 @@ test('doctor: surfaces Review Render Pipeline section', () => {
   assert(out.includes('dw-kit-render'), 'mentions renderer package');
 });
 
+// ── Test: commit-message convention (v1.4.1) ─────────────────────────────────
+console.log();
+console.log('▶ commit-message convention');
+
+const REPO_ROOT = resolve(__dirname, '..');
+
+const TEMPLATE_FILES = [
+  '.claude/rules/commit-standards.md',
+  '.claude/rules/dw.md',
+  '.claude/skills/dw-commit/SKILL.md',
+  '.claude/agents/executor.md',
+  '.dw/core/WORKFLOW.md',
+  '.dw/adapters/generic/AGENT.md',
+];
+
+for (const rel of TEMPLATE_FILES) {
+  test(`no literal Co-Authored-By footer in ${rel}`, () => {
+    const body = readFileSync(join(REPO_ROOT, rel), 'utf-8');
+    // A real footer starts the line with `Co-Authored-By:`. Prohibition
+    // statements always embed it in backticks, so they have a `\`` prefix
+    // before the token and won't match a line-start anchor.
+    const offending = body.split('\n').filter((line) => /^Co-Authored-By:/i.test(line));
+    assert(
+      offending.length === 0,
+      `Found literal Co-Authored-By footer line(s):\n${offending.join('\n')}`
+    );
+  });
+}
+
+test('commit-standards.md states English-only rule', () => {
+  const body = readFileSync(join(REPO_ROOT, '.claude/rules/commit-standards.md'), 'utf-8');
+  assert(/english/i.test(body), 'mentions English');
+  assert(/imperative/i.test(body), 'mentions imperative mood');
+});
+
 await runPending();
 
 // ── Cleanup ──────────────────────────────────────────────────────────────────

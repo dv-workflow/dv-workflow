@@ -1,37 +1,48 @@
 # Commit Standards
 
 ## Format
-```
-<type>(<scope>): <mô tả tiếng Việt hoặc tiếng Anh>
 
-[Body - chi tiết thay đổi, lý do]
-[Blank line]
-[Footer - breaking changes, references]
-
-Co-Authored-By: Claude <noreply@anthropic.com>
 ```
+<type>(<scope>): <imperative English subject ≤72 chars>
+
+[Optional body — explain WHY, wrap at 72 chars]
+
+[Optional footer — BREAKING CHANGE: ..., Refs: #123]
+```
+
+**English only.** Use imperative mood: `add user auth`, `fix login redirect`, `update API client` — never `added`, `fixes`, or past tense.
+
+**Do not append `Co-Authored-By: Claude` or any AI signature.** Commits are authored by the human who reviewed and shipped them.
 
 ## Types
-| Type | Khi nào dùng |
-|------|-------------|
-| `feat` | Tính năng mới |
-| `fix` | Sửa lỗi |
-| `refactor` | Tái cấu trúc, không thay đổi behavior |
-| `test` | Thêm/sửa tests |
-| `docs` | Tài liệu, comments |
-| `chore` | Build, config, dependencies |
-| `style` | Format, whitespace (không thay đổi logic) |
-| `perf` | Cải thiện performance |
 
-## Quy tắc
-- Mỗi commit = 1 subtask hoặc 1 đơn vị logic hoàn chỉnh
-- Mô tả ngắn <= 72 ký tự
-- Dùng thì hiện tại: "thêm", "sửa", "cập nhật" (không phải "đã thêm")
-- KHÔNG commit files chứa secrets (.env, credentials, tokens)
-- KHÔNG commit console.log/debugger còn sót
+| Type | When to use |
+|------|-------------|
+| `feat` | New feature |
+| `fix` | Bug fix |
+| `refactor` | Restructure without behavior change |
+| `test` | Add or update tests |
+| `docs` | Documentation, comments |
+| `chore` | Build, config, dependencies |
+| `style` | Format, whitespace (no logic change) |
+| `perf` | Performance improvement |
+
+## Rules
+
+- One commit = one subtask or one complete logical unit
+- Subject ≤72 chars; body wrapped at 72
+- Imperative present tense (`add`, `fix`, `update` — not `added`, `fixed`, `updates`)
+- Never commit secrets (`.env`, credentials, tokens)
+- Never commit leftover `console.log`, `debugger`, etc.
 
 ## Branch Naming
+
 ```
 <type>/<task-name>
 ```
-Ví dụ: `feat/user-auth`, `fix/login-redirect`, `refactor/api-structure`
+
+Examples: `feat/user-auth`, `fix/login-redirect`, `refactor/api-structure`
+
+## Localization Override
+
+This convention defaults to English to match the global open-source norm. A team that ships only in another language MAY override this rule in their own project by editing this file — but the toolkit itself ships English-default templates.

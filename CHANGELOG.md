@@ -4,6 +4,45 @@
 
 ---
 
+## [v1.4.1] — 2026-05-18
+
+### Changed — commit message convention
+
+**English-only, no AI signature.** Previously the toolkit shipped templates that mixed Vietnamese/English commit subjects and appended `Co-Authored-By: Claude <noreply@anthropic.com>` on every commit. End users adopting `dw-kit` reported this as friction — they had to strip the signature and translate every commit in every new project.
+
+The toolkit now ships English-default, signature-free templates:
+
+```
+<type>(<scope>): <imperative English subject ≤72 chars>
+
+[Optional body — explain WHY, wrap at 72]
+```
+
+- Imperative mood (`add user auth`, not `added user auth` or any other language)
+- No `Co-Authored-By: Claude` footer — commits are authored by the human who reviewed and shipped them
+- Types unchanged: `feat` `fix` `refactor` `test` `docs` `chore` `style` `perf`
+
+Teams that ship only in another language can override `.claude/rules/commit-standards.md` in their own project; this is the toolkit's default, not a hard requirement.
+
+### Files updated
+
+- `.claude/rules/commit-standards.md` — full rewrite, English-only with localization-override note
+- `.claude/rules/dw.md` — Commit Format section clarified
+- `.claude/skills/dw-commit/SKILL.md` — template no longer appends Co-Authored-By
+- `.claude/agents/executor.md` — Commit Format block updated
+- `.dw/core/WORKFLOW.md` — Phase 6 Commit Convention updated
+- `.dw/adapters/generic/AGENT.md` — generic agent template updated
+
+### Added — guard against regression
+
+Smoke test now asserts no shipped template under `.claude/` or `.dw/core/` contains a literal `Co-Authored-By:` line outside of `# Do not` prohibition statements.
+
+### Migration
+
+No code change required. Existing commits keep their history. Future commits made via `/dw:commit` and the executor agent will follow the new format automatically.
+
+---
+
 ## [v1.4.0] — 2026-05-15
 
 ### Headline — Optional Review Render Pipeline ([ADR-0007](.dw/decisions/0007-decoupled-review-render-pipeline.md))

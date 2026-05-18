@@ -293,14 +293,14 @@ Reviewer báo cáo phải phân loại theo mức độ:
 ### Commit Convention
 
 ```
-<type>(<scope>): <mô tả ngắn ≤72 ký tự>
+<type>(<scope>): <imperative English subject ≤72 chars>
 
-[Chi tiết nếu cần]
-
-Co-Authored-By: Claude <noreply@anthropic.com>
+[Optional body — explain WHY, wrap at 72]
 ```
 
 Types: `feat`, `fix`, `refactor`, `test`, `docs`, `chore`, `style`, `perf`
+
+English imperative mood (`add`, `fix`, `update` — not past tense or other languages). **Do not append `Co-Authored-By: Claude` or any AI signature.** Full rules: `.claude/rules/commit-standards.md`.
 
 **Pre-commit checklist:**
 - [ ] Không có debug code
