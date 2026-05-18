@@ -1,18 +1,21 @@
 ---
 task_id: review-render-pipeline
 started: 2026-05-15
-last_updated: 2026-05-15
-status: Ship-Ready (PR open)
-current_phase: Phase 0+1+2 all shipped on feat/review-render-pipeline
-blockers: TL review of PR #10
+last_updated: 2026-05-18
+status: Done
+current_phase: Released as v1.4.0 (main + dev pushed, tag v1.4.0 published, npm dw-kit@1.4.0 live)
+blockers: none
 ---
 
 # Tracking: Decoupled Review Render Pipeline
 
 ## Status Snapshot
 
-**Phase:** All 12 subtasks shipped. PR #10 open against `dev`.
-**Next milestone:** TL review → merge `feat/review-render-pipeline` → publish `dw-kit-render` to npm → close Issue #9.
+**Phase:** Done — released as v1.4.0 on 2026-05-18.
+**Shipped:** `dw-kit@1.4.0` on npm; v1.4.0 tag pushed; PR #10 merged; main + dev synced to origin.
+**Outstanding (not blocking):**
+- `dw-kit-render` sub-package npm publish — separate cadence, falls back to markdown gracefully without it.
+- GitHub Issue #9 close — pending user action (CI/permission scope).
 
 ## Linked Issue
 
@@ -42,6 +45,20 @@ blockers: TL review of PR #10
 Status legend: ⬜ Pending · 🟡 In Progress · ✅ Done · 🔴 Blocked · ⏸ Paused
 
 ## Changelog
+
+### 2026-05-18 — Released v1.4.0
+
+**Actions taken:**
+- Pushed `main` to origin (release merge commit `3838cdc`); `dev` already at `b36b682`.
+- Tagged `v1.4.0` annotated, pushed to origin.
+- Published `dw-kit@1.4.0` to npm (registry confirms).
+- Updated ACTIVE.md + this tracking to status `Done`.
+
+**Outstanding (intentionally separate):**
+- `dw-kit-render` npm publish — deferred to allow dogfood feedback round; pipeline degrades gracefully without it.
+- GitHub Issue #9 close — needs user execution (org-repo permissions).
+
+**Next:** v1.4.1 patch — switch tool's commit-message convention to English-only, drop `Co-Authored-By: Claude` from templates (user feedback 2026-05-18).
 
 ### 2026-05-15 (afternoon) — Phase 1 + Phase 2 complete
 
